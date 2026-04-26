@@ -42,6 +42,9 @@ Speech resources:
 - Whisper: practical offline English ASR engine for the current prototype.
 - DoReCo Gurindji and PARADISEC GK1: future research sources for Gurindji
   speech only after access and permission are confirmed.
+- Local DoReCo Gurindji annotation files are available outside the repo at the
+  sibling `../Data` folder in the current development workspace. They support
+  corpus and glossary research, not medical classification by themselves.
 
 Triage safety resources:
 
@@ -63,6 +66,28 @@ Fine-tuning Whisper is future work, not a v1 app dependency.
 6. Export an offline model only if redistribution is permitted.
 7. Swap the model behind `SpeechInputService`/`WhisperService` without changing
    UI or analysis contracts.
+
+## Local DoReCo Workflow
+
+Use the extractor to inspect local DoReCo annotations without committing source
+or generated corpus outputs:
+
+```powershell
+python python_pipeline/01_extract_doreco_gurindji.py
+```
+
+The default input is the sibling `../Data` folder. Outputs are written under
+`python_pipeline/outputs/doreco_gurindji/`, which is ignored by Git.
+
+The extractor writes:
+
+- cleaned word rows with text and English translation fields;
+- word frequency summaries;
+- foreign-material/code-switching rows;
+- candidate health/body/pain terms matched against the curated app lexicon.
+
+Only manually reviewed, small glossary changes should be promoted into tracked
+app assets.
 
 ## ML Path
 
@@ -87,6 +112,8 @@ Known constraints:
 - Public medical datasets are synthetic or curated, not clinical deployment
   evidence.
 - There is no public Gurindji medical speech dataset.
+- The local DoReCo data contains annotations only; PARADISEC audio is not
+  present locally.
 - Gurindji dictionary and corpus sources require careful attribution and cultural
   respect.
 - DoReCo notes that Gurindji language mixing is common in the dataset.
