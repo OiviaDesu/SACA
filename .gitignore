@@ -33,6 +33,10 @@ migrate_working_dir/
 /coverage/
 /dist/
 
+# Local dataset/cache outputs. Keep raw corpora and generated artifacts out of Git.
+python_pipeline/data/
+python_pipeline/outputs/
+
 # Local platform/dev machine files
 android/local.properties
 android/.gradle/
