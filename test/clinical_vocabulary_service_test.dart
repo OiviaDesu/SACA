@@ -35,9 +35,12 @@ void main() {
     expect(vocabulary.bodyAreaTerm('head')?.gurindjiLabel, 'ngarlaka');
     expect(vocabulary.bodyAreaTerm('heart')?.gurindjiLabel, 'mangarli');
     expect(vocabulary.symptomTerm('headache')?.gurindjiLabel, 'ngarlaka pung');
-    expect(vocabulary.symptomTerm('stomachache')?.gurindjiLabel, 'majul turlung');
-    expect(vocabulary.symptomTerm('sore_throat')?.gurindjiLabel, 'ngirlkirri pung');
-    expect(vocabulary.symptomTerm('chest_pain')?.gurindjiLabel, 'mangarli pung');
+    expect(
+        vocabulary.symptomTerm('stomachache')?.gurindjiLabel, 'majul turlung');
+    expect(vocabulary.symptomTerm('sore_throat')?.gurindjiLabel,
+        'ngirlkirri pung');
+    expect(
+        vocabulary.symptomTerm('chest_pain')?.gurindjiLabel, 'mangarli pung');
     expect(vocabulary.normalizeText('pung'), contains('pain'));
     expect(vocabulary.normalizeText('kangkurr ma-'), contains('pain'));
     expect(vocabulary.normalizeText('walawupkarra'), contains('bleeding'));
