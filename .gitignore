@@ -1,0 +1,100 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Editor-local configuration
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.flutter-plugins
+.pub-cache/
+.pub/
+/build/
+/coverage/
+/dist/
+
+# Local platform/dev machine files
+android/local.properties
+android/.gradle/
+android/saca_demo_android.iml
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+windows/flutter/ephemeral/
+
+# Local model assets. See docs/MODEL_ASSETS.md.
+assets/models/sherpa-onnx-whisper-base/*.onnx
+assets/models/sherpa-onnx-whisper-base/tokens.txt
+
+# Internal assistant/automation artifacts (kept locally, not tracked)
+.agents/
+.adal/
+.augment/
+.bob/
+.codex/
+.claude/
+.codebuddy/
+.commandcode/
+.continue/
+.cortex/
+.crush/
+.cursor/
+.factory/
+.goose/
+.iflow/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.trae/
+.vibe/
+.windsurf/
+.zencoder/
+.github/skills/
+.github/java-upgrade/
+/memories/
+/skills/
+skills-lock.json
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.github/copilot-instructions.md
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
