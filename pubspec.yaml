@@ -13,7 +13,7 @@ dependencies:
   whisper_kit: ^0.3.0
 
   # Sherpa-ONNX: used when deploying fine-tuned ONNX model later
-  sherpa_onnx: ^1.10.30
+  sherpa_onnx: ^1.12.40
 
   # Audio recording (16 kHz mono PCM)
   record: ^6.2.0
@@ -27,7 +27,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
