@@ -1,0 +1,37 @@
+name: saca_demo
+description: SACA – Smart Adaptive Clinical Assistant (Whisper offline STT demo)
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Offline Whisper STT via whisper.cpp (Android + iOS)
+  whisper_kit: ^0.3.0
+
+  # Sherpa-ONNX: used when deploying fine-tuned ONNX model later
+  sherpa_onnx: ^1.10.30
+
+  # Audio recording (16 kHz mono PCM)
+  record: ^6.2.0
+  path_provider: ^2.1.3
+
+  # UI
+  gap: ^3.0.1
+  cupertino_icons: ^1.0.8
+  window_manager: 0.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/gurindji_lexicon.json
+    - assets/models/
+    - assets/models/sherpa-onnx-whisper-base/

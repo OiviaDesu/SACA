@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[pre-push] Running flutter analyze..."
+flutter analyze
+
+echo "[pre-push] Running flutter test..."
+flutter test
+
+echo "[pre-push] All checks passed. Proceeding with push."
