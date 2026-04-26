@@ -1,0 +1,3857 @@
+[
+  {
+    "gurindji": "jalany",
+    "english": "the tongue",
+    "type": "body"
+  },
+  {
+    "gurindji": "jakuwi",
+    "english": "the jaw",
+    "type": "body"
+  },
+  {
+    "gurindji": "jamana ngamayi",
+    "english": "the toe",
+    "type": "body"
+  },
+  {
+    "gurindji": "janga",
+    "english": "sick/ill",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "janga",
+    "english": "wound",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "jiminkirt",
+    "english": "the kidney",
+    "type": "body"
+  },
+  {
+    "gurindji": "jitji",
+    "english": "the nose",
+    "type": "body"
+  },
+  {
+    "gurindji": "jitji jarriny",
+    "english": "the nostril",
+    "type": "body"
+  },
+  {
+    "gurindji": "kajurta",
+    "english": "the wrist",
+    "type": "body"
+  },
+  {
+    "gurindji": "kala",
+    "english": "the thigh",
+    "type": "body"
+  },
+  {
+    "gurindji": "kamamurru",
+    "english": "blind",
+    "type": "disease"
+  },
+  {
+    "gurindji": "kampun",
+    "english": "the vein or artery",
+    "type": "body"
+  },
+  {
+    "gurindji": "karrwi",
+    "english": "the armpit",
+    "type": "body"
+  },
+  {
+    "gurindji": "kartaj ma-",
+    "english": "to choke",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kartpi",
+    "english": "the hair",
+    "type": "body"
+  },
+  {
+    "gurindji": "kataj pa-",
+    "english": "to cut",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kulyurrk",
+    "english": "to cough",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kungulu",
+    "english": "the blood",
+    "type": "body"
+  },
+  {
+    "gurindji": "kurlpak yuwa-",
+    "english": "to vomit",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kurranyku",
+    "english": "to be thirsty",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kuyuwarn",
+    "english": "the bone",
+    "type": "body"
+  },
+  {
+    "gurindji": "laja",
+    "english": "the shoulder",
+    "type": "body"
+  },
+  {
+    "gurindji": "langa",
+    "english": "the ear",
+    "type": "body"
+  },
+  {
+    "gurindji": "larnti",
+    "english": "the hip",
+    "type": "body"
+  },
+  {
+    "gurindji": "lipi",
+    "english": "the fingernail",
+    "type": "body"
+  },
+  {
+    "gurindji": "lirra",
+    "english": "the mouth/tooth",
+    "type": "body"
+  },
+  {
+    "gurindji": "lupu",
+    "english": "the intestines or gut",
+    "type": "body"
+  },
+  {
+    "gurindji": "majul",
+    "english": "the stomach",
+    "type": "body"
+  },
+  {
+    "gurindji": "makurrmakurr",
+    "english": "the fever",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "makurru",
+    "english": "cold",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "malumpa",
+    "english": "the liver",
+    "type": "body"
+  },
+  {
+    "gurindji": "mangarli",
+    "english": "the chest",
+    "type": "body"
+  },
+  {
+    "gurindji": "mankalinyan",
+    "english": "the earwax",
+    "type": "body"
+  },
+  {
+    "gurindji": "marlurlumpurr karri-",
+    "english": "weak",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "maru",
+    "english": "the buttocks",
+    "type": "body"
+  },
+  {
+    "gurindji": "mikilyi",
+    "english": "the brain",
+    "type": "body"
+  },
+  {
+    "gurindji": "mila",
+    "english": "the eye",
+    "type": "body"
+  },
+  {
+    "gurindji": "miljangarriny",
+    "english": "the eyelid",
+    "type": "body"
+  },
+  {
+    "gurindji": "milyjangarriny",
+    "english": "the eyelash",
+    "type": "body"
+  },
+  {
+    "gurindji": "jamin",
+    "english": "the face",
+    "type": "body"
+  },
+  {
+    "gurindji": "lungarn",
+    "english": "the face",
+    "type": "body"
+  },
+  {
+    "gurindji": "jika",
+    "english": "the beard / chin",
+    "type": "body"
+  },
+  {
+    "gurindji": "janypurra",
+    "english": "the rib",
+    "type": "body"
+  },
+  {
+    "gurindji": "jakapirti",
+    "english": "the hip",
+    "type": "body"
+  },
+  {
+    "gurindji": "jamana",
+    "english": "the foot",
+    "type": "body"
+  },
+  {
+    "gurindji": "jamana nantananta",
+    "english": "the toes",
+    "type": "body"
+  },
+  {
+    "gurindji": "jamana ngatinyan",
+    "english": "the big toe",
+    "type": "body"
+  },
+  {
+    "gurindji": "jamana mangarli",
+    "english": "the ball of foot",
+    "type": "body"
+  },
+  {
+    "gurindji": "jamana wulngarn",
+    "english": "the sole / arch of foot",
+    "type": "body"
+  },
+  {
+    "gurindji": "jawiyawuku",
+    "english": "the offal / internal organs",
+    "type": "body"
+  },
+  {
+    "gurindji": "ngalparr",
+    "english": "the back",
+    "type": "body"
+  },
+  {
+    "gurindji": "ngulyi",
+    "english": "the head",
+    "type": "body"
+  },
+  {
+    "gurindji": "nyilyirrk",
+    "english": "the neck",
+    "type": "body"
+  },
+  {
+    "gurindji": "pajirri",
+    "english": "the hand",
+    "type": "body"
+  },
+  {
+    "gurindji": "pajirri nantananta",
+    "english": "the fingers",
+    "type": "body"
+  },
+  {
+    "gurindji": "pajirri ngatinyan",
+    "english": "the thumb",
+    "type": "body"
+  },
+  {
+    "gurindji": "pirntii",
+    "english": "the rib",
+    "type": "body"
+  },
+  {
+    "gurindji": "pulyurr",
+    "english": "the knee",
+    "type": "body"
+  },
+  {
+    "gurindji": "warlupurru",
+    "english": "the ankle",
+    "type": "body"
+  },
+  {
+    "gurindji": "warrgarrk",
+    "english": "the skin",
+    "type": "body"
+  },
+  {
+    "gurindji": "wilyku",
+    "english": "the elbow",
+    "type": "body"
+  },
+  {
+    "gurindji": "yimarr",
+    "english": "the finger / toe nail",
+    "type": "body"
+  },
+  {
+    "gurindji": "yirlarr",
+    "english": "the forehead",
+    "type": "body"
+  },
+  {
+    "gurindji": "ngurr",
+    "english": "the throat",
+    "type": "body"
+  },
+  {
+    "gurindji": "ngarinyjamana",
+    "english": "the heel",
+    "type": "body"
+  },
+  {
+    "gurindji": "marlpa",
+    "english": "the belly / abdomen",
+    "type": "body"
+  },
+  {
+    "gurindji": "jarl",
+    "english": "the chest (male)",
+    "type": "body"
+  },
+  {
+    "gurindji": "murlpa",
+    "english": "the fat / flesh",
+    "type": "body"
+  },
+  {
+    "gurindji": "kurrp",
+    "english": "the head / skull",
+    "type": "body"
+  },
+  {
+    "gurindji": "jangany",
+    "english": "sickness / illness",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "janga-yawung",
+    "english": "having a sore",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "jangajangaarra",
+    "english": "constantly sick",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "jalya karri-",
+    "english": "to feel better / fit after illness",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kulykulya",
+    "english": "congestion / bad cold",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "karlapa",
+    "english": "boils / skin infections",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "marntara",
+    "english": "skin sores",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kakapala",
+    "english": "mouth thrush",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "jawuljaru",
+    "english": "diarrhoea",
+    "type": "disease"
+  },
+  {
+    "gurindji": "makaj pa-",
+    "english": "to scratch (an itch)",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "pungku ma-",
+    "english": "to hit / injure",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "pung",
+    "english": "ache",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kangkurr ma-",
+    "english": "to be in pain",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "walawupkarra",
+    "english": "bleed",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kuliyan",
+    "english": "cancer",
+    "type": "disease"
+  },
+  {
+    "gurindji": "warlarrp",
+    "english": "very sick / gravely ill",
+    "type": "disease"
+  },
+  {
+    "gurindji": "jangany jangkarni",
+    "english": "severe / potentially fatal flu",
+    "type": "disease"
+  },
+  {
+    "gurindji": "ngajkula",
+    "english": "diarrhoea with mucus",
+    "type": "disease"
+  },
+  {
+    "gurindji": "ngarturr",
+    "english": "pregnant",
+    "type": "disease"
+  },
+  {
+    "gurindji": "jurtpiny",
+    "english": "deaf",
+    "type": "disease"
+  },
+  {
+    "gurindji": "wirlinyi",
+    "english": "lame / crippled",
+    "type": "disease"
+  },
+  {
+    "gurindji": "ngawurr",
+    "english": "crazy / mentally unwell",
+    "type": "disease"
+  },
+  {
+    "gurindji": "hey nyangula-n yani?",
+    "english": "welcome / hello (hey, when did you arrive?)",
+    "type": "greeting"
+  },
+  {
+    "gurindji": "marntaj",
+    "english": "goodbye / see you later",
+    "type": "greeting"
+  },
+  {
+    "gurindji": "wanyjika-n yanku?",
+    "english": "where are you going?",
+    "type": "greeting"
+  },
+  {
+    "gurindji": "ngurna yanku ngurra-ngkurra",
+    "english": "I'm going home",
+    "type": "greeting"
+  },
+  {
+    "gurindji": "kawayi",
+    "english": "come here",
+    "type": "greeting"
+  },
+  {
+    "gurindji": "ngali yanku-rli",
+    "english": "let's go",
+    "type": "greeting"
+  },
+  {
+    "gurindji": "yuwayi",
+    "english": "yes",
+    "type": "other"
+  },
+  {
+    "gurindji": "lawara",
+    "english": "no / nothing",
+    "type": "other"
+  },
+  {
+    "gurindji": "ngayu",
+    "english": "I / me",
+    "type": "pronoun"
+  },
+  {
+    "gurindji": "nyuntu",
+    "english": "you (singular)",
+    "type": "pronoun"
+  },
+  {
+    "gurindji": "nyantu",
+    "english": "he / she / it",
+    "type": "pronoun"
+  },
+  {
+    "gurindji": "ngaliwa",
+    "english": "we (inclusive)",
+    "type": "pronoun"
+  },
+  {
+    "gurindji": "ngantipa",
+    "english": "we (exclusive)",
+    "type": "pronoun"
+  },
+  {
+    "gurindji": "nyurrulu",
+    "english": "you (plural)",
+    "type": "pronoun"
+  },
+  {
+    "gurindji": "nyarrulu",
+    "english": "they",
+    "type": "pronoun"
+  },
+  {
+    "gurindji": "nyatpa",
+    "english": "how?",
+    "type": "question"
+  },
+  {
+    "gurindji": "nyatjang",
+    "english": "how many / how much?",
+    "type": "question"
+  },
+  {
+    "gurindji": "nyampa",
+    "english": "what?",
+    "type": "question"
+  },
+  {
+    "gurindji": "nyangurla",
+    "english": "when?",
+    "type": "question"
+  },
+  {
+    "gurindji": "wanyjika",
+    "english": "where?",
+    "type": "question"
+  },
+  {
+    "gurindji": "wanyji",
+    "english": "which?",
+    "type": "question"
+  },
+  {
+    "gurindji": "ngana",
+    "english": "who?",
+    "type": "question"
+  },
+  {
+    "gurindji": "nyampawu",
+    "english": "why?",
+    "type": "question"
+  },
+  {
+    "gurindji": "ngana yini ngun?",
+    "english": "what is your name?",
+    "type": "question"
+  },
+  {
+    "gurindji": "ngaji",
+    "english": "father / father's brother / God",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "ngamayi",
+    "english": "mother / mother's sister",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "papa",
+    "english": "brother",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "ngapa",
+    "english": "older brother",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "karlaj",
+    "english": "younger brother / younger sister / younger sibling",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "kapuku",
+    "english": "sister",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "kawurlu",
+    "english": "older sister",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "karu",
+    "english": "child / children",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "yapakaru",
+    "english": "baby",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "ngumparna",
+    "english": "husband / sibling-in-law",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "janka",
+    "english": "woman / wife / old woman",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "ngalawuny",
+    "english": "son / niece",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "kurturtu",
+    "english": "daughter / nephew / sibling's child",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "kaku",
+    "english": "grandfather",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "jawiji",
+    "english": "grandfather",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "marluka",
+    "english": "old man",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "jaju",
+    "english": "grandmother",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "ngapuju",
+    "english": "grandmother",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "kaminyjarr",
+    "english": "grandson / granddaughter",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "ngamirni",
+    "english": "mother's brother",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "mukurl",
+    "english": "father's sister",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "parnkurti",
+    "english": "cousin",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "kamparrijang",
+    "english": "ancestors / first",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "ngumayijang",
+    "english": "descendants",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "lamparra",
+    "english": "father-in-law / son-in-law / parents-in-law",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "mali",
+    "english": "mother-in-law (of a man) / son-in-law (of a woman)",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "kurriji",
+    "english": "mother-in-law (of a woman) / daughter-in-law (of a woman)",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "nungkiying",
+    "english": "relatives / family",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "wangaak",
+    "english": "orphan / poor",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "wangu",
+    "english": "widow",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "karliyinta",
+    "english": "widower",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "karli kujarra",
+    "english": "twins",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "luku",
+    "english": "to marry / married man",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "kajirri",
+    "english": "married woman / old woman",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "witing",
+    "english": "wedding",
+    "type": "kinship"
+  },
+  {
+    "gurindji": "ngumpit",
+    "english": "person / man",
+    "type": "noun"
+  },
+  {
+    "gurindji": "yarrulan",
+    "english": "young man",
+    "type": "noun"
+  },
+  {
+    "gurindji": "manga",
+    "english": "girl",
+    "type": "noun"
+  },
+  {
+    "gurindji": "wamala",
+    "english": "young woman",
+    "type": "noun"
+  },
+  {
+    "gurindji": "malyju",
+    "english": "male / boy",
+    "type": "noun"
+  },
+  {
+    "gurindji": "nampiyita",
+    "english": "female",
+    "type": "noun"
+  },
+  {
+    "gurindji": "jaliji",
+    "english": "friend / mate",
+    "type": "noun"
+  },
+  {
+    "gurindji": "kamaliwang",
+    "english": "stranger",
+    "type": "noun"
+  },
+  {
+    "gurindji": "puya",
+    "english": "the body",
+    "type": "body"
+  },
+  {
+    "gurindji": "wajawurr",
+    "english": "the skin / hide",
+    "type": "body"
+  },
+  {
+    "gurindji": "niyan",
+    "english": "the flesh",
+    "type": "body"
+  },
+  {
+    "gurindji": "ngurrurn",
+    "english": "the pubic hair",
+    "type": "body"
+  },
+  {
+    "gurindji": "yarrji",
+    "english": "dandruff",
+    "type": "body"
+  },
+  {
+    "gurindji": "wirnturru",
+    "english": "the horn / root",
+    "type": "body"
+  },
+  {
+    "gurindji": "jawut",
+    "english": "the tail",
+    "type": "body"
+  },
+  {
+    "gurindji": "parntawurru",
+    "english": "the back / spine",
+    "type": "body"
+  },
+  {
+    "gurindji": "yimitjimitji",
+    "english": "the eyebrow",
+    "type": "body"
+  },
+  {
+    "gurindji": "nyimij",
+    "english": "to blink",
+    "type": "body"
+  },
+  {
+    "gurindji": "nyitjira",
+    "english": "nasal mucus",
+    "type": "body"
+  },
+  {
+    "gurindji": "wanyput",
+    "english": "the lip",
+    "type": "body"
+  },
+  {
+    "gurindji": "ngirlkirri",
+    "english": "the neck / throat / voice",
+    "type": "body"
+  },
+  {
+    "gurindji": "jikirtikirti",
+    "english": "the nape of the neck",
+    "type": "body"
+  },
+  {
+    "gurindji": "laparn",
+    "english": "the shoulderblade",
+    "type": "body"
+  },
+  {
+    "gurindji": "warting",
+    "english": "the collarbone",
+    "type": "body"
+  },
+  {
+    "gurindji": "wartarn",
+    "english": "the arm / hand / palm",
+    "type": "body"
+  },
+  {
+    "gurindji": "wartarn majul",
+    "english": "the palm of the hand",
+    "type": "body"
+  },
+  {
+    "gurindji": "wartarn nanta",
+    "english": "the finger",
+    "type": "body"
+  },
+  {
+    "gurindji": "wartarn ngamayi",
+    "english": "the thumb",
+    "type": "body"
+  },
+  {
+    "gurindji": "nungkuru",
+    "english": "the elbow",
+    "type": "body"
+  },
+  {
+    "gurindji": "tari",
+    "english": "the ankle",
+    "type": "body"
+  },
+  {
+    "gurindji": "luju",
+    "english": "the heel",
+    "type": "body"
+  },
+  {
+    "gurindji": "kurtpu",
+    "english": "the calf of the leg",
+    "type": "body"
+  },
+  {
+    "gurindji": "tingarri",
+    "english": "the knee",
+    "type": "body"
+  },
+  {
+    "gurindji": "pinkirr",
+    "english": "the wing / feather",
+    "type": "body"
+  },
+  {
+    "gurindji": "ngapurlu",
+    "english": "the breast / udder / milk",
+    "type": "body"
+  },
+  {
+    "gurindji": "timpi",
+    "english": "the nipple / teat / nut / seed",
+    "type": "body"
+  },
+  {
+    "gurindji": "jurlu",
+    "english": "the navel",
+    "type": "body"
+  },
+  {
+    "gurindji": "mangarli",
+    "english": "the heart",
+    "type": "body"
+  },
+  {
+    "gurindji": "yaya",
+    "english": "the lung",
+    "type": "body"
+  },
+  {
+    "gurindji": "warlapan",
+    "english": "the womb",
+    "type": "body"
+  },
+  {
+    "gurindji": "ngirlngirl",
+    "english": "the testicles",
+    "type": "body"
+  },
+  {
+    "gurindji": "lumpa",
+    "english": "the penis",
+    "type": "body"
+  },
+  {
+    "gurindji": "wakarra",
+    "english": "the vagina",
+    "type": "body"
+  },
+  {
+    "gurindji": "puju",
+    "english": "the vulva",
+    "type": "body"
+  },
+  {
+    "gurindji": "pirntiyi",
+    "english": "the rib",
+    "type": "body"
+  },
+  {
+    "gurindji": "ngarlaka",
+    "english": "the head / mountain or hill",
+    "type": "body"
+  },
+  {
+    "gurindji": "jangarnka",
+    "english": "the chin / beard",
+    "type": "body"
+  },
+  {
+    "gurindji": "ngayirrp ma-",
+    "english": "to breathe",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "jaakip ma-",
+    "english": "to yawn",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "ringakap ma-",
+    "english": "to hiccough",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "ngajirrp ma-",
+    "english": "to sneeze",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "jilngit ya-",
+    "english": "to perspire / sweat",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "jupak yuwa-",
+    "english": "to spit",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "paya-",
+    "english": "to bite",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "ngalyak paya-",
+    "english": "to lick",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "jawul walywalyarra karri-",
+    "english": "to dribble",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "makin karri-",
+    "english": "to sleep / to lie down",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "purrngip ma-",
+    "english": "to snore",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kuni ma-",
+    "english": "to dream",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "tuliny ya-",
+    "english": "to wake up",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "tirrirn ngaya-",
+    "english": "to fart",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kumpu ngaya-",
+    "english": "to urinate",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kura ngaya-",
+    "english": "to defecate",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "tarlarlap karri-",
+    "english": "to shiver",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "taruk wani-",
+    "english": "to bathe",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "paraj pu-",
+    "english": "to be born / to beget / to find",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "wanji",
+    "english": "to be alive / the life",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "yikarrp ma-",
+    "english": "to scratch",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "yalpuyalpu karri-",
+    "english": "healthy",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "rumpa",
+    "english": "the swelling",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "jalya",
+    "english": "the itch",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "kira",
+    "english": "the blister",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "puka",
+    "english": "the pus / rotten / stinking",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "paturu",
+    "english": "the scar",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "purrku",
+    "english": "tired",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "yawarra",
+    "english": "to rest",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "patawarn",
+    "english": "strong / hard",
+    "type": "symptom"
+  },
+  {
+    "gurindji": "tampang",
+    "english": "to die / dead",
+    "type": "disease"
+  },
+  {
+    "gurindji": "nyiny nga-",
+    "english": "to drown",
+    "type": "disease"
+  },
+  {
+    "gurindji": "tampang pa-",
+    "english": "to kill",
+    "type": "disease"
+  },
+  {
+    "gurindji": "linyjarr",
+    "english": "the corpse",
+    "type": "disease"
+  },
+  {
+    "gurindji": "nyangu-nyangu",
+    "english": "the physician / healer",
+    "type": "disease"
+  },
+  {
+    "gurindji": "mirrijin",
+    "english": "medicine",
+    "type": "disease"
+  },
+  {
+    "gurindji": "mawuya",
+    "english": "poison",
+    "type": "disease"
+  },
+  {
+    "gurindji": "papulwari",
+    "english": "bald",
+    "type": "disease"
+  },
+  {
+    "gurindji": "martilyi",
+    "english": "lame",
+    "type": "disease"
+  },
+  {
+    "gurindji": "wila",
+    "english": "deaf",
+    "type": "disease"
+  },
+  {
+    "gurindji": "marnumulung",
+    "english": "mute",
+    "type": "disease"
+  },
+  {
+    "gurindji": "ngawanginyi",
+    "english": "drunk",
+    "type": "disease"
+  },
+  {
+    "gurindji": "kulyurr",
+    "english": "the cold / illness",
+    "type": "disease"
+  },
+  {
+    "gurindji": "turrp",
+    "english": "injection",
+    "type": "disease"
+  },
+  {
+    "gurindji": "ngurra",
+    "english": "the land / camp / place / country",
+    "type": "nature"
+  },
+  {
+    "gurindji": "janja",
+    "english": "the soil",
+    "type": "nature"
+  },
+  {
+    "gurindji": "jurtu",
+    "english": "the dust",
+    "type": "nature"
+  },
+  {
+    "gurindji": "kurlwa",
+    "english": "the mud",
+    "type": "nature"
+  },
+  {
+    "gurindji": "warrayarl",
+    "english": "the sand",
+    "type": "nature"
+  },
+  {
+    "gurindji": "warranginy",
+    "english": "the cliff or precipice",
+    "type": "nature"
+  },
+  {
+    "gurindji": "palangarri",
+    "english": "the plain / coffee",
+    "type": "nature"
+  },
+  {
+    "gurindji": "talukurru",
+    "english": "the valley",
+    "type": "nature"
+  },
+  {
+    "gurindji": "lutju",
+    "english": "the island",
+    "type": "nature"
+  },
+  {
+    "gurindji": "pirntiwirti",
+    "english": "the shore",
+    "type": "nature"
+  },
+  {
+    "gurindji": "jarriny",
+    "english": "the cave",
+    "type": "nature"
+  },
+  {
+    "gurindji": "ngawa",
+    "english": "water / the drink",
+    "type": "nature"
+  },
+  {
+    "gurindji": "wangkuwala",
+    "english": "the sea",
+    "type": "nature"
+  },
+  {
+    "gurindji": "ngamarla",
+    "english": "the foam",
+    "type": "nature"
+  },
+  {
+    "gurindji": "langkana",
+    "english": "the lake",
+    "type": "nature"
+  },
+  {
+    "gurindji": "ngawirlangpirlang",
+    "english": "the wave",
+    "type": "nature"
+  },
+  {
+    "gurindji": "pinka",
+    "english": "the river or stream",
+    "type": "nature"
+  },
+  {
+    "gurindji": "winyji",
+    "english": "the spring or well",
+    "type": "nature"
+  },
+  {
+    "gurindji": "nangkurru",
+    "english": "the swamp",
+    "type": "nature"
+  },
+  {
+    "gurindji": "yanturri",
+    "english": "the waterfall",
+    "type": "nature"
+  },
+  {
+    "gurindji": "manyja",
+    "english": "the woods or forest",
+    "type": "nature"
+  },
+  {
+    "gurindji": "pakara",
+    "english": "the savanna / outside",
+    "type": "nature"
+  },
+  {
+    "gurindji": "wumara",
+    "english": "the stone or rock / money",
+    "type": "nature"
+  },
+  {
+    "gurindji": "kulumarra",
+    "english": "the sky",
+    "type": "nature"
+  },
+  {
+    "gurindji": "wurlngarn",
+    "english": "the sun / the day / the clock",
+    "type": "nature"
+  },
+  {
+    "gurindji": "janginyina",
+    "english": "the lightning / bolt of lightning",
+    "type": "nature"
+  },
+  {
+    "gurindji": "turlurlup",
+    "english": "the thunder",
+    "type": "nature"
+  },
+  {
+    "gurindji": "walawuru",
+    "english": "the storm",
+    "type": "nature"
+  },
+  {
+    "gurindji": "waji",
+    "english": "the rainbow",
+    "type": "nature"
+  },
+  {
+    "gurindji": "ngunti",
+    "english": "the light / flame / lamp / torch",
+    "type": "nature"
+  },
+  {
+    "gurindji": "mum",
+    "english": "darkness / dark",
+    "type": "nature"
+  },
+  {
+    "gurindji": "yarti",
+    "english": "the shade or shadow",
+    "type": "nature"
+  },
+  {
+    "gurindji": "karrngan",
+    "english": "the dew",
+    "type": "nature"
+  },
+  {
+    "gurindji": "wumaj",
+    "english": "the wind",
+    "type": "nature"
+  },
+  {
+    "gurindji": "maarn",
+    "english": "the cloud",
+    "type": "nature"
+  },
+  {
+    "gurindji": "kaparru",
+    "english": "the fog",
+    "type": "nature"
+  },
+  {
+    "gurindji": "murrupa",
+    "english": "the ice",
+    "type": "nature"
+  },
+  {
+    "gurindji": "warlu",
+    "english": "the fire / firewood",
+    "type": "nature"
+  },
+  {
+    "gurindji": "jungkart",
+    "english": "the smoke",
+    "type": "nature"
+  },
+  {
+    "gurindji": "ngapurung",
+    "english": "the steam",
+    "type": "nature"
+  },
+  {
+    "gurindji": "puna",
+    "english": "the ash",
+    "type": "nature"
+  },
+  {
+    "gurindji": "kunyini",
+    "english": "the embers / charcoal",
+    "type": "nature"
+  },
+  {
+    "gurindji": "mayawun",
+    "english": "wind",
+    "type": "nature"
+  },
+  {
+    "gurindji": "yipu",
+    "english": "rain / the spring (season)",
+    "type": "nature"
+  },
+  {
+    "gurindji": "jakiliny",
+    "english": "the moon / the month / the snail",
+    "type": "nature"
+  },
+  {
+    "gurindji": "kiki",
+    "english": "the star / ornament",
+    "type": "nature"
+  },
+  {
+    "gurindji": "kunturru",
+    "english": "the sky",
+    "type": "nature"
+  },
+  {
+    "gurindji": "parunga",
+    "english": "hot weather / the summer / the year",
+    "type": "nature"
+  },
+  {
+    "gurindji": "kalajawuny",
+    "english": "the winter",
+    "type": "nature"
+  },
+  {
+    "gurindji": "ngarin",
+    "english": "the animal / meat",
+    "type": "animal"
+  },
+  {
+    "gurindji": "puliki",
+    "english": "cattle / cow",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kaapikaapi",
+    "english": "the calf",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kartpiralang",
+    "english": "the sheep",
+    "type": "animal"
+  },
+  {
+    "gurindji": "pikipiki",
+    "english": "the pig",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kilpukut",
+    "english": "the goat",
+    "type": "animal"
+  },
+  {
+    "gurindji": "yawarta",
+    "english": "the horse",
+    "type": "animal"
+  },
+  {
+    "gurindji": "langajuwal",
+    "english": "the donkey",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kukkuk",
+    "english": "the chicken",
+    "type": "animal"
+  },
+  {
+    "gurindji": "jipilyuku",
+    "english": "the duck",
+    "type": "animal"
+  },
+  {
+    "gurindji": "juru",
+    "english": "the nest",
+    "type": "animal"
+  },
+  {
+    "gurindji": "jurlak",
+    "english": "the bird",
+    "type": "animal"
+  },
+  {
+    "gurindji": "jalwa",
+    "english": "the heron",
+    "type": "animal"
+  },
+  {
+    "gurindji": "warlawurru",
+    "english": "the eagle",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kalpun",
+    "english": "the hawk",
+    "type": "animal"
+  },
+  {
+    "gurindji": "parnkal",
+    "english": "the bat",
+    "type": "animal"
+  },
+  {
+    "gurindji": "warrpawurru",
+    "english": "the bat (another word)",
+    "type": "animal"
+  },
+  {
+    "gurindji": "pangarra",
+    "english": "the parrot / white cockatoo",
+    "type": "animal"
+  },
+  {
+    "gurindji": "ngarnalang",
+    "english": "the parrot",
+    "type": "animal"
+  },
+  {
+    "gurindji": "milnginymilnginy",
+    "english": "the parrot",
+    "type": "animal"
+  },
+  {
+    "gurindji": "wangkuriny",
+    "english": "the crow",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kuljara",
+    "english": "the dove",
+    "type": "animal"
+  },
+  {
+    "gurindji": "mukmuk",
+    "english": "the owl",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kuyarru",
+    "english": "the owl",
+    "type": "animal"
+  },
+  {
+    "gurindji": "purrkiji",
+    "english": "the cormorant",
+    "type": "animal"
+  },
+  {
+    "gurindji": "warlaku",
+    "english": "the dog",
+    "type": "animal"
+  },
+  {
+    "gurindji": "jangana",
+    "english": "the rabbit / opossum",
+    "type": "animal"
+  },
+  {
+    "gurindji": "minija",
+    "english": "the cat",
+    "type": "animal"
+  },
+  {
+    "gurindji": "puwuny",
+    "english": "the mouse or rat",
+    "type": "animal"
+  },
+  {
+    "gurindji": "murrunkirn",
+    "english": "the mouse or rat",
+    "type": "animal"
+  },
+  {
+    "gurindji": "yawu",
+    "english": "the fish",
+    "type": "animal"
+  },
+  {
+    "gurindji": "nyili",
+    "english": "the scale (fish)",
+    "type": "animal"
+  },
+  {
+    "gurindji": "parnngirri",
+    "english": "the shell",
+    "type": "animal"
+  },
+  {
+    "gurindji": "wutu",
+    "english": "the head louse",
+    "type": "animal"
+  },
+  {
+    "gurindji": "wawuyany",
+    "english": "the body louse",
+    "type": "animal"
+  },
+  {
+    "gurindji": "yingkuwarl",
+    "english": "the nit",
+    "type": "animal"
+  },
+  {
+    "gurindji": "lirrimi",
+    "english": "the centipede",
+    "type": "animal"
+  },
+  {
+    "gurindji": "muntarla",
+    "english": "the scorpion",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kumpirlang",
+    "english": "the cockroach",
+    "type": "animal"
+  },
+  {
+    "gurindji": "pingi",
+    "english": "the ant",
+    "type": "animal"
+  },
+  {
+    "gurindji": "tarru",
+    "english": "the spider",
+    "type": "animal"
+  },
+  {
+    "gurindji": "karrata",
+    "english": "the spider web",
+    "type": "animal"
+  },
+  {
+    "gurindji": "nama",
+    "english": "the bee",
+    "type": "animal"
+  },
+  {
+    "gurindji": "tarla",
+    "english": "the beeswax",
+    "type": "animal"
+  },
+  {
+    "gurindji": "ngarlu",
+    "english": "the beehive / honey",
+    "type": "animal"
+  },
+  {
+    "gurindji": "nganyanya",
+    "english": "the wasp",
+    "type": "animal"
+  },
+  {
+    "gurindji": "walngirn",
+    "english": "the fly",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kirnali",
+    "english": "the mosquito",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kanamarrurru",
+    "english": "the mosquito",
+    "type": "animal"
+  },
+  {
+    "gurindji": "jaalij",
+    "english": "prawns or shrimp",
+    "type": "animal"
+  },
+  {
+    "gurindji": "murnkurt",
+    "english": "the termites",
+    "type": "animal"
+  },
+  {
+    "gurindji": "mitirli",
+    "english": "the tick",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kuljany",
+    "english": "the snake",
+    "type": "animal"
+  },
+  {
+    "gurindji": "purntaru",
+    "english": "the quail",
+    "type": "animal"
+  },
+  {
+    "gurindji": "jiya",
+    "english": "the kangaroo",
+    "type": "animal"
+  },
+  {
+    "gurindji": "jungkuwurru",
+    "english": "the echidna / anteater",
+    "type": "animal"
+  },
+  {
+    "gurindji": "malimali",
+    "english": "the butterfly",
+    "type": "animal"
+  },
+  {
+    "gurindji": "pirlpirlji",
+    "english": "the grasshopper",
+    "type": "animal"
+  },
+  {
+    "gurindji": "ngalja",
+    "english": "the frog",
+    "type": "animal"
+  },
+  {
+    "gurindji": "lungkura",
+    "english": "the lizard",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kirrawa",
+    "english": "the goanna / lizard",
+    "type": "animal"
+  },
+  {
+    "gurindji": "warrija",
+    "english": "the crocodile or alligator",
+    "type": "animal"
+  },
+  {
+    "gurindji": "narrinyjila",
+    "english": "the turtle",
+    "type": "animal"
+  },
+  {
+    "gurindji": "wirnangpurru",
+    "english": "the grey kangaroo",
+    "type": "animal"
+  },
+  {
+    "gurindji": "yiparrartu",
+    "english": "the emu",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kumurlawurta",
+    "english": "the magpie",
+    "type": "animal"
+  },
+  {
+    "gurindji": "jurlaka",
+    "english": "the bird",
+    "type": "animal"
+  },
+  {
+    "gurindji": "wirnturruyawung",
+    "english": "the buffalo",
+    "type": "animal"
+  },
+  {
+    "gurindji": "ngurrakin",
+    "english": "the coyote",
+    "type": "animal"
+  },
+  {
+    "gurindji": "kampangayi",
+    "english": "the firefly",
+    "type": "animal"
+  },
+  {
+    "gurindji": "karnti",
+    "english": "the tree / wood / branch or stick",
+    "type": "plant"
+  },
+  {
+    "gurindji": "warampurr",
+    "english": "the vine",
+    "type": "plant"
+  },
+  {
+    "gurindji": "ngunyju",
+    "english": "the tobacco",
+    "type": "plant"
+  },
+  {
+    "gurindji": "marna",
+    "english": "the tree trunk",
+    "type": "plant"
+  },
+  {
+    "gurindji": "jarra",
+    "english": "the forked branch / thigh",
+    "type": "plant"
+  },
+  {
+    "gurindji": "parnnga",
+    "english": "the bark",
+    "type": "plant"
+  },
+  {
+    "gurindji": "tinung",
+    "english": "the sap",
+    "type": "plant"
+  },
+  {
+    "gurindji": "kajkuru",
+    "english": "the palm tree",
+    "type": "plant"
+  },
+  {
+    "gurindji": "kurlartarti",
+    "english": "the citrus fruit",
+    "type": "plant"
+  },
+  {
+    "gurindji": "panana",
+    "english": "the banana",
+    "type": "plant"
+  },
+  {
+    "gurindji": "pikurta",
+    "english": "the potato / sweet potato / yam",
+    "type": "plant"
+  },
+  {
+    "gurindji": "mangurlu",
+    "english": "the grain / millet or sorghum",
+    "type": "plant"
+  },
+  {
+    "gurindji": "rawurru",
+    "english": "the bamboo",
+    "type": "plant"
+  },
+  {
+    "gurindji": "manyingila",
+    "english": "the fish poison plant",
+    "type": "plant"
+  },
+  {
+    "gurindji": "jarnpirta",
+    "english": "the mushroom",
+    "type": "plant"
+  },
+  {
+    "gurindji": "yuka",
+    "english": "the grass",
+    "type": "plant"
+  },
+  {
+    "gurindji": "jalyi",
+    "english": "the branch / leaf",
+    "type": "plant"
+  },
+  {
+    "gurindji": "yirna",
+    "english": "the flower",
+    "type": "plant"
+  },
+  {
+    "gurindji": "jimpirr",
+    "english": "cane grass with nuts",
+    "type": "plant"
+  },
+  {
+    "gurindji": "jimulung",
+    "english": "boab / bottle tree",
+    "type": "plant"
+  },
+  {
+    "gurindji": "jimpiringarna",
+    "english": "bush tobacco",
+    "type": "plant"
+  },
+  {
+    "gurindji": "mangarri",
+    "english": "food / bread / flour / vegetables / fruit",
+    "type": "food"
+  },
+  {
+    "gurindji": "ngamayak",
+    "english": "the dough",
+    "type": "food"
+  },
+  {
+    "gurindji": "jarrarrwuluk",
+    "english": "the sausage",
+    "type": "food"
+  },
+  {
+    "gurindji": "yingalk",
+    "english": "the soup / petroleum",
+    "type": "food"
+  },
+  {
+    "gurindji": "wararr",
+    "english": "oil / grease or fat / butter",
+    "type": "food"
+  },
+  {
+    "gurindji": "karang",
+    "english": "salt",
+    "type": "food"
+  },
+  {
+    "gurindji": "pipa",
+    "english": "pepper",
+    "type": "food"
+  },
+  {
+    "gurindji": "warrayal",
+    "english": "sugar",
+    "type": "food"
+  },
+  {
+    "gurindji": "mirlarrang",
+    "english": "beer / spear",
+    "type": "food"
+  },
+  {
+    "gurindji": "kampij",
+    "english": "the egg",
+    "type": "food"
+  },
+  {
+    "gurindji": "karrikurn",
+    "english": "the yolk",
+    "type": "food"
+  },
+  {
+    "gurindji": "nalija",
+    "english": "tea",
+    "type": "food"
+  },
+  {
+    "gurindji": "nunykuwarra",
+    "english": "to be hungry",
+    "type": "food"
+  },
+  {
+    "gurindji": "kunyja",
+    "english": "sweet / candy / sweets",
+    "type": "food"
+  },
+  {
+    "gurindji": "lujkarra nga-",
+    "english": "to smoke (tobacco)",
+    "type": "food"
+  },
+  {
+    "gurindji": "jiwirri",
+    "english": "cooked / ripe",
+    "type": "food"
+  },
+  {
+    "gurindji": "kurnka",
+    "english": "raw / unripe",
+    "type": "food"
+  },
+  {
+    "gurindji": "japirri",
+    "english": "the knife",
+    "type": "object"
+  },
+  {
+    "gurindji": "wirlka",
+    "english": "the axe",
+    "type": "object"
+  },
+  {
+    "gurindji": "kurrupartu",
+    "english": "the boomerang",
+    "type": "object"
+  },
+  {
+    "gurindji": "kiyarri",
+    "english": "the digging stick / yamstick",
+    "type": "object"
+  },
+  {
+    "gurindji": "wananga",
+    "english": "the netbag",
+    "type": "object"
+  },
+  {
+    "gurindji": "jikurnu",
+    "english": "the mortar / whetstone",
+    "type": "object"
+  },
+  {
+    "gurindji": "marang",
+    "english": "the pestle",
+    "type": "object"
+  },
+  {
+    "gurindji": "muntiri",
+    "english": "the rope",
+    "type": "object"
+  },
+  {
+    "gurindji": "niil",
+    "english": "the needle",
+    "type": "object"
+  },
+  {
+    "gurindji": "warrpa",
+    "english": "the dress",
+    "type": "object"
+  },
+  {
+    "gurindji": "lunkurrngarna",
+    "english": "the coat / shirt",
+    "type": "object"
+  },
+  {
+    "gurindji": "jurrulungku",
+    "english": "the trousers",
+    "type": "object"
+  },
+  {
+    "gurindji": "murrkartu",
+    "english": "the hat or cap",
+    "type": "object"
+  },
+  {
+    "gurindji": "wirriji",
+    "english": "the belt",
+    "type": "object"
+  },
+  {
+    "gurindji": "nunpa",
+    "english": "the pocket / corner",
+    "type": "object"
+  },
+  {
+    "gurindji": "taman",
+    "english": "the bracelet",
+    "type": "object"
+  },
+  {
+    "gurindji": "tartij",
+    "english": "the headband / headdress",
+    "type": "object"
+  },
+  {
+    "gurindji": "purrjarn",
+    "english": "the brush",
+    "type": "object"
+  },
+  {
+    "gurindji": "nyumurli",
+    "english": "the soap",
+    "type": "object"
+  },
+  {
+    "gurindji": "kartak",
+    "english": "the pot / kettle / cup / tin / can",
+    "type": "object"
+  },
+  {
+    "gurindji": "pilayit",
+    "english": "the plate",
+    "type": "object"
+  },
+  {
+    "gurindji": "lurlupkarraaji",
+    "english": "the spoon",
+    "type": "object"
+  },
+  {
+    "gurindji": "kurrku",
+    "english": "the oven",
+    "type": "object"
+  },
+  {
+    "gurindji": "pang",
+    "english": "the bed",
+    "type": "object"
+  },
+  {
+    "gurindji": "tuwarrji",
+    "english": "the pillow",
+    "type": "object"
+  },
+  {
+    "gurindji": "palkin",
+    "english": "the blanket / to spread out",
+    "type": "object"
+  },
+  {
+    "gurindji": "lurluwaji",
+    "english": "the chair",
+    "type": "object"
+  },
+  {
+    "gurindji": "kantata",
+    "english": "the roof",
+    "type": "object"
+  },
+  {
+    "gurindji": "jawitiwiti",
+    "english": "the door or gate",
+    "type": "object"
+  },
+  {
+    "gurindji": "warluwaji",
+    "english": "the fireplace",
+    "type": "object"
+  },
+  {
+    "gurindji": "tankuj",
+    "english": "the ladder",
+    "type": "object"
+  },
+  {
+    "gurindji": "mirlimirli",
+    "english": "paper / book / letter",
+    "type": "object"
+  },
+  {
+    "gurindji": "tuturrpkaji",
+    "english": "the pen",
+    "type": "object"
+  },
+  {
+    "gurindji": "lajapkaji",
+    "english": "the bicycle",
+    "type": "object"
+  },
+  {
+    "gurindji": "kurririj",
+    "english": "the car",
+    "type": "object"
+  },
+  {
+    "gurindji": "turrkalangarna",
+    "english": "the train",
+    "type": "object"
+  },
+  {
+    "gurindji": "tiwuwaji",
+    "english": "the airplane",
+    "type": "object"
+  },
+  {
+    "gurindji": "kartiyi",
+    "english": "the boat",
+    "type": "object"
+  },
+  {
+    "gurindji": "wilmurr",
+    "english": "the telephone",
+    "type": "object"
+  },
+  {
+    "gurindji": "nanta",
+    "english": "the battery",
+    "type": "object"
+  },
+  {
+    "gurindji": "warlpkaji",
+    "english": "the toilet",
+    "type": "object"
+  },
+  {
+    "gurindji": "murlukurn",
+    "english": "glass / bottle",
+    "type": "object"
+  },
+  {
+    "gurindji": "yartiwaji",
+    "english": "the film / movie",
+    "type": "object"
+  },
+  {
+    "gurindji": "lujkarraaji",
+    "english": "the pipe / cigarette",
+    "type": "object"
+  },
+  {
+    "gurindji": "mirlirri",
+    "english": "the walking stick",
+    "type": "object"
+  },
+  {
+    "gurindji": "kirrim-kaji",
+    "english": "the match (fire)",
+    "type": "object"
+  },
+  {
+    "gurindji": "mirta",
+    "english": "the shield",
+    "type": "object"
+  },
+  {
+    "gurindji": "turlkkaji",
+    "english": "the gun",
+    "type": "object"
+  },
+  {
+    "gurindji": "jangurru",
+    "english": "the chisel",
+    "type": "object"
+  },
+  {
+    "gurindji": "larrkan",
+    "english": "the trap",
+    "type": "object"
+  },
+  {
+    "gurindji": "warni",
+    "english": "the fishnet",
+    "type": "object"
+  },
+  {
+    "gurindji": "puul",
+    "english": "the fish trap",
+    "type": "object"
+  },
+  {
+    "gurindji": "mirlirti",
+    "english": "the fishhook",
+    "type": "object"
+  },
+  {
+    "gurindji": "wuyurrurn",
+    "english": "the fishing line",
+    "type": "object"
+  },
+  {
+    "gurindji": "marru",
+    "english": "the house / village",
+    "type": "place"
+  },
+  {
+    "gurindji": "mangkaya",
+    "english": "the hut",
+    "type": "place"
+  },
+  {
+    "gurindji": "maralyi",
+    "english": "the men's house",
+    "type": "place"
+  },
+  {
+    "gurindji": "kurrmari",
+    "english": "the meeting house",
+    "type": "place"
+  },
+  {
+    "gurindji": "patik",
+    "english": "the field / pasture / fence",
+    "type": "place"
+  },
+  {
+    "gurindji": "warntarri",
+    "english": "the road / path / street",
+    "type": "place"
+  },
+  {
+    "gurindji": "tuwa",
+    "english": "the shop / store",
+    "type": "place"
+  },
+  {
+    "gurindji": "kankula",
+    "english": "up / the heaven",
+    "type": "place"
+  },
+  {
+    "gurindji": "kanyjal",
+    "english": "down / low",
+    "type": "place"
+  },
+  {
+    "gurindji": "walyak",
+    "english": "inside / to enter",
+    "type": "place"
+  },
+  {
+    "gurindji": "murlangka",
+    "english": "here",
+    "type": "place"
+  },
+  {
+    "gurindji": "yalangka",
+    "english": "there",
+    "type": "place"
+  },
+  {
+    "gurindji": "kamparri",
+    "english": "in front of",
+    "type": "place"
+  },
+  {
+    "gurindji": "kaninyjal",
+    "english": "under / the bottom",
+    "type": "place"
+  },
+  {
+    "gurindji": "kankulapal",
+    "english": "above",
+    "type": "place"
+  },
+  {
+    "gurindji": "pirnti",
+    "english": "beside / the edge / the side",
+    "type": "place"
+  },
+  {
+    "gurindji": "kamurra",
+    "english": "the middle",
+    "type": "place"
+  },
+  {
+    "gurindji": "karrawarra",
+    "english": "east",
+    "type": "place"
+  },
+  {
+    "gurindji": "karlarra",
+    "english": "west",
+    "type": "place"
+  },
+  {
+    "gurindji": "kayirra",
+    "english": "north",
+    "type": "place"
+  },
+  {
+    "gurindji": "kurlarra",
+    "english": "south",
+    "type": "place"
+  },
+  {
+    "gurindji": "kanyjurrawurt",
+    "english": "the native country",
+    "type": "place"
+  },
+  {
+    "gurindji": "jala",
+    "english": "today / now",
+    "type": "time"
+  },
+  {
+    "gurindji": "kaput",
+    "english": "tomorrow / the morning",
+    "type": "time"
+  },
+  {
+    "gurindji": "kaputkari",
+    "english": "the day after tomorrow",
+    "type": "time"
+  },
+  {
+    "gurindji": "puriny",
+    "english": "yesterday / the afternoon",
+    "type": "time"
+  },
+  {
+    "gurindji": "purinykari",
+    "english": "the day before yesterday",
+    "type": "time"
+  },
+  {
+    "gurindji": "kaputa",
+    "english": "the night",
+    "type": "time"
+  },
+  {
+    "gurindji": "rangkarr",
+    "english": "the dawn",
+    "type": "time"
+  },
+  {
+    "gurindji": "minyjarlk",
+    "english": "midday",
+    "type": "time"
+  },
+  {
+    "gurindji": "parntamarik",
+    "english": "the evening",
+    "type": "time"
+  },
+  {
+    "gurindji": "talymip",
+    "english": "the week / Sunday",
+    "type": "time"
+  },
+  {
+    "gurindji": "wajintayi",
+    "english": "Monday",
+    "type": "time"
+  },
+  {
+    "gurindji": "tirrip",
+    "english": "the day",
+    "type": "time"
+  },
+  {
+    "gurindji": "mayani",
+    "english": "the time",
+    "type": "time"
+  },
+  {
+    "gurindji": "jalayalang",
+    "english": "new",
+    "type": "time"
+  },
+  {
+    "gurindji": "kaputkaput",
+    "english": "early",
+    "type": "time"
+  },
+  {
+    "gurindji": "wajija",
+    "english": "immediately / fast",
+    "type": "time"
+  },
+  {
+    "gurindji": "yamak",
+    "english": "slow / quiet",
+    "type": "time"
+  },
+  {
+    "gurindji": "ngajikparni",
+    "english": "always",
+    "type": "time"
+  },
+  {
+    "gurindji": "kurtirni",
+    "english": "soon",
+    "type": "time"
+  },
+  {
+    "gurindji": "ngajik",
+    "english": "for a long time",
+    "type": "time"
+  },
+  {
+    "gurindji": "jujup",
+    "english": "the beginning",
+    "type": "time"
+  },
+  {
+    "gurindji": "jiti",
+    "english": "last",
+    "type": "time"
+  },
+  {
+    "gurindji": "jintaku",
+    "english": "one",
+    "type": "number"
+  },
+  {
+    "gurindji": "kujarra",
+    "english": "two",
+    "type": "number"
+  },
+  {
+    "gurindji": "murrkun",
+    "english": "three",
+    "type": "number"
+  },
+  {
+    "gurindji": "kujarra-kujarra",
+    "english": "four",
+    "type": "number"
+  },
+  {
+    "gurindji": "ngarra",
+    "english": "five",
+    "type": "number"
+  },
+  {
+    "gurindji": "purrp",
+    "english": "all",
+    "type": "number"
+  },
+  {
+    "gurindji": "jarrwa",
+    "english": "many",
+    "type": "number"
+  },
+  {
+    "gurindji": "murrkunpurru",
+    "english": "few",
+    "type": "number"
+  },
+  {
+    "gurindji": "marulu",
+    "english": "enough",
+    "type": "number"
+  },
+  {
+    "gurindji": "timpak",
+    "english": "full",
+    "type": "number"
+  },
+  {
+    "gurindji": "tangka",
+    "english": "empty",
+    "type": "number"
+  },
+  {
+    "gurindji": "kujarrawurt",
+    "english": "twice / two times",
+    "type": "number"
+  },
+  {
+    "gurindji": "murrkunkurt",
+    "english": "three times",
+    "type": "number"
+  },
+  {
+    "gurindji": "kujarrap",
+    "english": "the pair",
+    "type": "number"
+  },
+  {
+    "gurindji": "larrkunyja",
+    "english": "the crowd",
+    "type": "number"
+  },
+  {
+    "gurindji": "maya",
+    "english": "more",
+    "type": "number"
+  },
+  {
+    "gurindji": "waki",
+    "english": "white",
+    "type": "colour"
+  },
+  {
+    "gurindji": "mumpung",
+    "english": "black",
+    "type": "colour"
+  },
+  {
+    "gurindji": "winkilying",
+    "english": "red / colour",
+    "type": "colour"
+  },
+  {
+    "gurindji": "wurrkawurrkal",
+    "english": "blue / green",
+    "type": "colour"
+  },
+  {
+    "gurindji": "karrikurn-karrikurn",
+    "english": "yellow",
+    "type": "colour"
+  },
+  {
+    "gurindji": "marrunyu",
+    "english": "happy",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "yayip ma-",
+    "english": "to laugh",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "nginy karri-",
+    "english": "to smile",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "wajarra karri-",
+    "english": "to play",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "pulyap ma-",
+    "english": "to love",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "puny ma-",
+    "english": "to kiss",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "kawirirri ma-",
+    "english": "to embrace",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "ngurrulyp",
+    "english": "the pain",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "luyurr",
+    "english": "the grief",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "nguran",
+    "english": "the anxiety",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "juwurl ma-",
+    "english": "to regret / be sorry",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "lungkarra karri-",
+    "english": "to cry",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "mikara",
+    "english": "the tear",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "ngarlarrip ma-",
+    "english": "to groan",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "jirtart karri-",
+    "english": "to hate",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "kuli",
+    "english": "anger / quarrel",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "nguwajkarra",
+    "english": "envy or jealousy",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "minyirri",
+    "english": "shame",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "kumpurlakpurlak",
+    "english": "brave",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "wukarra",
+    "english": "fear",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "pirartnginyi",
+    "english": "surprised / astonished",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "mijal",
+    "english": "good luck",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "pujarl",
+    "english": "lazy",
+    "type": "emotion"
+  },
+  {
+    "gurindji": "punyu",
+    "english": "good",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "wankaj",
+    "english": "bad / sore feet",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "jalungurru",
+    "english": "beautiful",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kilypikilypi",
+    "english": "ugly",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "jangkarni",
+    "english": "big",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "yapawurru",
+    "english": "small / cheap",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "juwal",
+    "english": "long / tall",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "lutu",
+    "english": "short",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "payal",
+    "english": "wide",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kurrpu",
+    "english": "narrow",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "junyju",
+    "english": "thick",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "tinkal",
+    "english": "thin",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "tarlukurru",
+    "english": "deep",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kalja",
+    "english": "shallow",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "palki",
+    "english": "flat",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "jutu",
+    "english": "straight / right",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kirturlkpari",
+    "english": "crooked",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "ngaramalang",
+    "english": "high",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "pirtakpari",
+    "english": "round",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "jimpiri",
+    "english": "the hole",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kirlka",
+    "english": "clean",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "nyunal",
+    "english": "dirty",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "wanyjarrng",
+    "english": "wrinkled",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "pantij",
+    "english": "wet",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "pulwarr",
+    "english": "dry",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "tupurrng",
+    "english": "hot",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "tanyji",
+    "english": "warm",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kalypa",
+    "english": "soft",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "purtuwurtu",
+    "english": "rough",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kirinykiriny",
+    "english": "smooth",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kutukutu",
+    "english": "sharp",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "tapu",
+    "english": "blunt",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "rampali",
+    "english": "light (weight)",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "tarrpijipiji",
+    "english": "clever",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "pinarri",
+    "english": "wise",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "walnga",
+    "english": "stupid / mad",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "wijparlarra",
+    "english": "naked",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "ngalking",
+    "english": "greedy",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "yijarni",
+    "english": "true",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "muntapungu",
+    "english": "stingy",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "wumara jangkarni",
+    "english": "expensive",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kanung",
+    "english": "easy",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kulyarri",
+    "english": "young",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "ngapukarriny",
+    "english": "fragrant",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kirli",
+    "english": "ready",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "jilmungpari",
+    "english": "broken",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "ngapuk karri-",
+    "english": "to smell",
+    "type": "verb"
+  },
+  {
+    "gurindji": "ngapuk ma-",
+    "english": "to sniff",
+    "type": "verb"
+  },
+  {
+    "gurindji": "ngurluk",
+    "english": "to taste",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wiingki",
+    "english": "salty / brackish",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "jalingki",
+    "english": "bitter / sour",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "kurru nya-",
+    "english": "to hear / to listen",
+    "type": "verb"
+  },
+  {
+    "gurindji": "yilying",
+    "english": "the sound or noise",
+    "type": "noun"
+  },
+  {
+    "gurindji": "jirrimarna",
+    "english": "loud",
+    "type": "adjective"
+  },
+  {
+    "gurindji": "karrap nya-",
+    "english": "to see / to look",
+    "type": "verb"
+  },
+  {
+    "gurindji": "mirlinyinyip karri-",
+    "english": "to shine",
+    "type": "verb"
+  },
+  {
+    "gurindji": "pat ma-",
+    "english": "to touch",
+    "type": "verb"
+  },
+  {
+    "gurindji": "yintij ma-",
+    "english": "to pinch",
+    "type": "verb"
+  },
+  {
+    "gurindji": "patpat ma-",
+    "english": "to feel",
+    "type": "verb"
+  },
+  {
+    "gurindji": "ya-",
+    "english": "to go / to come",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kalu ya-",
+    "english": "to walk",
+    "type": "verb"
+  },
+  {
+    "gurindji": "rarraj ya-",
+    "english": "to run",
+    "type": "verb"
+  },
+  {
+    "gurindji": "tiwu ya-",
+    "english": "to fly",
+    "type": "verb"
+  },
+  {
+    "gurindji": "lilaj ya-",
+    "english": "to swim",
+    "type": "verb"
+  },
+  {
+    "gurindji": "mingip ya-",
+    "english": "to crawl",
+    "type": "verb"
+  },
+  {
+    "gurindji": "tipart wani-",
+    "english": "to jump",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kaya-",
+    "english": "to kick",
+    "type": "verb"
+  },
+  {
+    "gurindji": "warrkap wanyja-",
+    "english": "to dance",
+    "type": "verb"
+  },
+  {
+    "gurindji": "takujkarra ya-",
+    "english": "to limp",
+    "type": "verb"
+  },
+  {
+    "gurindji": "partaj ya-",
+    "english": "to climb / go up",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jawurruk ya-",
+    "english": "to go down",
+    "type": "verb"
+  },
+  {
+    "gurindji": "warl wanyja-",
+    "english": "to flee / retreat",
+    "type": "verb"
+  },
+  {
+    "gurindji": "tuwa ya-",
+    "english": "to arrive / to meet",
+    "type": "verb"
+  },
+  {
+    "gurindji": "walyak ya-",
+    "english": "to enter",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kayi pa-",
+    "english": "to follow / pursue",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wart ya-",
+    "english": "to come back",
+    "type": "verb"
+  },
+  {
+    "gurindji": "ka-",
+    "english": "to carry / bring / take / drive",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jayi-",
+    "english": "to give",
+    "type": "verb"
+  },
+  {
+    "gurindji": "warrkuj ma-",
+    "english": "to get / pick up",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jangkawu ma-",
+    "english": "to grasp",
+    "type": "verb"
+  },
+  {
+    "gurindji": "turt ma-",
+    "english": "to hold",
+    "type": "verb"
+  },
+  {
+    "gurindji": "pirrka ma-",
+    "english": "to make / build",
+    "type": "verb"
+  },
+  {
+    "gurindji": "pa-",
+    "english": "to strike / hit / beat",
+    "type": "verb"
+  },
+  {
+    "gurindji": "turrp pu-",
+    "english": "to stab",
+    "type": "verb"
+  },
+  {
+    "gurindji": "pakirr pa-",
+    "english": "to break",
+    "type": "verb"
+  },
+  {
+    "gurindji": "lak pa-",
+    "english": "to split",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jirrip pa-",
+    "english": "to tear",
+    "type": "verb"
+  },
+  {
+    "gurindji": "yurr ma-",
+    "english": "to rub",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kamang ma-",
+    "english": "to wipe / destroy",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wuyi ma-",
+    "english": "to stretch",
+    "type": "verb"
+  },
+  {
+    "gurindji": "yirr ma-",
+    "english": "to pull",
+    "type": "verb"
+  },
+  {
+    "gurindji": "talwirr yuwa-",
+    "english": "to hang up",
+    "type": "verb"
+  },
+  {
+    "gurindji": "july ma-",
+    "english": "to squeeze",
+    "type": "verb"
+  },
+  {
+    "gurindji": "julurl wuya-",
+    "english": "to pour",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wulyuk ma-",
+    "english": "to wash",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wirnarrk ma-",
+    "english": "to sweep / scrape",
+    "type": "verb"
+  },
+  {
+    "gurindji": "yinka-",
+    "english": "to carve",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wup pa-",
+    "english": "to fan",
+    "type": "verb"
+  },
+  {
+    "gurindji": "punip ma-",
+    "english": "to paint",
+    "type": "verb"
+  },
+  {
+    "gurindji": "yingin yuwa-",
+    "english": "to move",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wirrminy yuwa-",
+    "english": "to turn",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jak ma-",
+    "english": "to drop",
+    "type": "verb"
+  },
+  {
+    "gurindji": "waj wuya-",
+    "english": "to throw",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jap ma-",
+    "english": "to catch",
+    "type": "verb"
+  },
+  {
+    "gurindji": "warrayi ya-",
+    "english": "to flow",
+    "type": "verb"
+  },
+  {
+    "gurindji": "tarap wani-",
+    "english": "to sink",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wumpalp karri-",
+    "english": "to float",
+    "type": "verb"
+  },
+  {
+    "gurindji": "nyimurluk wa-",
+    "english": "to dive",
+    "type": "verb"
+  },
+  {
+    "gurindji": "tijkurlp pa-",
+    "english": "to splash",
+    "type": "verb"
+  },
+  {
+    "gurindji": "purriip marn-",
+    "english": "to blow",
+    "type": "verb"
+  },
+  {
+    "gurindji": "lut wani-",
+    "english": "to kneel",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jalurlk karri-",
+    "english": "to crouch",
+    "type": "verb"
+  },
+  {
+    "gurindji": "yarntaly wani-",
+    "english": "to slide or slip",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jujup ma-",
+    "english": "to begin",
+    "type": "verb"
+  },
+  {
+    "gurindji": "purrp ma-",
+    "english": "to finish",
+    "type": "verb"
+  },
+  {
+    "gurindji": "murr karri-",
+    "english": "to cease",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wajija ya-",
+    "english": "to hurry",
+    "type": "verb"
+  },
+  {
+    "gurindji": "lurlu karri-",
+    "english": "to sit",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kutij karri-",
+    "english": "to stand",
+    "type": "verb"
+  },
+  {
+    "gurindji": "karri-",
+    "english": "to remain / to be / to live",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kurlpap ma-",
+    "english": "to gather",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jurtat ma-",
+    "english": "to pile up",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jalarr yuwa-",
+    "english": "to join / hire",
+    "type": "verb"
+  },
+  {
+    "gurindji": "tirirt ma-",
+    "english": "to separate",
+    "type": "verb"
+  },
+  {
+    "gurindji": "warnparlk ma-",
+    "english": "to open",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jipurt ma-",
+    "english": "to shut",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jakarr ma-",
+    "english": "to cover",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wurlaj yuwa-",
+    "english": "to hide",
+    "type": "verb"
+  },
+  {
+    "gurindji": "tuma-",
+    "english": "to grow",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kampa-",
+    "english": "to cook / bake",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wupkarra kampa-",
+    "english": "to roast or fry",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jama-",
+    "english": "to crush or grind",
+    "type": "verb"
+  },
+  {
+    "gurindji": "mirlij pa-",
+    "english": "to peel / skin",
+    "type": "verb"
+  },
+  {
+    "gurindji": "parlak yuwa-",
+    "english": "to stir or mix",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jalajkarra ma-",
+    "english": "to knead",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wirriman yuwa-",
+    "english": "to put on (clothing)",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wamip pa-",
+    "english": "to spin (thread)",
+    "type": "verb"
+  },
+  {
+    "gurindji": "mintim ma-",
+    "english": "to sew",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wamip ma-",
+    "english": "to weave or plait",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kurrijkarra pu-",
+    "english": "to dig",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kirrim kampa-",
+    "english": "to light (fire)",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jipu(n) pa-",
+    "english": "to extinguish",
+    "type": "verb"
+  },
+  {
+    "gurindji": "purtuj kampa-",
+    "english": "to burn",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jiya-",
+    "english": "to burn (intrans.)",
+    "type": "verb"
+  },
+  {
+    "gurindji": "larlup ma-",
+    "english": "to draw water",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kirr ka-",
+    "english": "to think / remember",
+    "type": "verb"
+  },
+  {
+    "gurindji": "ngarrka ma-",
+    "english": "to understand",
+    "type": "verb"
+  },
+  {
+    "gurindji": "pina karri-",
+    "english": "to know",
+    "type": "verb"
+  },
+  {
+    "gurindji": "pinarrik karri-",
+    "english": "to learn",
+    "type": "verb"
+  },
+  {
+    "gurindji": "pinarrik ma-",
+    "english": "to teach",
+    "type": "verb"
+  },
+  {
+    "gurindji": "nyirn ma-",
+    "english": "to forget",
+    "type": "verb"
+  },
+  {
+    "gurindji": "marr ma-",
+    "english": "to imitate",
+    "type": "verb"
+  },
+  {
+    "gurindji": "majka",
+    "english": "to try",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wilngwilng ma-",
+    "english": "to want",
+    "type": "verb"
+  },
+  {
+    "gurindji": "ngatji ma-",
+    "english": "to choose",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wapurt karri-",
+    "english": "to forgive",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kuranykarra ma-",
+    "english": "to lie (deceive)",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jarrakap ma-",
+    "english": "to speak / talk",
+    "type": "verb"
+  },
+  {
+    "gurindji": "ma-",
+    "english": "to say",
+    "type": "verb"
+  },
+  {
+    "gurindji": "piyarrp ma-",
+    "english": "to tell / announce",
+    "type": "verb"
+  },
+  {
+    "gurindji": "yangki pa-",
+    "english": "to ask",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jangat pu-",
+    "english": "to answer",
+    "type": "verb"
+  },
+  {
+    "gurindji": "ngungung ma-",
+    "english": "to promise",
+    "type": "verb"
+  },
+  {
+    "gurindji": "mamam pa-",
+    "english": "to refuse / forbid",
+    "type": "verb"
+  },
+  {
+    "gurindji": "ju-",
+    "english": "to scold",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kaj yuwa-",
+    "english": "to call / invite",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jatajatajkarra yuwa-",
+    "english": "to write",
+    "type": "verb"
+  },
+  {
+    "gurindji": "riitim ma-",
+    "english": "to read",
+    "type": "verb"
+  },
+  {
+    "gurindji": "yunpa-",
+    "english": "to sing",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wayarrap ma-",
+    "english": "to shout",
+    "type": "verb"
+  },
+  {
+    "gurindji": "kiyakiyap ma-",
+    "english": "to whisper",
+    "type": "verb"
+  },
+  {
+    "gurindji": "nguyurrp ma-",
+    "english": "to mumble",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wuruny ma-",
+    "english": "to whistle",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wartayip karri-",
+    "english": "to shriek",
+    "type": "verb"
+  },
+  {
+    "gurindji": "muwup ma-",
+    "english": "to howl",
+    "type": "verb"
+  },
+  {
+    "gurindji": "muk karri-",
+    "english": "to be silent",
+    "type": "verb"
+  },
+  {
+    "gurindji": "nganany ma-",
+    "english": "to threaten",
+    "type": "verb"
+  },
+  {
+    "gurindji": "payim ma-",
+    "english": "to pay / buy",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jalim jayi-",
+    "english": "to sell",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wirnarn jayi-",
+    "english": "to trade or barter",
+    "type": "verb"
+  },
+  {
+    "gurindji": "wumara ma-",
+    "english": "to earn",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jarrmip karri-",
+    "english": "to share",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jangarra yuwa-",
+    "english": "to permit",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jart pa-",
+    "english": "to prevent",
+    "type": "verb"
+  },
+  {
+    "gurindji": "pun yuwa-",
+    "english": "to help",
+    "type": "verb"
+  },
+  {
+    "gurindji": "maj pa-",
+    "english": "to command or order",
+    "type": "verb"
+  },
+  {
+    "gurindji": "purrul yuwa-",
+    "english": "to let go / liberate",
+    "type": "verb"
+  },
+  {
+    "gurindji": "nyampayala",
+    "english": "the thing",
+    "type": "noun"
+  },
+  {
+    "gurindji": "karrwa-",
+    "english": "to have",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jipij yuwa-",
+    "english": "to bury",
+    "type": "verb"
+  },
+  {
+    "gurindji": "nakurr",
+    "english": "the grave",
+    "type": "noun"
+  },
+  {
+    "gurindji": "lunkurr",
+    "english": "the carcass",
+    "type": "noun"
+  },
+  {
+    "gurindji": "yumi",
+    "english": "custom / law",
+    "type": "noun"
+  },
+  {
+    "gurindji": "waringarri",
+    "english": "war / army / soldier / battle",
+    "type": "noun"
+  },
+  {
+    "gurindji": "yawaliwali",
+    "english": "peace",
+    "type": "noun"
+  },
+  {
+    "gurindji": "larrmij",
+    "english": "weapons",
+    "type": "noun"
+  },
+  {
+    "gurindji": "kuturu",
+    "english": "the club (weapon)",
+    "type": "noun"
+  },
+  {
+    "gurindji": "jangayi",
+    "english": "the sling (weapon)",
+    "type": "noun"
+  },
+  {
+    "gurindji": "yangkarrp ya-",
+    "english": "to hunt",
+    "type": "verb"
+  },
+  {
+    "gurindji": "turlkkarra pa-",
+    "english": "to shoot",
+    "type": "verb"
+  },
+  {
+    "gurindji": "purruly",
+    "english": "to miss (a shot)",
+    "type": "verb"
+  },
+  {
+    "gurindji": "nguru",
+    "english": "the bait",
+    "type": "noun"
+  },
+  {
+    "gurindji": "tumpalak",
+    "english": "the coin",
+    "type": "noun"
+  },
+  {
+    "gurindji": "ngampukuju",
+    "english": "the chieftain / guilty",
+    "type": "noun"
+  },
+  {
+    "gurindji": "panpiya",
+    "english": "the clan",
+    "type": "noun"
+  },
+  {
+    "gurindji": "karlpumarn",
+    "english": "the master",
+    "type": "noun"
+  },
+  {
+    "gurindji": "kapman",
+    "english": "the government",
+    "type": "noun"
+  },
+  {
+    "gurindji": "tirrkkaji",
+    "english": "the police",
+    "type": "noun"
+  },
+  {
+    "gurindji": "ngayiwa",
+    "english": "the soul or spirit",
+    "type": "noun"
+  },
+  {
+    "gurindji": "yarnayarnang",
+    "english": "magic",
+    "type": "noun"
+  },
+  {
+    "gurindji": "munpa",
+    "english": "sorcerer / witch",
+    "type": "noun"
+  },
+  {
+    "gurindji": "munga-munga",
+    "english": "fairy or elf",
+    "type": "noun"
+  },
+  {
+    "gurindji": "kaya",
+    "english": "the ghost",
+    "type": "noun"
+  },
+  {
+    "gurindji": "wuma",
+    "english": "the omen",
+    "type": "noun"
+  },
+  {
+    "gurindji": "marntiwa",
+    "english": "circumcision / initiation ceremony",
+    "type": "noun"
+  },
+  {
+    "gurindji": "tarruku",
+    "english": "holy",
+    "type": "noun"
+  },
+  {
+    "gurindji": "pampaya",
+    "english": "speech",
+    "type": "noun"
+  },
+  {
+    "gurindji": "jaru",
+    "english": "language / word / story",
+    "type": "noun"
+  },
+  {
+    "gurindji": "yini",
+    "english": "the name",
+    "type": "noun"
+  },
+  {
+    "gurindji": "junpa",
+    "english": "the song",
+    "type": "noun"
+  },
+  {
+    "gurindji": "waruk",
+    "english": "the work",
+    "type": "noun"
+  },
+  {
+    "gurindji": "pinak jayinguwaji",
+    "english": "the teacher",
+    "type": "noun"
+  },
+  {
+    "gurindji": "wuyurrurnkarraaji",
+    "english": "the fisherman",
+    "type": "noun"
+  },
+  {
+    "gurindji": "mintimkaji",
+    "english": "the tailor",
+    "type": "noun"
+  },
+  {
+    "gurindji": "tartajkarraaji",
+    "english": "the blacksmith",
+    "type": "noun"
+  },
+  {
+    "gurindji": "takman",
+    "english": "the herdsman",
+    "type": "noun"
+  },
+  {
+    "gurindji": "liwurrapkaji",
+    "english": "the beggar",
+    "type": "noun"
+  },
+  {
+    "gurindji": "jakarrwaji",
+    "english": "covering (blanket / nappy)",
+    "type": "noun"
+  },
+  {
+    "gurindji": "jakarrarraaji",
+    "english": "dust storm",
+    "type": "noun"
+  },
+  {
+    "gurindji": "jaalap",
+    "english": "to say goodbye / bid farewell",
+    "type": "verb"
+  },
+  {
+    "gurindji": "jaaj",
+    "english": "to beg / plead",
+    "type": "verb"
+  }
+]

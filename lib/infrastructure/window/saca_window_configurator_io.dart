@@ -1,0 +1,34 @@
+import 'dart:async';
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:window_manager/window_manager.dart';
+
+import '../../core/theme/saca_theme.dart';
+
+Future<void> configureSacaDesktopWindow() async {
+  if (defaultTargetPlatform != TargetPlatform.windows) return;
+
+  await windowManager.ensureInitialized();
+
+  const options = WindowOptions(
+    size: Size(1240, 780),
+    minimumSize: Size(760, 560),
+    center: true,
+    backgroundColor: SacaTheme.background,
+    skipTaskbar: false,
+    title: 'SACA',
+    titleBarStyle: TitleBarStyle.hidden,
+    windowButtonVisibility: false,
+  );
+
+  unawaited(
+    windowManager.waitUntilReadyToShow(options, () async {
+      await windowManager.setAsFrameless();
+      await windowManager.setResizable(true);
+      await windowManager.setHasShadow(true);
+      await windowManager.show();
+      await windowManager.focus();
+    }),
+  );
+}
