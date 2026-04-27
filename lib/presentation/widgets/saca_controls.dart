@@ -219,75 +219,112 @@ class SacaSeveritySlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clampedValue = value.clamp(1, 10);
+    const labelWidth = 74.0;
+    const sliderHorizontalPadding = 28.0;
 
     return Semantics(
       label: semanticLabel,
       value: '$clampedValue',
       increasedValue: '${(clampedValue + 1).clamp(1, 10)}',
       decreasedValue: '${(clampedValue - 1).clamp(1, 10)}',
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: SacaTheme.surface,
-          borderRadius: BorderRadius.circular(SacaTheme.radius),
-          border: Border.all(color: SacaTheme.border),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x1F000000),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 140),
-                child: Text(
-                  '$clampedValue',
-                  key: ValueKey<String>('severityValue-$clampedValue'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 56,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0,
-                    height: 1,
-                    color: SacaTheme.text,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF4F8),
-                  borderRadius: BorderRadius.circular(SacaTheme.radius),
-                ),
-                child: SizedBox(
-                  height: 54,
-                  child: CupertinoSlider(
-                    key: const ValueKey('severitySlider'),
-                    value: clampedValue.toDouble(),
-                    min: 1,
-                    max: 10,
-                    divisions: 9,
-                    activeColor: SacaTheme.selectedBorder,
-                    thumbColor: SacaTheme.text,
-                    onChanged: (nextValue) => onChanged(nextValue.round()),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: KeyedSubtree(
+        key: const ValueKey('severitySliderInlineControl'),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final availableWidth = constraints.maxWidth;
+            final trackWidth =
+                (availableWidth - sliderHorizontalPadding * 2).clamp(
+              1.0,
+              double.infinity,
+            );
+            final progress = (clampedValue - 1) / 9;
+            final thumbCenter = sliderHorizontalPadding + trackWidth * progress;
+            final labelLeft = (thumbCenter - labelWidth / 2).clamp(
+              0.0,
+              (availableWidth - labelWidth).clamp(0.0, double.infinity),
+            );
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(minLabel, style: SacaTheme.small),
-                  Text(maxLabel, style: SacaTheme.small),
+                  SizedBox(
+                    height: 116,
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: labelLeft,
+                          top: 0,
+                          width: labelWidth,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 140),
+                            child: Text(
+                              '$clampedValue',
+                              key: ValueKey<String>(
+                                'severityValue-$clampedValue',
+                              ),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 52,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0,
+                                height: 1,
+                                color: SacaTheme.text,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          left: sliderHorizontalPadding,
+                          right: sliderHorizontalPadding,
+                          top: 82,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE7F2F6),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: const SizedBox(height: 10),
+                          ),
+                        ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 58,
+                          child: SizedBox(
+                            height: 58,
+                            child: CupertinoSlider(
+                              key: const ValueKey('severitySlider'),
+                              value: clampedValue.toDouble(),
+                              min: 1,
+                              max: 10,
+                              divisions: 9,
+                              activeColor: SacaTheme.selectedBorder,
+                              thumbColor: SacaTheme.text,
+                              onChanged: (nextValue) =>
+                                  onChanged(nextValue.round()),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: sliderHorizontalPadding,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(minLabel, style: SacaTheme.small),
+                        Text(maxLabel, style: SacaTheme.small),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
