@@ -90,6 +90,8 @@ class SacaOptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasDescription = description?.trim().isNotEmpty ?? false;
+
     return CupertinoButton(
       minimumSize: const Size(0, SacaTheme.minTapTarget),
       padding: EdgeInsets.zero,
@@ -129,7 +131,7 @@ class SacaOptionButton extends StatelessWidget {
                           style: SacaTheme.body,
                           overflow: TextOverflow.visible,
                         ),
-                        if (description != null) ...[
+                        if (hasDescription) ...[
                           const SizedBox(height: 5),
                           Text(
                             description!,

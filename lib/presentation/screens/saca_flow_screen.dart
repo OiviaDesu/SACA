@@ -1389,18 +1389,22 @@ class _StepTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasSubtitle = subtitle.trim().isNotEmpty;
+
     return Column(
       crossAxisAlignment: align == TextAlign.left
           ? CrossAxisAlignment.start
           : CrossAxisAlignment.stretch,
       children: [
         Text(title, textAlign: align, style: SacaTheme.title),
-        const SizedBox(height: 8),
-        Text(
-          subtitle,
-          textAlign: align,
-          style: SacaTheme.body.copyWith(color: SacaTheme.mutedText),
-        ),
+        if (hasSubtitle) ...[
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            textAlign: align,
+            style: SacaTheme.body.copyWith(color: SacaTheme.mutedText),
+          ),
+        ],
       ],
     );
   }
