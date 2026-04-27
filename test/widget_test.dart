@@ -69,7 +69,7 @@ void main() {
     expect(find.byKey(const ValueKey('windowsCustomTitleBar')), findsOneWidget);
     expect(find.byKey(const ValueKey('windowsWindowControls')), findsOneWidget);
     expect(find.byKey(const ValueKey('windowsProgressRail')), findsOneWidget);
-    expect(find.text('Offline'), findsOneWidget);
+    expect(find.text('Offline ready'), findsOneWidget);
 
     await tester.tap(find.text('English'));
     await tester.pump();
@@ -95,10 +95,10 @@ void main() {
     await _reachInputMethod(tester);
 
     expect(controller.state.step, SacaStep.inputMethod);
-    expect(find.text('Choose input'), findsOneWidget);
-    expect(find.text('Text'), findsOneWidget);
-    expect(find.text('Voice'), findsOneWidget);
-    expect(find.text('Body'), findsOneWidget);
+    expect(find.text('How do you want to enter symptoms?'), findsOneWidget);
+    expect(find.text('Text input'), findsOneWidget);
+    expect(find.text('Voice input'), findsOneWidget);
+    expect(find.text('Visual selection'), findsOneWidget);
     expect(find.text('Symptom select'), findsNothing);
     expect(find.text('Body diagram'), findsNothing);
   });
@@ -109,7 +109,7 @@ void main() {
     await _pumpFlow(tester);
     await _reachInputMethod(tester);
 
-    await tester.tap(find.text('Text'));
+    await tester.tap(find.text('Text input'));
     await tester.pump();
     await tester.enterText(
       find.byKey(const ValueKey('symptomTextField')),
@@ -119,10 +119,10 @@ void main() {
     await _tapVisible(tester, find.text('Continue'));
     await _answerQuestionnaire(tester);
 
-    expect(find.text('Result'), findsOneWidget);
+    expect(find.text('Triage guidance'), findsOneWidget);
     expect(find.text('Influenza'), findsOneWidget);
-    expect(find.text('Level: Mild'), findsOneWidget);
-    expect(find.textContaining('Not a diagnosis'), findsOneWidget);
+    expect(find.text('Severity: Mild'), findsOneWidget);
+    expect(find.textContaining('does not replace a clinician'), findsOneWidget);
   });
 
   testWidgets('visual selection path supports symptom and body selection', (
@@ -131,7 +131,7 @@ void main() {
     final controller = await _pumpFlow(tester);
     await _reachInputMethod(tester);
 
-    await tester.tap(find.text('Body'));
+    await tester.tap(find.text('Visual selection'));
     await tester.pump();
     await tester.tap(find.text('Fever'));
     await tester.pump();
@@ -150,7 +150,7 @@ void main() {
     await _pumpFlow(tester);
     await _reachInputMethod(tester);
 
-    await tester.tap(find.text('Text'));
+    await tester.tap(find.text('Text input'));
     await tester.pump();
     await tester.enterText(
       find.byKey(const ValueKey('symptomTextField')),
@@ -176,7 +176,7 @@ void main() {
     await _pumpFlow(tester, style: SacaPlatformStyle.androidMobile);
     await _reachInputMethod(tester);
 
-    await tester.tap(find.text('Text'));
+    await tester.tap(find.text('Text input'));
     await tester.pump();
     await tester.enterText(
       find.byKey(const ValueKey('symptomTextField')),
@@ -195,7 +195,7 @@ void main() {
     await _pumpFlow(tester);
     await _reachInputMethod(tester);
 
-    await tester.tap(find.text('Text'));
+    await tester.tap(find.text('Text input'));
     await tester.pump();
     await tester.enterText(
       find.byKey(const ValueKey('symptomTextField')),
@@ -207,7 +207,7 @@ void main() {
 
     expect(find.text('Call 000 now'), findsOneWidget);
     expect(find.text('Urgent symptoms'), findsOneWidget);
-    expect(find.text('Level: Emergency'), findsOneWidget);
+    expect(find.text('Severity: Emergency'), findsOneWidget);
   });
 
   testWidgets('gurindji visual selection shows Gurindji clinical labels', (
@@ -220,7 +220,7 @@ void main() {
     );
     await _reachInputMethod(tester, language: 'Gurindji');
 
-    await tester.tap(find.text('Puya'));
+    await tester.tap(find.text('Puya nyawa'));
     await tester.pump();
 
     expect(find.text('makurrmakurr'), findsOneWidget);
@@ -258,7 +258,7 @@ void main() {
       related: 'ngirlkirri pung',
     );
 
-    expect(find.text('Jangany'), findsWidgets);
+    expect(find.text('Jangany nyawa'), findsOneWidget);
     expect(find.text('jangany'), findsOneWidget);
     expect(find.text('Jangany: Yamak'), findsOneWidget);
     expect(find.text('Triage guidance'), findsNothing);
@@ -275,10 +275,10 @@ void main() {
     await tester.pump();
 
     expect(
-      find.textContaining('Ngayirrp mayi'),
+      find.textContaining('Gurindji ngayirrp mayi'),
       findsOneWidget,
     );
-    expect(find.text('Voice'), findsNothing);
+    expect(find.text('Voice input'), findsNothing);
   });
 
   testWidgets('gurindji emergency result uses Gurindji copy and keeps 000', (

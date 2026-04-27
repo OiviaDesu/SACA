@@ -21,12 +21,14 @@ void main() {
   });
 
   test('returns English UI strings in English mode', () {
-    expect(localizer.t(SacaLanguage.english, 'inputTitle'), 'Choose input');
+    expect(localizer.t(SacaLanguage.english, 'inputTitle'),
+        'How do you want to enter symptoms?');
     expect(localizer.t(SacaLanguage.english, 'continue'), 'Continue');
   });
 
   test('returns Gurindji UI strings in Gurindji mode', () {
-    expect(localizer.t(SacaLanguage.gurindji, 'inputTitle'), 'Nyawa');
+    expect(localizer.t(SacaLanguage.gurindji, 'inputTitle'),
+        'Nyatpa jangany nyawa?');
     expect(localizer.t(SacaLanguage.gurindji, 'continue'), 'Kawayi');
   });
 
