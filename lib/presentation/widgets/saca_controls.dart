@@ -200,6 +200,100 @@ class SacaChipButton extends StatelessWidget {
   }
 }
 
+class SacaSeveritySlider extends StatelessWidget {
+  const SacaSeveritySlider({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    required this.semanticLabel,
+    this.minLabel = '1',
+    this.maxLabel = '10',
+  });
+
+  final int value;
+  final ValueChanged<int> onChanged;
+  final String semanticLabel;
+  final String minLabel;
+  final String maxLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final clampedValue = value.clamp(1, 10);
+
+    return Semantics(
+      label: semanticLabel,
+      value: '$clampedValue',
+      increasedValue: '${(clampedValue + 1).clamp(1, 10)}',
+      decreasedValue: '${(clampedValue - 1).clamp(1, 10)}',
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: SacaTheme.surface,
+          borderRadius: BorderRadius.circular(SacaTheme.radius),
+          border: Border.all(color: SacaTheme.border),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1F000000),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 140),
+                child: Text(
+                  '$clampedValue',
+                  key: ValueKey<String>('severityValue-$clampedValue'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 56,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0,
+                    height: 1,
+                    color: SacaTheme.text,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF4F8),
+                  borderRadius: BorderRadius.circular(SacaTheme.radius),
+                ),
+                child: SizedBox(
+                  height: 54,
+                  child: CupertinoSlider(
+                    key: const ValueKey('severitySlider'),
+                    value: clampedValue.toDouble(),
+                    min: 1,
+                    max: 10,
+                    divisions: 9,
+                    activeColor: SacaTheme.selectedBorder,
+                    thumbColor: SacaTheme.text,
+                    onChanged: (nextValue) => onChanged(nextValue.round()),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(minLabel, style: SacaTheme.small),
+                  Text(maxLabel, style: SacaTheme.small),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class SacaErrorBanner extends StatelessWidget {
   const SacaErrorBanner({super.key, required this.message});
 

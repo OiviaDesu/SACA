@@ -383,17 +383,38 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
     SacaFlowState state,
     SacaPlatformStyle style,
   ) {
-    return _singleChoiceQuestion(
+    final severity = int.tryParse(state.questionAnswers['severity'] ?? '')
+            ?.clamp(1, 10)
+            .toInt() ??
+        5;
+
+    return _wrapStep(
       state: state,
       style: style,
-      title: _localizer.t(state.language, 'severityTitle'),
-      subtitle: _localizer.t(state.language, 'severitySubtitle'),
-      questionId: 'severity',
-      choices: [
-        for (var value = 1; value <= 10; value++) _Choice('$value', '$value'),
+      children: [
+        _title(
+          style,
+          _localizer.t(state.language, 'severityTitle'),
+          _localizer.t(state.language, 'severitySubtitle'),
+        ),
+        const SizedBox(height: 18),
+        SacaSeveritySlider(
+          value: severity,
+          semanticLabel: _localizer.t(state.language, 'severityTitle'),
+          onChanged: (value) =>
+              _controller.answerQuestion('severity', value.toString()),
+        ),
+        const SizedBox(height: 24),
+        SacaPrimaryButton(
+          label: _localizer.t(state.language, 'continue'),
+          icon: CupertinoIcons.arrow_right_circle,
+          filled: true,
+          onPressed: () {
+            _controller.answerQuestion('severity', severity.toString());
+            _controller.nextQuestion();
+          },
+        ),
       ],
-      nextLabel: _localizer.t(state.language, 'continue'),
-      onNext: _controller.nextQuestion,
     );
   }
 

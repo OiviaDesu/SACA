@@ -144,6 +144,25 @@ void main() {
     expect(controller.state.step, SacaStep.questionSeverity);
   });
 
+  testWidgets('severity question uses a large default slider value', (
+    tester,
+  ) async {
+    await _pumpFlow(tester);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Text input'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'fever',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Continue'));
+
+    expect(find.byKey(const ValueKey('severitySlider')), findsOneWidget);
+    expect(find.byKey(const ValueKey('severityValue-5')), findsOneWidget);
+  });
+
   testWidgets('red flag text shows emergency advice', (tester) async {
     await _pumpFlow(tester);
     await _reachInputMethod(tester);
@@ -311,7 +330,7 @@ Future<void> _answerQuestionnaire(
   final noAllergyLabel = gurindji ? 'Karrwarn' : 'No known allergies';
   final analyseLabel = gurindji ? 'Nyawa' : 'Analyse';
 
-  await _tapVisible(tester, find.text(severity));
+  await _setSeveritySlider(tester, int.parse(severity));
   await _tapVisible(tester, find.text(continueLabel));
   await _tapVisible(tester, find.text(durationLabel));
   await _tapVisible(tester, find.text(continueLabel));
@@ -326,6 +345,22 @@ Future<void> _answerQuestionnaire(
   await _tapVisible(tester, find.text(noChangeLabel));
   await _tapVisible(tester, find.text(analyseLabel));
   await tester.pump(const Duration(milliseconds: 500));
+}
+
+Future<void> _setSeveritySlider(WidgetTester tester, int severity) async {
+  final slider = find.byKey(const ValueKey('severitySlider'));
+  await tester.ensureVisible(slider);
+  await tester.pump();
+
+  final current = tester.widget<CupertinoSlider>(slider).value;
+  final rect = tester.getRect(slider);
+  final clampedSeverity = severity.clamp(1, 10);
+  final dx = ((clampedSeverity - current) / 9) * (rect.width - 56);
+
+  if (dx.abs() > 0.1) {
+    await tester.drag(slider, Offset(dx, 0));
+    await tester.pump();
+  }
 }
 
 Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
