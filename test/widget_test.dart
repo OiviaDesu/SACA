@@ -160,7 +160,35 @@ void main() {
     await _tapVisible(tester, find.text('Continue'));
 
     expect(find.byKey(const ValueKey('severitySlider')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('severitySliderInlineControl')),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('severityValue-5')), findsOneWidget);
+  });
+
+  testWidgets('severity slider fits narrow mobile layout', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpFlow(tester, style: SacaPlatformStyle.androidMobile);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Text input'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'fever',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Continue'));
+
+    expect(find.byKey(const ValueKey('severitySlider')), findsOneWidget);
+    expect(find.byKey(const ValueKey('severityValue-5')), findsOneWidget);
+    await _setSeveritySlider(tester, 9);
+    expect(find.byKey(const ValueKey('severityValue-9')), findsOneWidget);
   });
 
   testWidgets('red flag text shows emergency advice', (tester) async {
