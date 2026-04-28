@@ -457,8 +457,8 @@ class ClinicalVocabularyService {
 class _LexiconIndex {
   _LexiconIndex(List<LexiconEntry> entries) {
     for (final entry in entries) {
-      _entriesByGurindji['${entry.type}:${_normalizePhrase(entry.gurindji)}'] ??=
-          entry;
+      _entriesByGurindji[
+          '${entry.type}:${_normalizePhrase(entry.gurindji)}'] ??= entry;
       for (final variant in _englishVariants(entry.english)) {
         _entriesByLookup['${entry.type}:$variant'] ??= entry;
       }
@@ -466,8 +466,7 @@ class _LexiconIndex {
   }
 
   final Map<String, LexiconEntry> _entriesByLookup = <String, LexiconEntry>{};
-  final Map<String, LexiconEntry> _entriesByGurindji =
-      <String, LexiconEntry>{};
+  final Map<String, LexiconEntry> _entriesByGurindji = <String, LexiconEntry>{};
 
   LexiconEntry? find({required String type, required String english}) {
     return _entriesByLookup['$type:${_normalizePhrase(english)}'];
