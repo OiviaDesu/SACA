@@ -147,5 +147,6 @@ recognition on Windows still requires local model files.
 ## More Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Gurindji NLP and dataset strategy](docs/GURINDJI_NLP.md)
 - [Model assets](docs/MODEL_ASSETS.md)
 - [Contributing](CONTRIBUTING.md)
