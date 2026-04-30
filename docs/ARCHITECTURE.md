@@ -50,10 +50,11 @@ User input (text / voice / visual)
 - Android / iOS:
   - backend: `whisper_kit`
   - default language code for transcription requests: `en`
+  - English mode prefers an optional local `ggml-base.en.bin` bundle; otherwise falls back to multilingual `small`
   - Gurindji mode attempts local custom model path; otherwise falls back to standard small model
 - Windows:
   - backend: `sherpa_onnx` (`OfflineRecognizer`)
-  - required assets copied at runtime from `assets/models/sherpa-onnx-whisper-base/`
+  - prefers optional English-only ONNX assets when available; otherwise uses `assets/models/sherpa-onnx-whisper-base/`
 - Web:
   - `whisper_service_stub.dart` with `supportsOnDeviceStt == false`
 

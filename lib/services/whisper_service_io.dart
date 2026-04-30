@@ -1,7 +1,7 @@
 // WhisperService – platform service for on-device STT.
 //
-// - Windows: sherpa_onnx + bundled whisper-base ONNX model
-// - Android/iOS: whisper_kit
+// - Windows: sherpa_onnx + bundled Whisper ONNX model
+// - Android/iOS: whisper_kit with optional bundled English-only base.en asset
 
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -39,6 +39,17 @@ class WhisperService {
   bool get _isSherpaWindowsPlatform => Platform.isWindows;
   bool get supportsOnDeviceStt =>
       _isWhisperKitPlatform || _isSherpaWindowsPlatform;
+
+  static const _defaultWindowsBundle = _WhisperAssetBundle(
+    assetBase: 'assets/models/sherpa-onnx-whisper-base',
+    supportDirName: 'sherpa-onnx-whisper-base',
+    label: 'whisper-base',
+  );
+  static const _englishWindowsBundle = _WhisperAssetBundle(
+    assetBase: 'assets/models/sherpa-onnx-whisper-base-en',
+    supportDirName: 'sherpa-onnx-whisper-base-en',
+    label: 'whisper-base.en',
+  );
 
   /// Call once at app start to initialize the platform STT runtime.
   Future<void> init({SacaLanguage language = SacaLanguage.english}) async {
@@ -87,7 +98,22 @@ class WhisperService {
       return;
     }
 
-    // Phase 1: standard whisper-small (multilingual)
+    final englishModelDir = await _prepareBundledEnglishMobileModel();
+    if (englishModelDir != null) {
+      debugPrint(
+        '[SACA] Mobile English STT: using bundled ggml-base.en.bin via WhisperModel.base alias.',
+      );
+      _whisper = Whisper(
+        model: WhisperModel.base,
+        modelDir: englishModelDir.path,
+      );
+      return;
+    }
+
+    // Current whisper_kit runtime does not expose .en model enums.
+    debugPrint(
+      '[SACA] Mobile English STT: no bundled .en model found and whisper_kit 0.3.0 has no .en enum; falling back to multilingual whisper-small.',
+    );
     _whisper = Whisper(
       model: WhisperModel.small,
       onDownloadProgress: (received, total) {
@@ -102,7 +128,8 @@ class WhisperService {
 
   Future<void> _initWindowsRecognizer() async {
     _ensureSherpaBindingsInitialized();
-    final modelDir = await _ensureWindowsModelFiles();
+    final bundle = await _resolveWindowsBundle();
+    final modelDir = await _ensureWindowsModelFiles(bundle);
     final sep = Platform.pathSeparator;
 
     final modelConfig = sherpa.OfflineModelConfig(
@@ -124,7 +151,7 @@ class WhisperService {
     _disposeWindowsRecognizer();
     _windowsRecognizer = sherpa.OfflineRecognizer(config);
 
-    debugPrint('[SACA] Windows whisper-base loaded from ${modelDir.path}');
+    debugPrint('[SACA] Windows ${bundle.label} loaded from ${modelDir.path}');
   }
 
   void _ensureSherpaBindingsInitialized() {
@@ -133,14 +160,81 @@ class WhisperService {
     _sherpaBindingsInitialized = true;
   }
 
-  Future<Directory> _ensureWindowsModelFiles() async {
-    const assetBase = 'assets/models/sherpa-onnx-whisper-base';
+  Future<Directory?> _prepareBundledEnglishMobileModel() async {
+    if (_language != SacaLanguage.english || !_isWhisperKitPlatform) {
+      return null;
+    }
+
+    const assetPath = 'assets/models/whisper-base.en/ggml-base.en.bin';
+    final hasBundledEnglishModel = await _assetExists(assetPath);
+    if (!hasBundledEnglishModel) {
+      return null;
+    }
+
+    final modelDir = await _getWhisperKitModelDirectory();
+    final targetFile = File('${modelDir.path}/ggml-base.bin');
+
+    if (await targetFile.exists()) {
+      return modelDir;
+    }
+
+    try {
+      final data = await rootBundle.load(assetPath);
+      final bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      await targetFile.writeAsBytes(bytes, flush: true);
+      return modelDir;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Directory> _getWhisperKitModelDirectory() async {
+    if (Platform.isAndroid) {
+      return getApplicationSupportDirectory();
+    }
+    return getLibraryDirectory();
+  }
+
+  Future<_WhisperAssetBundle> _resolveWindowsBundle() async {
+    if (_language != SacaLanguage.english) {
+      return _defaultWindowsBundle;
+    }
+
+    final hasEnglishBundle = await _assetExists(
+      '${_englishWindowsBundle.assetBase}/encoder.onnx',
+    );
+    if (hasEnglishBundle) {
+      debugPrint(
+        '[SACA] Windows English STT: using bundled ${_englishWindowsBundle.label}.',
+      );
+      return _englishWindowsBundle;
+    }
+
+    debugPrint(
+      '[SACA] Windows English STT: no English-only ONNX bundle found; using ${_defaultWindowsBundle.label}.',
+    );
+    return _defaultWindowsBundle;
+  }
+
+  Future<bool> _assetExists(String assetPath) async {
+    try {
+      await rootBundle.load(assetPath);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<Directory> _ensureWindowsModelFiles(_WhisperAssetBundle bundle) async {
     const requiredFiles = ['encoder.onnx', 'decoder.onnx', 'tokens.txt'];
 
     final supportDir = await getApplicationSupportDirectory();
     final sep = Platform.pathSeparator;
     final targetDir =
-        Directory('${supportDir.path}${sep}sherpa-onnx-whisper-base');
+        Directory('${supportDir.path}$sep${bundle.supportDirName}');
 
     if (!await targetDir.exists()) {
       await targetDir.create(recursive: true);
@@ -150,7 +244,7 @@ class WhisperService {
       final targetFile = File('${targetDir.path}$sep$fileName');
       if (await targetFile.exists()) continue;
 
-      final assetPath = '$assetBase/$fileName';
+      final assetPath = '${bundle.assetBase}/$fileName';
       try {
         final data = await rootBundle.load(assetPath);
         final bytes = data.buffer.asUint8List(
@@ -161,7 +255,7 @@ class WhisperService {
       } catch (e) {
         throw Exception(
           'Missing model asset: $assetPath.\n'
-          'Please extract sherpa-onnx-whisper-base under assets/models/sherpa-onnx-whisper-base/.\n'
+          'Please place the required model files under ${bundle.assetBase}/.\n'
           'Original error: $e',
         );
       }
@@ -337,4 +431,16 @@ class WhisperService {
     _windowsRecognizer?.free();
     _windowsRecognizer = null;
   }
+}
+
+class _WhisperAssetBundle {
+  const _WhisperAssetBundle({
+    required this.assetBase,
+    required this.supportDirName,
+    required this.label,
+  });
+
+  final String assetBase;
+  final String supportDirName;
+  final String label;
 }

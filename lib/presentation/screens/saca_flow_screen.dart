@@ -12,6 +12,8 @@ import '../widgets/desktop_window_chrome.dart';
 import '../widgets/saca_controls.dart';
 import '../widgets/saca_logo_header.dart';
 
+enum _VisualInputStage { symptoms, front, back }
+
 class SacaFlowScreen extends StatefulWidget {
   const SacaFlowScreen({
     super.key,
@@ -31,6 +33,7 @@ class SacaFlowScreen extends StatefulWidget {
 class _SacaFlowScreenState extends State<SacaFlowScreen> {
   late final SacaFlowController _controller;
   late final SacaLocalizer _localizer;
+  _VisualInputStage _visualStage = _VisualInputStage.symptoms;
 
   @override
   void initState() {
@@ -54,35 +57,78 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       backgroundColor: SacaTheme.background,
-      child: SafeArea(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            final state = _controller.state;
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                final style = widget.styleOverride ??
-                    SacaPlatformStyleResolver.resolve(
-                      platform: defaultTargetPlatform,
-                      width: constraints.maxWidth,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const _ShellBackdrop(),
+          SafeArea(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) {
+                final state = _controller.state;
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final style = widget.styleOverride ??
+                        SacaPlatformStyleResolver.resolve(
+                          platform: defaultTargetPlatform,
+                          width: constraints.maxWidth,
+                        );
+                    final content = AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 240),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        final slide = Tween<Offset>(
+                          begin: const Offset(0, 0.04),
+                          end: Offset.zero,
+                        ).animate(animation);
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(position: slide, child: child),
+                        );
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey<String>(
+                          '${state.step.name}-${_visualStage.name}',
+                        ),
+                        child: _contentFor(context, state, style),
+                      ),
                     );
-                final content = _contentFor(context, state, style);
+                    final shellChild = style == SacaPlatformStyle.windowsDesktop
+                        ? _DesktopShell(
+                            state: state,
+                            localizer: _localizer,
+                            onBack: _canGoBack(state.step)
+                                ? _controller.goBack
+                                : null,
+                            onInfo: () => _showPrototypeInfo(context),
+                            child: content,
+                          )
+                        : _MobileShell(child: content);
 
-                if (style == SacaPlatformStyle.windowsDesktop) {
-                  return _DesktopShell(
-                    state: state,
-                    localizer: _localizer,
-                    onBack: _canGoBack(state.step) ? _controller.goBack : null,
-                    onInfo: () => _showPrototypeInfo(context),
-                    child: content,
-                  );
-                }
-
-                return _MobileShell(child: content);
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        shellChild,
+                        _VoiceLoadingOverlay(
+                          visible: state.voiceBusyPhase != VoiceBusyPhase.none,
+                          title: _localizer.voiceBusyTitle(
+                            state.language,
+                            state.voiceBusyPhase,
+                          ),
+                          subtitle: _localizer.voiceBusySubtitle(
+                            state.language,
+                            state.voiceBusyPhase,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
               },
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -197,12 +243,13 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
           description:
               _localizer.t(state.language, 'visualSelectionDescription'),
           icon: CupertinoIcons.person_crop_circle,
-          onPressed: () => _controller.chooseInputMethod(InputMethod.visual),
+          onPressed: () {
+            setState(() {
+              _visualStage = _VisualInputStage.symptoms;
+            });
+            _controller.chooseInputMethod(InputMethod.visual);
+          },
         ),
-        if (state.isBusy) ...[
-          const SizedBox(height: 18),
-          const CupertinoActivityIndicator(),
-        ],
       ],
     );
   }
@@ -240,10 +287,6 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                       : _controller.startRecording();
                 },
         ),
-        if (state.isBusy) ...[
-          const SizedBox(height: 14),
-          const CupertinoActivityIndicator(),
-        ],
         const SizedBox(height: 18),
         _SacaTextField(
           key: const ValueKey('voiceTranscriptField'),
@@ -311,7 +354,7 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
     SacaFlowState state,
     SacaPlatformStyle style,
   ) {
-    final canContinue = state.selectedSymptomIds.isNotEmpty ||
+    final hasSelection = state.selectedSymptomIds.isNotEmpty ||
         state.selectedBodyAreaIds.isNotEmpty;
     final selectedLabels = [
       ...SacaFlowState.symptoms
@@ -328,54 +371,177 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
               )),
     ];
 
-    return _wrapStep(
-      style: style,
-      state: state,
-      children: [
-        _title(
-          style,
-          _localizer.t(state.language, 'visualTitle'),
-          _localizer.t(state.language, 'visualSubtitle'),
-        ),
-        const SizedBox(height: 14),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
+    return switch (_visualStage) {
+      _VisualInputStage.symptoms => _wrapStep(
+          style: style,
+          state: state,
           children: [
-            for (final symptom in SacaFlowState.symptoms)
-              SacaChipButton(
-                label: _localizer.symptomLabel(state.language, symptom),
-                selected: state.selectedSymptomIds.contains(symptom.id),
-                onPressed: () => _controller.toggleSymptom(symptom.id),
-              ),
+            _visualStageHeader(
+              language: state.language,
+              current: _VisualInputStage.symptoms,
+            ),
+            _title(
+              style,
+              _localizer.t(state.language, 'visualSymptomsTitle'),
+              _localizer.t(state.language, 'visualSymptomsSubtitle'),
+            ),
+            const SizedBox(height: 18),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final symptom in SacaFlowState.symptoms)
+                  SacaChipButton(
+                    label: _localizer.symptomLabel(state.language, symptom),
+                    selected: state.selectedSymptomIds.contains(symptom.id),
+                    onPressed: () => _controller.toggleSymptom(symptom.id),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            _SelectedSummary(
+              title: _localizer.t(state.language, 'selected'),
+              emptyText: _localizer.t(state.language, 'selectedEmpty'),
+              values: selectedLabels,
+            ),
+            const SizedBox(height: 22),
+            SacaPrimaryButton(
+              key: const ValueKey('visualSymptomsContinueButton'),
+              label: _localizer.t(state.language, 'continue'),
+              icon: CupertinoIcons.arrow_right_circle,
+              filled: true,
+              onPressed: () {
+                setState(() {
+                  _visualStage = _VisualInputStage.front;
+                });
+              },
+            ),
           ],
         ),
-        const SizedBox(height: 18),
-        _BodyDiagramPair(
-          selectedIds: state.selectedBodyAreaIds,
-          onToggle: _controller.toggleBodyArea,
-          labelForArea: (area) => _localizer.bodyAreaLabel(
-            state.language,
-            area,
-          ),
-          semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
-          desktop: style == SacaPlatformStyle.windowsDesktop,
+      _VisualInputStage.front => _wrapStep(
+          style: style,
+          state: state,
+          children: [
+            _visualStageHeader(
+              language: state.language,
+              current: _VisualInputStage.front,
+            ),
+            _title(
+              style,
+              _localizer.t(state.language, 'visualFrontTitle'),
+              _localizer.t(state.language, 'visualFrontSubtitle'),
+            ),
+            const SizedBox(height: 18),
+            BodyDiagram(
+              view: BodyView.front,
+              selectedIds: state.selectedBodyAreaIds,
+              onToggle: _controller.toggleBodyArea,
+              labelForArea: (area) => _localizer.bodyAreaLabel(
+                state.language,
+                area,
+              ),
+              semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
+            ),
+            const SizedBox(height: 16),
+            _SelectedSummary(
+              title: _localizer.t(state.language, 'selected'),
+              emptyText: _localizer.t(state.language, 'selectedEmpty'),
+              values: selectedLabels,
+            ),
+            const SizedBox(height: 22),
+            Row(
+              children: [
+                Expanded(
+                  child: SacaPrimaryButton(
+                    key: const ValueKey('visualFrontBackButton'),
+                    label: _localizer.t(state.language, 'back'),
+                    icon: CupertinoIcons.arrow_left_circle,
+                    onPressed: () {
+                      setState(() {
+                        _visualStage = _VisualInputStage.symptoms;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SacaPrimaryButton(
+                    key: const ValueKey('visualFrontContinueButton'),
+                    label: _localizer.t(state.language, 'continue'),
+                    icon: CupertinoIcons.arrow_right_circle,
+                    filled: true,
+                    onPressed: () {
+                      setState(() {
+                        _visualStage = _VisualInputStage.back;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        const SizedBox(height: 14),
-        _SelectedSummary(
-          title: _localizer.t(state.language, 'selected'),
-          emptyText: _localizer.t(state.language, 'selectedEmpty'),
-          values: selectedLabels,
+      _VisualInputStage.back => _wrapStep(
+          style: style,
+          state: state,
+          children: [
+            _visualStageHeader(
+              language: state.language,
+              current: _VisualInputStage.back,
+            ),
+            _title(
+              style,
+              _localizer.t(state.language, 'visualBackTitle'),
+              _localizer.t(state.language, 'visualBackSubtitle'),
+            ),
+            const SizedBox(height: 18),
+            BodyDiagram(
+              view: BodyView.back,
+              selectedIds: state.selectedBodyAreaIds,
+              onToggle: _controller.toggleBodyArea,
+              labelForArea: (area) => _localizer.bodyAreaLabel(
+                state.language,
+                area,
+              ),
+              semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
+            ),
+            const SizedBox(height: 16),
+            _SelectedSummary(
+              title: _localizer.t(state.language, 'selected'),
+              emptyText: _localizer.t(state.language, 'selectedEmpty'),
+              values: selectedLabels,
+            ),
+            const SizedBox(height: 22),
+            Row(
+              children: [
+                Expanded(
+                  child: SacaPrimaryButton(
+                    key: const ValueKey('visualBackBackButton'),
+                    label: _localizer.t(state.language, 'back'),
+                    icon: CupertinoIcons.arrow_left_circle,
+                    onPressed: () {
+                      setState(() {
+                        _visualStage = _VisualInputStage.front;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SacaPrimaryButton(
+                    key: const ValueKey('visualBackContinueButton'),
+                    label: _localizer.t(state.language, 'continue'),
+                    icon: CupertinoIcons.arrow_right_circle,
+                    filled: true,
+                    onPressed:
+                        hasSelection ? _controller.continueFromInput : null,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        const SizedBox(height: 20),
-        SacaPrimaryButton(
-          label: _localizer.t(state.language, 'continue'),
-          icon: CupertinoIcons.arrow_right_circle,
-          filled: true,
-          onPressed: canContinue ? _controller.continueFromInput : null,
-        ),
-      ],
-    );
+    };
   }
 
   Widget _severityStep(
@@ -724,13 +890,81 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
     );
   }
 
-  Widget _title(SacaPlatformStyle style, String title, String subtitle) {
+  Widget _title(SacaPlatformStyle _, String title, String subtitle) {
     return _StepTitle(
       title: title,
       subtitle: subtitle,
-      align: style == SacaPlatformStyle.windowsDesktop
-          ? TextAlign.left
-          : TextAlign.center,
+      align: TextAlign.center,
+    );
+  }
+
+  Widget _visualStageHeader({
+    required SacaLanguage? language,
+    required _VisualInputStage current,
+  }) {
+    final stages = [
+      (
+        _VisualInputStage.symptoms,
+        _localizer.t(language, 'visualStageSymptoms')
+      ),
+      (_VisualInputStage.front, _localizer.t(language, 'visualStageFront')),
+      (_VisualInputStage.back, _localizer.t(language, 'visualStageBack')),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              for (var index = 0; index < stages.length; index++) ...[
+                Expanded(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    height: 6,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(99),
+                      gradient: stages[index].$1.index <= current.index
+                          ? const LinearGradient(
+                              colors: [
+                                SacaTheme.accent,
+                                SacaTheme.selectedBorder,
+                              ],
+                            )
+                          : const LinearGradient(
+                              colors: [
+                                Color(0xFFF0E5E2),
+                                Color(0xFFE9F0F2),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
+                if (index != stages.length - 1) const SizedBox(width: 8),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              for (var index = 0; index < stages.length; index++) ...[
+                Expanded(
+                  child: Text(
+                    stages[index].$2,
+                    textAlign: TextAlign.center,
+                    style: SacaTheme.small.copyWith(
+                      color: stages[index].$1 == current
+                          ? SacaTheme.text
+                          : SacaTheme.mutedText,
+                    ),
+                  ),
+                ),
+                if (index != stages.length - 1) const SizedBox(width: 8),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -770,11 +1004,17 @@ class _MobileShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: SacaTheme.phoneWidth),
+        constraints: const BoxConstraints(maxWidth: 720),
         child: SingleChildScrollView(
           child: Padding(
-            padding: SacaTheme.pagePadding,
-            child: child,
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+            child: Center(
+              child: ConstrainedBox(
+                constraints:
+                    const BoxConstraints(maxWidth: SacaTheme.phoneWidth),
+                child: child,
+              ),
+            ),
           ),
         ),
       ),
@@ -824,43 +1064,17 @@ class _DesktopShell extends StatelessWidget {
                       onInfo: onInfo,
                     ),
                     Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          DecoratedBox(
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFFFFAF9),
-                            ),
-                            child: _ProgressRail(
-                              step: state.step,
-                              language: state.language,
-                              localizer: localizer,
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(36, 30, 36, 40),
+                          child: Center(
+                            child: ConstrainedBox(
+                              key: const ValueKey('windowsContentColumn'),
+                              constraints: const BoxConstraints(maxWidth: 760),
+                              child: child,
                             ),
                           ),
-                          const DecoratedBox(
-                            decoration: BoxDecoration(
-                              border: Border(
-                                left: BorderSide(color: Color(0xFFE8DEDC)),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(44, 36, 44, 44),
-                                child: Align(
-                                  alignment: Alignment.topLeft,
-                                  child: ConstrainedBox(
-                                    constraints:
-                                        const BoxConstraints(maxWidth: 720),
-                                    child: child,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
@@ -1149,112 +1363,49 @@ class _DesktopWindowButton extends StatelessWidget {
   }
 }
 
-class _ProgressRail extends StatelessWidget {
-  const _ProgressRail({
-    required this.step,
-    required this.language,
-    required this.localizer,
-  });
-
-  final SacaStep step;
-  final SacaLanguage? language;
-  final SacaLocalizer localizer;
+class _ShellBackdrop extends StatelessWidget {
+  const _ShellBackdrop();
 
   @override
   Widget build(BuildContext context) {
-    final activeIndex = _activeIndex(step);
-    final items = localizer.progressLabels(language);
-
-    return SizedBox(
-      key: const ValueKey('windowsProgressRail'),
-      width: 220,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 28, 18, 22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(localizer.t(language, 'assessmentFlow'),
-                style: SacaTheme.body),
-            const SizedBox(height: 18),
-            for (var index = 0; index < items.length; index++) ...[
-              _ProgressItem(
-                label: items[index],
-                active: index == activeIndex,
-                complete: index < activeIndex,
-              ),
-              if (index != items.length - 1) const SizedBox(height: 10),
-            ],
-            const Spacer(),
-            _Footnote(text: localizer.t(language, 'noPersonalInfo')),
-          ],
-        ),
-      ),
-    );
-  }
-
-  int _activeIndex(SacaStep step) {
-    return switch (step) {
-      SacaStep.splash || SacaStep.language => 0,
-      SacaStep.inputMethod ||
-      SacaStep.voiceInput ||
-      SacaStep.textInput ||
-      SacaStep.visualInput =>
-        1,
-      SacaStep.questionSeverity ||
-      SacaStep.questionDuration ||
-      SacaStep.questionRelatedSymptoms ||
-      SacaStep.questionMedication ||
-      SacaStep.questionFood ||
-      SacaStep.questionAllergies ||
-      SacaStep.questionHealthChanges =>
-        2,
-      SacaStep.analysing => 3,
-      SacaStep.result => 4,
-    };
-  }
-}
-
-class _ProgressItem extends StatelessWidget {
-  const _ProgressItem({
-    required this.label,
-    required this.active,
-    required this.complete,
-  });
-
-  final String label;
-  final bool active;
-  final bool complete;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = active
-        ? SacaTheme.selected
-        : complete
-            ? const Color(0xFFEAF7EA)
-            : const Color(0xFFFFFAF9);
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(SacaTheme.radius),
-        border: Border.all(
-          color: active ? SacaTheme.selectedBorder : const Color(0xFFE3D9D7),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          children: [
-            Icon(
-              complete
-                  ? CupertinoIcons.check_mark_circled
-                  : CupertinoIcons.circle,
-              size: 18,
-              color: SacaTheme.text,
+      decoration: const BoxDecoration(gradient: SacaTheme.shellGradient),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              height: 220,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x26A9D5E7),
+                    Color(0x00A9D5E7),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(width: 8),
-            Text(label, style: SacaTheme.small.copyWith(color: SacaTheme.text)),
-          ],
-        ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: 180,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x00F3D7CF),
+                    Color(0x2AF3D7CF),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1406,61 +1557,6 @@ class _StepTitle extends StatelessWidget {
   }
 }
 
-class _BodyDiagramPair extends StatelessWidget {
-  const _BodyDiagramPair({
-    required this.selectedIds,
-    required this.onToggle,
-    required this.labelForArea,
-    required this.semanticsPrefix,
-    required this.desktop,
-  });
-
-  final Set<String> selectedIds;
-  final ValueChanged<String> onToggle;
-  final String Function(BodyArea area) labelForArea;
-  final String semanticsPrefix;
-  final bool desktop;
-
-  @override
-  Widget build(BuildContext context) {
-    final diagrams = [
-      BodyDiagram(
-        view: BodyView.front,
-        selectedIds: selectedIds,
-        onToggle: onToggle,
-        labelForArea: labelForArea,
-        semanticsPrefix: semanticsPrefix,
-      ),
-      BodyDiagram(
-        view: BodyView.back,
-        selectedIds: selectedIds,
-        onToggle: onToggle,
-        labelForArea: labelForArea,
-        semanticsPrefix: semanticsPrefix,
-      ),
-    ];
-
-    if (!desktop) {
-      return Column(
-        children: [
-          diagrams[0],
-          const SizedBox(height: 12),
-          diagrams[1],
-        ],
-      );
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: diagrams[0]),
-        const SizedBox(width: 16),
-        Expanded(child: diagrams[1]),
-      ],
-    );
-  }
-}
-
 class _Footnote extends StatelessWidget {
   const _Footnote({required this.text});
 
@@ -1489,6 +1585,106 @@ class _StatusPill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         child:
             Text(label, style: SacaTheme.small.copyWith(color: SacaTheme.text)),
+      ),
+    );
+  }
+}
+
+class _VoiceLoadingOverlay extends StatelessWidget {
+  const _VoiceLoadingOverlay({
+    required this.visible,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final bool visible;
+  final String? title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: !visible,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 180),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+          final scale = Tween<double>(begin: 0.97, end: 1).animate(curved);
+          final slide = Tween<Offset>(
+            begin: const Offset(0, 0.02),
+            end: Offset.zero,
+          ).animate(curved);
+          return FadeTransition(
+            opacity: curved,
+            child: SlideTransition(
+              position: slide,
+              child: ScaleTransition(scale: scale, child: child),
+            ),
+          );
+        },
+        child: visible
+            ? Stack(
+                key: const ValueKey('voiceLoadingOverlay'),
+                fit: StackFit.expand,
+                children: [
+                  const ColoredBox(color: Color(0x22000000)),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 280),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: SacaTheme.surfaceGradient,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: SacaTheme.selectedBorder),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x18000000),
+                              blurRadius: 24,
+                              offset: Offset(0, 12),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const CupertinoActivityIndicator(radius: 14),
+                              if (title != null) ...[
+                                const SizedBox(height: 14),
+                                Text(
+                                  title!,
+                                  key: const ValueKey('voiceLoadingTitle'),
+                                  textAlign: TextAlign.center,
+                                  style: SacaTheme.body.copyWith(
+                                    color: SacaTheme.text,
+                                  ),
+                                ),
+                              ],
+                              if (subtitle != null) ...[
+                                const SizedBox(height: 6),
+                                Text(
+                                  subtitle!,
+                                  key: const ValueKey('voiceLoadingSubtitle'),
+                                  textAlign: TextAlign.center,
+                                  style: SacaTheme.small,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }
@@ -1539,16 +1735,26 @@ class _SelectedSummary extends StatelessWidget {
     final text = values.isEmpty ? emptyText : values.join(', ');
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: SacaTheme.surface,
-        borderRadius: BorderRadius.circular(SacaTheme.radius),
+        gradient: SacaTheme.surfaceGradient,
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: SacaTheme.border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(title, style: SacaTheme.small),
+            Text(
+              title,
+              style: SacaTheme.small.copyWith(color: SacaTheme.text),
+            ),
             const SizedBox(height: 6),
             Text(text, style: SacaTheme.body),
           ],
@@ -1616,9 +1822,16 @@ class _SacaTextFieldState extends State<_SacaTextField> {
       style: SacaTheme.body,
       placeholderStyle: SacaTheme.body.copyWith(color: SacaTheme.mutedText),
       decoration: BoxDecoration(
-        color: SacaTheme.surface,
-        borderRadius: BorderRadius.circular(SacaTheme.radius),
+        gradient: SacaTheme.surfaceGradient,
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: SacaTheme.border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
     );
   }
@@ -1639,24 +1852,42 @@ class _ResultPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: SacaTheme.surface,
-        borderRadius: BorderRadius.circular(SacaTheme.radius),
+        gradient: SacaTheme.surfaceGradient,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: result.isEmergency ? SacaTheme.emergency : SacaTheme.border,
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x16000000),
+            blurRadius: 24,
+            offset: Offset(0, 10),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (result.isEmergency) ...[
-              Text(
-                localizer.t(language, 'call000Now'),
-                textAlign: TextAlign.center,
-                style: SacaTheme.title.copyWith(color: SacaTheme.emergency),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0x14D92D20),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0x33D92D20)),
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Text(
+                    localizer.t(language, 'call000Now'),
+                    textAlign: TextAlign.center,
+                    style: SacaTheme.title.copyWith(color: SacaTheme.emergency),
+                  ),
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 14),
             ],
             Text(
               localizer.t(language, 'possiblePattern'),
