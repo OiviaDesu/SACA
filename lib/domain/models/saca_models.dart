@@ -4,6 +4,8 @@ enum InputMethod { text, voice, visual }
 
 enum SeverityLevel { mild, moderate, severe, emergency }
 
+enum VoiceBusyPhase { none, preparing, transcribing }
+
 enum SacaStep {
   splash,
   language,
@@ -134,6 +136,7 @@ class SacaFlowState {
     this.analysisResult,
     this.isRecording = false,
     this.isBusy = false,
+    this.voiceBusyPhase = VoiceBusyPhase.none,
     this.errorMessage,
   });
 
@@ -148,6 +151,7 @@ class SacaFlowState {
   final AnalysisResult? analysisResult;
   final bool isRecording;
   final bool isBusy;
+  final VoiceBusyPhase voiceBusyPhase;
   final String? errorMessage;
 
   String get combinedInput => analysisRequest.combinedInput;
@@ -179,6 +183,7 @@ class SacaFlowState {
     bool clearAnalysisResult = false,
     bool? isRecording,
     bool? isBusy,
+    VoiceBusyPhase? voiceBusyPhase,
     String? errorMessage,
     bool clearError = false,
   }) {
@@ -195,6 +200,7 @@ class SacaFlowState {
           clearAnalysisResult ? null : analysisResult ?? this.analysisResult,
       isRecording: isRecording ?? this.isRecording,
       isBusy: isBusy ?? this.isBusy,
+      voiceBusyPhase: voiceBusyPhase ?? this.voiceBusyPhase,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
