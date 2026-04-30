@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,6 +14,7 @@ import 'package:saca_demo/presentation/adaptive/saca_platform_style.dart';
 import 'package:saca_demo/presentation/controllers/saca_flow_controller.dart';
 import 'package:saca_demo/presentation/localization/saca_localizer.dart';
 import 'package:saca_demo/presentation/screens/saca_flow_screen.dart';
+import 'package:saca_demo/presentation/widgets/saca_controls.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +56,7 @@ void main() {
     );
   });
 
-  testWidgets('windows shell renders custom toolbar and progress rail',
+  testWidgets('windows shell renders centered content without progress rail',
       (tester) async {
     final controller = await _pumpFlow(
       tester,
@@ -68,7 +71,8 @@ void main() {
     expect(find.byKey(const ValueKey('windowsResizeOverlay')), findsOneWidget);
     expect(find.byKey(const ValueKey('windowsCustomTitleBar')), findsOneWidget);
     expect(find.byKey(const ValueKey('windowsWindowControls')), findsOneWidget);
-    expect(find.byKey(const ValueKey('windowsProgressRail')), findsOneWidget);
+    expect(find.byKey(const ValueKey('windowsContentColumn')), findsOneWidget);
+    expect(find.byKey(const ValueKey('windowsProgressRail')), findsNothing);
     expect(find.text('Offline ready'), findsOneWidget);
 
     await tester.tap(find.text('English'));
@@ -98,7 +102,7 @@ void main() {
     expect(find.text('How do you want to enter symptoms?'), findsOneWidget);
     expect(find.text('Text input'), findsOneWidget);
     expect(find.text('Voice input'), findsOneWidget);
-    expect(find.text('Visual selection'), findsOneWidget);
+    expect(find.text('Body map'), findsOneWidget);
     expect(find.text('Symptom select'), findsNothing);
     expect(find.text('Body diagram'), findsNothing);
   });
@@ -119,28 +123,39 @@ void main() {
     await _tapVisible(tester, find.text('Continue'));
     await _answerQuestionnaire(tester);
 
-    expect(find.text('Triage guidance'), findsOneWidget);
-    expect(find.text('Influenza'), findsOneWidget);
+    expect(find.text('Care guidance'), findsOneWidget);
+    expect(find.text('Fever and throat symptoms'), findsOneWidget);
     expect(find.text('Severity: Mild'), findsOneWidget);
     expect(find.textContaining('does not replace a clinician'), findsOneWidget);
   });
 
-  testWidgets('visual selection path supports symptom and body selection', (
+  testWidgets('visual body map path supports symptom and body selection', (
     tester,
   ) async {
     final controller = await _pumpFlow(tester);
     await _reachInputMethod(tester);
 
-    await tester.tap(find.text('Visual selection'));
+    await tester.tap(find.text('Body map'));
     await tester.pump();
     await tester.tap(find.text('Fever'));
     await tester.pump();
+    await _pressPrimaryButton(
+      tester,
+      const ValueKey('visualSymptomsContinueButton'),
+    );
+    expect(find.byKey(const ValueKey('bodyDiagram-front')), findsOneWidget);
     await tester.tap(find.text('Throat').first);
     await tester.pump();
+    await _pressPrimaryButton(
+      tester,
+      const ValueKey('visualFrontContinueButton'),
+    );
+    expect(find.byKey(const ValueKey('bodyDiagram-back')), findsOneWidget);
+    await _pressPrimaryButton(
+        tester, const ValueKey('visualBackContinueButton'));
 
     expect(controller.state.selectedSymptomIds, contains('fever'));
     expect(controller.state.selectedBodyAreaIds, contains('throat'));
-    await _tapVisible(tester, find.text('Continue'));
     expect(controller.state.step, SacaStep.questionSeverity);
   });
 
@@ -206,7 +221,10 @@ void main() {
     await _answerQuestionnaire(tester, severity: '9', related: 'Chest pain');
 
     expect(find.text('Call 000 now'), findsOneWidget);
-    expect(find.text('Urgent symptoms'), findsOneWidget);
+    expect(
+      find.text('Urgent chest, breathing, or bleeding signs'),
+      findsOneWidget,
+    );
     expect(find.text('Severity: Emergency'), findsOneWidget);
   });
 
@@ -224,14 +242,25 @@ void main() {
     await tester.pump();
 
     expect(find.text('makurrmakurr'), findsOneWidget);
+    await tester.tap(find.text('makurrmakurr'));
+    await tester.pump();
+    await _pressPrimaryButton(
+      tester,
+      const ValueKey('visualSymptomsContinueButton'),
+    );
+    expect(find.byKey(const ValueKey('bodyDiagram-front')), findsOneWidget);
     expect(find.text('ngirlkirri'), findsOneWidget);
     expect(find.text('Fever'), findsNothing);
     expect(find.text('Throat'), findsNothing);
 
-    await tester.tap(find.text('makurrmakurr'));
-    await tester.pump();
     await _tapVisible(tester, find.text('ngirlkirri').first);
-    await _tapVisible(tester, find.text('Kawayi'));
+    await _pressPrimaryButton(
+      tester,
+      const ValueKey('visualFrontContinueButton'),
+    );
+    expect(find.byKey(const ValueKey('bodyDiagram-back')), findsOneWidget);
+    await _pressPrimaryButton(
+        tester, const ValueKey('visualBackContinueButton'));
 
     expect(controller.state.step, SacaStep.questionSeverity);
     expect(controller.state.selectedSymptomIds, contains('fever'));
@@ -259,9 +288,9 @@ void main() {
     );
 
     expect(find.text('Jangany nyawa'), findsOneWidget);
-    expect(find.text('jangany'), findsOneWidget);
+    expect(find.text('makurrmakurr / ngirlkirri pung'), findsOneWidget);
     expect(find.text('Jangany: Yamak'), findsOneWidget);
-    expect(find.text('Triage guidance'), findsNothing);
+    expect(find.text('Care guidance'), findsNothing);
     expect(find.text('Severity: Mild'), findsNothing);
   });
 
@@ -279,6 +308,90 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Voice input'), findsNothing);
+  });
+
+  testWidgets('voice input shows centered loading overlay while preparing', (
+    tester,
+  ) async {
+    final prepareCompleter = Completer<AppResult<void>>();
+    await _pumpFlow(
+      tester,
+      speechInput: _ControllableSpeechInputService(
+        prepareFuture: prepareCompleter.future,
+      ),
+    );
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('voiceLoadingOverlay')), findsOneWidget);
+    expect(find.text('Getting voice ready'), findsOneWidget);
+    expect(find.text('Listening to your recording'), findsNothing);
+
+    prepareCompleter.complete(const AppResult.success(null));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(find.byKey(const ValueKey('voiceLoadingOverlay')), findsNothing);
+    expect(find.byKey(const ValueKey('voiceTranscriptField')), findsOneWidget);
+  });
+
+  testWidgets(
+      'voice transcribe shows loading overlay and then fills transcript',
+      (tester) async {
+    final transcribeCompleter = Completer<AppResult<SpeechInputResult>>();
+    final speechInput = _ControllableSpeechInputService(
+      transcribeFuture: transcribeCompleter.future,
+    );
+    await _pumpFlow(tester, speechInput: speechInput);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    await tester.tap(find.text('Record'));
+    await tester.pump();
+    await tester.tap(find.text('Stop recording'));
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('voiceLoadingOverlay')), findsOneWidget);
+    expect(find.text('Listening to your recording'), findsOneWidget);
+
+    transcribeCompleter.complete(
+      const AppResult.success(
+          SpeechInputResult(text: 'headache and sore throat')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(find.byKey(const ValueKey('voiceLoadingOverlay')), findsNothing);
+    expect(find.text('headache and sore throat'), findsOneWidget);
+  });
+
+  testWidgets('gurindji voice loading overlay stays localized', (tester) async {
+    final prepareCompleter = Completer<AppResult<void>>();
+    await _pumpFlow(
+      tester,
+      vocabulary: vocabulary,
+      localizer: localizer,
+      speechInput: _ControllableSpeechInputService(
+        prepareFuture: prepareCompleter.future,
+      ),
+    );
+    await _reachInputMethod(tester, language: 'Gurindji');
+
+    await tester.tap(find.text('Ngayirrp'));
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('voiceLoadingOverlay')), findsOneWidget);
+    expect(find.text('Ngayirrp yamak'), findsOneWidget);
+    expect(find.text('Getting voice ready'), findsNothing);
+
+    prepareCompleter.complete(const AppResult.success(null));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
   });
 
   testWidgets('gurindji emergency result uses Gurindji copy and keeps 000', (
@@ -303,10 +416,16 @@ void main() {
     );
 
     expect(find.text('000 kawayi jala'), findsOneWidget);
-    expect(find.text('warlarrp'), findsOneWidget);
+    expect(
+      find.text('mangarli pung / ngayirrp ma- / warlarrp'),
+      findsOneWidget,
+    );
     expect(find.text('Jangany: 000'), findsOneWidget);
     expect(find.text('Call 000 now'), findsNothing);
-    expect(find.text('Urgent symptoms'), findsNothing);
+    expect(
+      find.text('Urgent chest, breathing, or bleeding signs'),
+      findsNothing,
+    );
   });
 }
 
@@ -315,11 +434,12 @@ Future<SacaFlowController> _pumpFlow(
   SacaPlatformStyle style = SacaPlatformStyle.androidMobile,
   ClinicalVocabularyService? vocabulary,
   SacaLocalizer? localizer,
+  SpeechInputService? speechInput,
 }) async {
   final activeVocabulary =
       vocabulary ?? const ClinicalVocabularyService.empty();
   final controller = SacaFlowController(
-    speechInput: _NoopSpeechInputService(),
+    speechInput: speechInput ?? _NoopSpeechInputService(),
     analysisService: MockAnalysisService(vocabulary: activeVocabulary),
   );
 
@@ -392,9 +512,30 @@ Future<void> _setSeveritySlider(WidgetTester tester, int severity) async {
 }
 
 Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
-  await tester.ensureVisible(finder);
+  final visibleFinder = finder.last;
+  final descendantButton = find.descendant(
+    of: visibleFinder,
+    matching: find.byType(CupertinoButton),
+  );
+  final ancestorButton = find.ancestor(
+    of: visibleFinder,
+    matching: find.byType(CupertinoButton),
+  );
+  final target = descendantButton.evaluate().isNotEmpty
+      ? descendantButton.last
+      : ancestorButton.evaluate().isNotEmpty
+          ? ancestorButton.last
+          : visibleFinder;
+  await tester.ensureVisible(target);
   await tester.pump();
-  await tester.tap(finder);
+  await tester.tap(target);
+  await tester.pump();
+}
+
+Future<void> _pressPrimaryButton(
+    WidgetTester tester, ValueKey<String> key) async {
+  final button = tester.widget<SacaPrimaryButton>(find.byKey(key));
+  button.onPressed?.call();
   await tester.pump();
 }
 
@@ -414,6 +555,48 @@ class _NoopSpeechInputService implements SpeechInputService {
 
   @override
   Future<AppResult<SpeechInputResult>> stopAndTranscribe() async {
+    return const AppResult.success(
+      SpeechInputResult(text: 'headache and sore throat'),
+    );
+  }
+
+  @override
+  Future<void> cancel() async {}
+
+  @override
+  void dispose() {}
+}
+
+class _ControllableSpeechInputService implements SpeechInputService {
+  _ControllableSpeechInputService({
+    this.prepareFuture,
+    this.transcribeFuture,
+  });
+
+  final Future<AppResult<void>>? prepareFuture;
+  final Future<AppResult<SpeechInputResult>>? transcribeFuture;
+
+  @override
+  bool get supportsOnDeviceStt => true;
+
+  @override
+  Future<AppResult<void>> prepare(SacaLanguage language) async {
+    if (prepareFuture != null) {
+      return await prepareFuture!;
+    }
+    return const AppResult.success(null);
+  }
+
+  @override
+  Future<AppResult<void>> startRecording() async {
+    return const AppResult.success(null);
+  }
+
+  @override
+  Future<AppResult<SpeechInputResult>> stopAndTranscribe() async {
+    if (transcribeFuture != null) {
+      return await transcribeFuture!;
+    }
     return const AppResult.success(
       SpeechInputResult(text: 'headache and sore throat'),
     );
