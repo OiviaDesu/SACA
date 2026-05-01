@@ -32,6 +32,7 @@ migrate_working_dir/
 /build/
 /coverage/
 /dist/
+/ios/
 
 # Local dataset/cache outputs. Keep raw corpora and generated artifacts out of Git.
 python_pipeline/data/
