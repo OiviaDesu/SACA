@@ -4,12 +4,15 @@ class SacaTheme {
   const SacaTheme._();
 
   static const background = Color(0xFFFFF4F2);
+  static const backgroundAlt = Color(0xFFF7FBFD);
   static const surface = Color(0xFFFFFFFF);
+  static const surfaceAlt = Color(0xFFFDF8F7);
   static const text = Color(0xFF1F1F1F);
   static const mutedText = Color(0xFF646464);
-  static const border = Color(0xFF8E8E93);
+  static const border = Color(0xFFD9D4D1);
   static const selected = Color(0xFFD9EEF7);
   static const selectedBorder = Color(0xFF8FC8DE);
+  static const accent = Color(0xFF5FADC8);
   static const emergency = Color(0xFFD92D20);
   static const warning = Color(0xFFFFC94A);
   static const safe = Color(0xFF75D05C);
@@ -18,6 +21,33 @@ class SacaTheme {
   static const double radius = 8;
   static const double minTapTarget = 52;
   static const EdgeInsets pagePadding = EdgeInsets.fromLTRB(20, 12, 20, 24);
+
+  static const LinearGradient shellGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color(0xFFFFF6F4),
+      Color(0xFFF8FCFD),
+    ],
+  );
+
+  static const LinearGradient surfaceGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFFFFFFFF),
+      Color(0xFFFDF8F7),
+    ],
+  );
+
+  static const LinearGradient selectedGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFFE9F6FB),
+      Color(0xFFD7EEF7),
+    ],
+  );
 
   static const TextStyle logoText = TextStyle(
     fontSize: 52,

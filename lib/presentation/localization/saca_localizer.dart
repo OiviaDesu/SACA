@@ -20,19 +20,21 @@ class SacaLocalizer {
     'languageFootnote':
         'This app gives preliminary guidance only. SACA jangany nyawa. Nyangu-nyangu-wangu.',
     'inputTitle': 'How do you want to enter symptoms?',
-    'inputSubtitle':
-        'Choose one path. Every path asks the same follow-up questions.',
+    'inputSubtitle': 'Choose one way to start.',
     'textInput': 'Text input',
     'textInputDescription': 'Type symptoms in simple words, such as fever.',
     'voiceInput': 'Voice input',
     'voiceInputDescription':
         'Record speech offline, then review the transcript.',
-    'visualSelection': 'Visual selection',
-    'visualSelectionDescription':
-        'Tap symptoms and body areas on a simple diagram.',
+    'visualSelection': 'Body map',
+    'visualSelectionDescription': 'Pick symptoms on a body guide.',
     'voiceTitle': 'Voice input',
     'voiceSubtitle':
         'Speak clearly. Review and edit the transcript before continuing.',
+    'voicePreparingTitle': 'Getting voice ready',
+    'voicePreparingSubtitle': 'Please wait a moment.',
+    'voiceTranscribingTitle': 'Listening to your recording',
+    'voiceTranscribingSubtitle': 'Turning speech into text offline.',
     'stopRecording': 'Stop recording',
     'record': 'Record',
     'transcriptPlaceholder': 'Transcript will appear here.',
@@ -45,9 +47,18 @@ class SacaLocalizer {
     'textSubtitle':
         'Write the main symptom first. The next screens ask for details.',
     'textPlaceholder': 'Example: fever',
-    'visualTitle': 'Visual selection',
-    'visualSubtitle':
-        'Tap symptoms and any body areas that match what is happening.',
+    'visualTitle': 'Body map',
+    'visualSubtitle': 'Pick the symptom, then the body area.',
+    'visualSymptomsTitle': 'What matches best?',
+    'visualSymptomsSubtitle': 'Choose the main symptom first.',
+    'visualFrontTitle': 'Where is it?',
+    'visualFrontSubtitle': 'Tap the front of the body.',
+    'visualBackTitle': 'Anything on the back?',
+    'visualBackSubtitle': 'Tap any area on the back.',
+    'visualStageSymptoms': 'Symptom',
+    'visualStageFront': 'Front',
+    'visualStageBack': 'Back',
+    'visualSkipTitle': 'You can choose more than one area.',
     'selected': 'Selected',
     'selectedEmpty': 'No symptoms or body areas selected yet.',
     'severityTitle': 'How strong is it?',
@@ -74,8 +85,8 @@ class SacaLocalizer {
     'noResultTitle': 'No result available',
     'noResultSubtitle': 'Please go back and run the analysis again.',
     'back': 'Back',
-    'resultTitle': 'Triage guidance',
-    'resultSubtitle': 'Use this to decide the next support step.',
+    'resultTitle': 'Care guidance',
+    'resultSubtitle': 'Use this to decide the next step.',
     'finish': 'Finish',
     'startAgain': 'Start again',
     'offlineReady': 'Offline ready',
@@ -93,7 +104,7 @@ class SacaLocalizer {
         'SACA is an offline triage support prototype for the Kalkaringi and Daguragu context. It is not a diagnostic tool.',
     'ok': 'OK',
     'call000Now': 'Call 000 now',
-    'possiblePattern': 'Possible pattern',
+    'possiblePattern': 'Most likely pattern',
     'severity': 'Severity',
     'severityMild': 'Mild',
     'severityModerate': 'Moderate',
@@ -124,6 +135,10 @@ class SacaLocalizer {
     'visualSelectionDescription': 'Jangany puya nyawa.',
     'voiceTitle': 'Ngayirrp',
     'voiceSubtitle': 'Ngayirrp yamak. Yawu nyawa jala.',
+    'voicePreparingTitle': 'Ngayirrp yamak',
+    'voicePreparingSubtitle': 'Pirri-pirri.',
+    'voiceTranscribingTitle': 'Ngayirrp nyawa',
+    'voiceTranscribingSubtitle': 'Yawu jala.',
     'stopRecording': 'Kurtirni',
     'record': 'Ngayirrp',
     'transcriptPlaceholder': 'Yawu jala karrinyana.',
@@ -135,6 +150,16 @@ class SacaLocalizer {
     'textPlaceholder': 'makurrmakurr',
     'visualTitle': 'Puya nyawa',
     'visualSubtitle': 'Jangany nyawa. Puya nyawa.',
+    'visualSymptomsTitle': 'Nyatpa jangany?',
+    'visualSymptomsSubtitle': 'Jangany nyawa karnarla.',
+    'visualFrontTitle': 'Nyatpa puya?',
+    'visualFrontSubtitle': 'Puya front nyawa.',
+    'visualBackTitle': 'Parntawurru puya?',
+    'visualBackSubtitle': 'Puya back nyawa.',
+    'visualStageSymptoms': 'Jangany',
+    'visualStageFront': 'Front',
+    'visualStageBack': 'Back',
+    'visualSkipTitle': 'Puya kirri nyawa.',
     'selected': 'Nyawa',
     'selectedEmpty': 'Jangany puya karrwarn.',
     'severityTitle': 'Nyatpa jangany?',
@@ -260,10 +285,43 @@ class SacaLocalizer {
   };
 
   static const _gurindjiDiseaseLabels = <String, String>{
-    'Influenza': 'jangany',
-    'Stomach upset': 'majul jangany',
-    'General symptoms': 'jangany',
-    'Urgent symptoms': 'warlarrp',
+    'Influenza': 'makurrmakurr / ngirlkirri pung',
+    'Stomach upset': 'majul pung / kurlpak yuwa-',
+    'General symptoms': 'puya pung / jangany',
+    'Urgent symptoms': 'mangarli pung / ngayirrp ma- / warlarrp',
+  };
+
+  static const _englishDiseaseLabels = <String, String>{
+    'Influenza': 'Fever and throat symptoms',
+    'Stomach upset': 'Stomach symptoms',
+    'General symptoms': 'Pain or body discomfort',
+    'Urgent symptoms': 'Urgent chest, breathing, or bleeding signs',
+  };
+
+  static const _englishGuidance = <String, List<String>>{
+    'Influenza': [
+      'Rest and drink water.',
+      'Use fever relief if it is safe for you.',
+      'Visit the clinic if fever, throat pain, or weakness gets worse.',
+      'Get urgent help if breathing becomes hard.',
+    ],
+    'Stomach upset': [
+      'Sip water often.',
+      'Avoid heavy meals for now.',
+      'Visit the clinic if pain or vomiting keeps going.',
+      'Get urgent help if you cannot keep fluids down.',
+    ],
+    'General symptoms': [
+      'Rest and watch for changes.',
+      'Write down where it hurts and what changed.',
+      'Visit the clinic if the pain keeps going or gets stronger.',
+      'Get urgent help for chest pain, trouble breathing, or bleeding.',
+    ],
+    'Urgent symptoms': [
+      'Call 000 now.',
+      'Get help from someone nearby if possible.',
+      'Do not wait for the app if breathing, chest pain, or bleeding is severe.',
+    ],
   };
 
   static const _gurindjiGuidance = <String, List<String>>{
@@ -326,7 +384,7 @@ class SacaLocalizer {
       return _gurindjiDiseaseLabels[disease] ??
           _vocabulary.resultDiseaseLabel(language, disease);
     }
-    return disease;
+    return _englishDiseaseLabels[disease] ?? disease;
   }
 
   String choiceLabel(
@@ -346,6 +404,22 @@ class SacaLocalizer {
     return t(language, 'voiceAccuracyNotice');
   }
 
+  String? voiceBusyTitle(SacaLanguage? language, VoiceBusyPhase phase) {
+    return switch (phase) {
+      VoiceBusyPhase.none => null,
+      VoiceBusyPhase.preparing => t(language, 'voicePreparingTitle'),
+      VoiceBusyPhase.transcribing => t(language, 'voiceTranscribingTitle'),
+    };
+  }
+
+  String? voiceBusySubtitle(SacaLanguage? language, VoiceBusyPhase phase) {
+    return switch (phase) {
+      VoiceBusyPhase.none => null,
+      VoiceBusyPhase.preparing => t(language, 'voicePreparingSubtitle'),
+      VoiceBusyPhase.transcribing => t(language, 'voiceTranscribingSubtitle'),
+    };
+  }
+
   String errorMessage(SacaLanguage? language, String message) {
     if (language != SacaLanguage.gurindji) return message;
     return t(language, 'errorGeneric');
@@ -362,7 +436,9 @@ class SacaLocalizer {
   }
 
   List<String> guidance(SacaLanguage? language, AnalysisResult result) {
-    if (language != SacaLanguage.gurindji) return result.guidance;
+    if (language != SacaLanguage.gurindji) {
+      return _englishGuidance[result.disease] ?? result.guidance;
+    }
     return _gurindjiGuidance[result.disease] ??
         _gurindjiGuidance['General symptoms']!;
   }
