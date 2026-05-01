@@ -40,6 +40,7 @@ class SacaFlowController extends ChangeNotifier {
           inputMethod: method,
           step: SacaStep.voiceInput,
           isBusy: true,
+          voiceBusyPhase: VoiceBusyPhase.preparing,
           clearError: true,
         ),
       );
@@ -51,12 +52,19 @@ class SacaFlowController extends ChangeNotifier {
         _setState(
           _state.copyWith(
             isBusy: false,
+            voiceBusyPhase: VoiceBusyPhase.none,
             errorMessage: result.failure?.message,
           ),
         );
         return;
       }
-      _setState(_state.copyWith(isBusy: false, clearError: true));
+      _setState(
+        _state.copyWith(
+          isBusy: false,
+          voiceBusyPhase: VoiceBusyPhase.none,
+          clearError: true,
+        ),
+      );
       return;
     }
 
@@ -64,37 +72,27 @@ class SacaFlowController extends ChangeNotifier {
       _state.copyWith(
         inputMethod: method,
         step: _stepForMethod(method),
+        voiceBusyPhase: VoiceBusyPhase.none,
         clearError: true,
       ),
     );
   }
 
   Future<void> startRecording() async {
-    _setState(_state.copyWith(isBusy: true, clearError: true));
+    _setState(
+      _state.copyWith(
+        isBusy: true,
+        voiceBusyPhase: VoiceBusyPhase.none,
+        clearError: true,
+      ),
+    );
     final result = await _speechInput.startRecording();
     if (!result.isSuccess) {
       _setState(
         _state.copyWith(
           isBusy: false,
           isRecording: false,
-          errorMessage: result.failure?.message,
-        ),
-      );
-      return;
-    }
-
-    _setState(
-      _state.copyWith(isBusy: false, isRecording: true, clearError: true),
-    );
-  }
-
-  Future<void> stopRecording() async {
-    _setState(_state.copyWith(isBusy: true, isRecording: false));
-    final result = await _speechInput.stopAndTranscribe();
-    if (!result.isSuccess) {
-      _setState(
-        _state.copyWith(
-          isBusy: false,
+          voiceBusyPhase: VoiceBusyPhase.none,
           errorMessage: result.failure?.message,
         ),
       );
@@ -104,6 +102,37 @@ class SacaFlowController extends ChangeNotifier {
     _setState(
       _state.copyWith(
         isBusy: false,
+        isRecording: true,
+        voiceBusyPhase: VoiceBusyPhase.none,
+        clearError: true,
+      ),
+    );
+  }
+
+  Future<void> stopRecording() async {
+    _setState(
+      _state.copyWith(
+        isBusy: true,
+        isRecording: false,
+        voiceBusyPhase: VoiceBusyPhase.transcribing,
+      ),
+    );
+    final result = await _speechInput.stopAndTranscribe();
+    if (!result.isSuccess) {
+      _setState(
+        _state.copyWith(
+          isBusy: false,
+          voiceBusyPhase: VoiceBusyPhase.none,
+          errorMessage: result.failure?.message,
+        ),
+      );
+      return;
+    }
+
+    _setState(
+      _state.copyWith(
+        isBusy: false,
+        voiceBusyPhase: VoiceBusyPhase.none,
         transcript: result.value?.text ?? '',
         clearError: true,
       ),
