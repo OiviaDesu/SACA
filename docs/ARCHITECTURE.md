@@ -17,17 +17,18 @@ lib/
 ├── infrastructure/
 │   ├── analysis/      # MockAnalysisService implementation
 │   ├── localization/  # Asset lexicon repository
-│   └── speech/        # WhisperSpeechInputService adapter
+│   └── speech/        # WhisperSpeechInputService adapter + voice prewarm
 ├── presentation/
 │   ├── adaptive/      # Platform-adaptive layout/style handling
 │   ├── controllers/   # SacaFlowController state machine
 │   ├── localization/  # UI localizer using clinical vocabulary
-│   ├── screens/       # SacaFlowScreen and step rendering
+│   ├── screens/       # SacaFlowScreen orchestration + step part files
 │   └── widgets/       # Reusable UI controls/body diagrams
 └── services/
     ├── audio_recorder_service.dart
     ├── whisper_service.dart
-    ├── whisper_service_io.dart
+    ├── whisper_service_io.dart       # facade for platform runtime helpers
+    ├── whisper_service/              # mobile/windows runtime modules
     └── whisper_service_stub.dart
 ```
 
@@ -44,6 +45,12 @@ User input (text / voice / visual)
             -> SafetyRuleService red-flag escalation
     -> AnalysisResult rendered in SacaFlowScreen
 ```
+
+Voice runtime startup is prewarmed after the first frame by
+`VoicePrewarmService`. This keeps app startup non-blocking while reducing the
+delay when the user opens Voice input. `WhisperService` also caches the loaded
+runtime key and any in-flight initialization future so repeated prepare calls
+reuse the same runtime.
 
 ## Speech-to-text backends
 
