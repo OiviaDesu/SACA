@@ -133,6 +133,8 @@ class SacaFlowState {
     this.selectedSymptomIds = const <String>{},
     this.selectedBodyAreaIds = const <String>{},
     this.questionAnswers = const <String, String>{},
+    this.voiceAnswerTranscript = '',
+    this.voiceAnswerMatched = true,
     this.analysisResult,
     this.isRecording = false,
     this.isBusy = false,
@@ -148,6 +150,8 @@ class SacaFlowState {
   final Set<String> selectedSymptomIds;
   final Set<String> selectedBodyAreaIds;
   final Map<String, String> questionAnswers;
+  final String voiceAnswerTranscript;
+  final bool voiceAnswerMatched;
   final AnalysisResult? analysisResult;
   final bool isRecording;
   final bool isBusy;
@@ -179,6 +183,8 @@ class SacaFlowState {
     Set<String>? selectedSymptomIds,
     Set<String>? selectedBodyAreaIds,
     Map<String, String>? questionAnswers,
+    String? voiceAnswerTranscript,
+    bool? voiceAnswerMatched,
     AnalysisResult? analysisResult,
     bool clearAnalysisResult = false,
     bool? isRecording,
@@ -196,6 +202,9 @@ class SacaFlowState {
       selectedSymptomIds: selectedSymptomIds ?? this.selectedSymptomIds,
       selectedBodyAreaIds: selectedBodyAreaIds ?? this.selectedBodyAreaIds,
       questionAnswers: questionAnswers ?? this.questionAnswers,
+      voiceAnswerTranscript:
+          voiceAnswerTranscript ?? this.voiceAnswerTranscript,
+      voiceAnswerMatched: voiceAnswerMatched ?? this.voiceAnswerMatched,
       analysisResult:
           clearAnalysisResult ? null : analysisResult ?? this.analysisResult,
       isRecording: isRecording ?? this.isRecording,

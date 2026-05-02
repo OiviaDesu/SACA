@@ -20,6 +20,10 @@ migrate_working_dir/
 
 # Editor-local configuration
 .vscode/
+.venv/
+.pytest_cache/
+Microsoft/
+note.txt
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -35,8 +39,17 @@ migrate_working_dir/
 /ios/
 
 # Local dataset/cache outputs. Keep raw corpora and generated artifacts out of Git.
-python_pipeline/data/
+python_pipeline/data/*
+!python_pipeline/data/
+!python_pipeline/data/.gitkeep
+!python_pipeline/data/README.md
+!python_pipeline/data/*.csv
+python_pipeline/data/Final_Augmented_dataset_Diseases_and_Symptoms.csv
+!python_pipeline/data/*.xlsx
 python_pipeline/outputs/
+python_pipeline/artifacts/
+*.joblib
+*.onnx
 
 # Local platform/dev machine files
 android/local.properties
@@ -83,6 +96,38 @@ assets/models/sherpa-onnx-whisper-base/tokens.txt
 .vibe/
 .windsurf/
 .zencoder/
+**/.agents/
+**/.adal/
+**/.augment/
+**/.bob/
+**/.codex/
+**/.claude/
+**/.codebuddy/
+**/.commandcode/
+**/.continue/
+**/.cortex/
+**/.crush/
+**/.cursor/
+**/.factory/
+**/.goose/
+**/.iflow/
+**/.junie/
+**/.kilocode/
+**/.kiro/
+**/.kode/
+**/.mcpjam/
+**/.mux/
+**/.neovate/
+**/.openhands/
+**/.pi/
+**/.pochi/
+**/.qoder/
+**/.qwen/
+**/.roo/
+**/.trae/
+**/.vibe/
+**/.windsurf/
+**/.zencoder/
 .github/skills/
 .github/java-upgrade/
 /memories/
@@ -92,6 +137,10 @@ CLAUDE.md
 AGENTS.md
 GEMINI.md
 .github/copilot-instructions.md
+**/CLAUDE.md
+**/AGENTS.md
+**/GEMINI.md
+**/.github/copilot-instructions.md
 
 # Symbolication related
 app.*.symbols

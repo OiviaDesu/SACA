@@ -370,6 +370,210 @@ void main() {
     expect(find.text('headache and sore throat'), findsOneWidget);
   });
 
+  testWidgets('voice input shows mic controls on severity follow-up',
+      (tester) async {
+    final controller = await _pumpFlow(tester);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    controller.updateTranscript('headache');
+    controller.continueFromInput();
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('voiceQuestionRecordButton')),
+        findsOneWidget);
+    expect(find.text('Answer by voice'), findsOneWidget);
+    expect(find.byKey(const ValueKey('severitySlider')), findsOneWidget);
+  });
+
+  testWidgets('voice answer on duration selects matching manual option',
+      (tester) async {
+    final controller = await _pumpFlow(
+      tester,
+      speechInput: _ControllableSpeechInputService(
+        transcribeFuture: Future.value(
+          const AppResult.success(SpeechInputResult(text: 'three days')),
+        ),
+      ),
+    );
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    controller.updateTranscript('headache');
+    controller.continueFromInput();
+    controller.answerQuestion('severity', '5');
+    controller.nextQuestion();
+    await tester.pump();
+
+    await tester.tap(find.text('Answer by voice'));
+    await tester.pump();
+    await tester.tap(find.text('Stop voice answer'));
+    await tester.pumpAndSettle();
+
+    expect(controller.state.questionAnswers['duration'], 'one to three days');
+    expect(find.byKey(const ValueKey('voiceQuestionHeard')), findsOneWidget);
+    expect(find.text('1-3 days'), findsOneWidget);
+  });
+
+  testWidgets('voice answer on duration selects more than seven days',
+      (tester) async {
+    final controller = await _pumpFlow(
+      tester,
+      speechInput: _ControllableSpeechInputService(
+        transcribeFuture: Future.value(
+          const AppResult.success(SpeechInputResult(text: 'More than 7 days')),
+        ),
+      ),
+    );
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    controller.updateTranscript('headache');
+    controller.continueFromInput();
+    controller.answerQuestion('severity', '5');
+    controller.nextQuestion();
+    await tester.pump();
+
+    await tester.tap(find.text('Answer by voice'));
+    await tester.pump();
+    await tester.tap(find.text('Stop voice answer'));
+    await tester.pumpAndSettle();
+
+    expect(
+        controller.state.questionAnswers['duration'], 'more than seven days');
+    expect(find.byKey(const ValueKey('voiceQuestionNotMatched')), findsNothing);
+    expect(find.text('>7 days'), findsOneWidget);
+  });
+
+  testWidgets('voice answer on allergies selects not sure', (tester) async {
+    final controller = await _pumpFlow(
+      tester,
+      speechInput: _ControllableSpeechInputService(
+        transcribeFuture: Future.value(
+          const AppResult.success(SpeechInputResult(text: 'Not sure.')),
+        ),
+      ),
+    );
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    controller.updateTranscript('headache');
+    controller.continueFromInput();
+    controller.answerQuestion('severity', '5');
+    controller.nextQuestion();
+    controller.answerQuestion('duration', 'one to three days');
+    controller.nextQuestion();
+    controller.toggleQuestionOption('related_symptoms', 'headache');
+    controller.nextQuestion();
+    controller.answerQuestion('medication', 'no medication');
+    controller.nextQuestion();
+    controller.answerQuestion('food', 'no food change');
+    controller.nextQuestion();
+    await tester.pump();
+
+    await tester.tap(find.text('Answer by voice'));
+    await tester.pump();
+    await tester.tap(find.text('Stop voice answer'));
+    await tester.pumpAndSettle();
+
+    expect(controller.state.questionAnswers['allergies'], 'not sure allergies');
+    expect(find.byKey(const ValueKey('voiceQuestionNotMatched')), findsNothing);
+    expect(find.text('Not sure'), findsOneWidget);
+  });
+
+  testWidgets('unmatched voice answer shows fallback and keeps controls',
+      (tester) async {
+    final controller = await _pumpFlow(
+      tester,
+      speechInput: _ControllableSpeechInputService(
+        transcribeFuture: Future.value(
+          const AppResult.success(SpeechInputResult(text: 'banana sky')),
+        ),
+      ),
+    );
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    controller.updateTranscript('headache');
+    controller.continueFromInput();
+    controller.answerQuestion('severity', '5');
+    controller.nextQuestion();
+    await tester.pump();
+
+    await tester.tap(find.text('Answer by voice'));
+    await tester.pump();
+    await tester.tap(find.text('Stop voice answer'));
+    await tester.pumpAndSettle();
+
+    expect(
+        find.byKey(const ValueKey('voiceQuestionNotMatched')), findsOneWidget);
+    expect(
+      find.text('Could not match answer. Please tap or try again.'),
+      findsOneWidget,
+    );
+    expect(find.text('1-3 days'), findsOneWidget);
+    expect(controller.state.questionAnswers['duration'], isNull);
+  });
+
+  testWidgets('maximized desktop content expands past old narrow width',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(2048, 1152));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(tester, style: SacaPlatformStyle.windowsDesktop);
+    await _reachInputMethod(tester);
+
+    final contentSize = tester.getSize(
+      find.byKey(const ValueKey('windowsContentColumn')),
+    );
+    expect(contentSize.width, greaterThan(1000));
+
+    final optionSize = tester.getSize(find.text('Text input').first);
+    expect(optionSize.width, greaterThan(0));
+  });
+
+  testWidgets('maximized desktop centers flow content vertically',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(2048, 1152));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(tester, style: SacaPlatformStyle.windowsDesktop);
+    await _reachInputMethod(tester);
+
+    final shellTopLeft = tester.getTopLeft(
+      find.byKey(const ValueKey('windowsContentColumn')),
+    );
+    final shellSize = tester.getSize(
+      find.byKey(const ValueKey('windowsContentColumn')),
+    );
+    final contentCenterY = shellTopLeft.dy + shellSize.height / 2;
+    final availableCenterY = 64 + (1152 - 64) / 2;
+
+    expect(contentCenterY, closeTo(availableCenterY, 60));
+    expect(shellTopLeft.dy, greaterThan(250));
+  });
+
+  testWidgets('short desktop window remains scroll-safe', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(900, 360));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(tester, style: SacaPlatformStyle.windowsDesktop);
+    await _reachInputMethod(tester);
+
+    expect(find.byKey(const ValueKey('windowsContentColumn')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('gurindji voice loading overlay stays localized', (tester) async {
     final prepareCompleter = Completer<AppResult<void>>();
     await _pumpFlow(

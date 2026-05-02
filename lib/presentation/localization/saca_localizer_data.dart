@@ -33,6 +33,11 @@ const _english = <String, String>{
   'voiceAccuracyNotice':
       'Gurindji speech recognition is placeholder only. Please review the transcript or use text/visual input.',
   'useTranscript': 'Use transcript',
+  'answerByVoice': 'Answer by voice',
+  'stopVoiceAnswer': 'Stop voice answer',
+  'voiceAnswerHeard': 'Heard:',
+  'voiceAnswerRetry': 'Try again',
+  'voiceAnswerNotMatched': 'Could not match answer. Please tap or try again.',
   'textTitle': 'Text input',
   'textSubtitle':
       'Write the main symptom first. The next screens ask for details.',
@@ -141,6 +146,11 @@ const _gurindji = <String, String>{
   'offlineSpeechNotice': 'Ngayirrp yawu mayi. Yawu nyawa.',
   'voiceAccuracyNotice': 'Gurindji ngayirrp mayi. Yawu nyawa.',
   'useTranscript': 'Yawu nyawa',
+  'answerByVoice': 'Ngayirrp answer',
+  'stopVoiceAnswer': 'Kurtirni answer',
+  'voiceAnswerHeard': 'Yawu:',
+  'voiceAnswerRetry': 'Ngayirrp jala',
+  'voiceAnswerNotMatched': 'Yawu karrwarn. Tap nyawa or ngayirrp jala.',
   'textTitle': 'Yawu',
   'textSubtitle': 'Jangany yawu nyawa. Ngana yawu nyawa kaput.',
   'textPlaceholder': 'makurrmakurr',

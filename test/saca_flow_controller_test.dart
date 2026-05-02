@@ -165,6 +165,117 @@ void main() {
       expect(controller.state.voiceBusyPhase, VoiceBusyPhase.none);
       expect(controller.state.transcript, 'headache and sore throat');
     });
+
+    test('voice maps severity transcripts to structured answer', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      controller.updateTranscript('pain');
+      controller.continueFromInput();
+
+      expect(controller.answerCurrentQuestionByVoice('nine'), isTrue);
+      expect(controller.state.questionAnswers['severity'], '9');
+      expect(controller.answerCurrentQuestionByVoice('9'), isTrue);
+      expect(controller.state.questionAnswers['severity'], '9');
+      expect(controller.answerCurrentQuestionByVoice('severe'), isTrue);
+      expect(controller.state.questionAnswers['severity'], '9');
+    });
+
+    test('voice maps duration answer and keeps unmatched non-blocking',
+        () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      controller.updateTranscript('pain');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+
+      expect(controller.answerCurrentQuestionByVoice('three days'), isTrue);
+      expect(controller.state.questionAnswers['duration'], 'one to three days');
+      expect(controller.answerCurrentQuestionByVoice('gibberish'), isFalse);
+      expect(controller.state.questionAnswers['duration'], 'one to three days');
+      expect(controller.state.voiceAnswerMatched, isFalse);
+    });
+
+    test('voice maps more than seven day duration variants', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      controller.updateTranscript('pain');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+
+      for (final transcript in <String>[
+        'More than 7 days',
+        'more than seven days',
+        'over 7 days',
+        '>7 days',
+      ]) {
+        expect(controller.answerCurrentQuestionByVoice(transcript), isTrue);
+        expect(
+          controller.state.questionAnswers['duration'],
+          'more than seven days',
+        );
+        expect(controller.state.voiceAnswerMatched, isTrue);
+      }
+    });
+
+    test('voice maps allergy choices without generic no stealing not sure',
+        () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      controller.updateTranscript('pain');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'one to three days');
+      controller.nextQuestion();
+      controller.toggleQuestionOption('related_symptoms', 'headache');
+      controller.nextQuestion();
+      controller.answerQuestion('medication', 'no medication');
+      controller.nextQuestion();
+      controller.answerQuestion('food', 'no food change');
+      controller.nextQuestion();
+
+      expect(controller.answerCurrentQuestionByVoice('Not sure.'), isTrue);
+      expect(
+          controller.state.questionAnswers['allergies'], 'not sure allergies');
+      expect(controller.answerCurrentQuestionByVoice('No known allergies'),
+          isTrue);
+      expect(
+          controller.state.questionAnswers['allergies'], 'no known allergies');
+      expect(controller.answerCurrentQuestionByVoice('banana sky'), isFalse);
+      expect(
+          controller.state.questionAnswers['allergies'], 'no known allergies');
+      expect(controller.state.voiceAnswerMatched, isFalse);
+    });
   });
 }
 

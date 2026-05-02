@@ -20,6 +20,8 @@ service.
 
 ## Minimum Viable Dataset Stack
 
+Detailed dataset matrix lives in [Dataset research summary](DATASET_RESEARCH_SUMMARY.md).
+
 Medical NLP datasets for prototype classification:
 
 - Gretel `symptom_to_diagnosis`: primary natural-language symptom to diagnosis
@@ -27,7 +29,11 @@ Medical NLP datasets for prototype classification:
 - Symptom2Disease: backup natural-language symptom dataset.
 - Healthcare Symptoms-Disease Classification Dataset: larger structured symptom
   to disease dataset for keyword/classifier experiments.
-- BI55/MedText: supplementary severity variation examples.
+- Disease and Symptoms Dataset: broad one-hot symptom/disease lookup, not primary
+  natural-language training data.
+- BI55/MedText: supplementary severity variation examples, not real triage labels.
+- MIMIC-IV-ED / MIETIC / MIMIC-IV-Ext CDS: best later triage sources, but require
+  PhysioNet credentialing and are not Week 6 dependencies.
 
 Gurindji language resources:
 
@@ -36,6 +42,8 @@ Gurindji language resources:
 - WOLD Gurindji Vocabulary: structured cross-reference for core vocabulary.
 - Pilot Gurindji Online Course: pronunciation and phrase reference where access
   conditions allow use.
+- AIATSIS dictionary and published grammar: optional reference if access and
+  permissions allow.
 
 Speech resources:
 
@@ -43,14 +51,19 @@ Speech resources:
 - DoReCo Gurindji and PARADISEC GK1: future research sources for Gurindji
   speech only after access and permission are confirmed.
 - Local DoReCo Gurindji annotation files are available outside the repo at the
-  sibling `../Data` folder in the current development workspace. They support
-  corpus and glossary research, not medical classification by themselves.
+  sibling `../Data` folder in the current development workspace. Current scan
+  found annotation files but no audio files. They support corpus and glossary
+  research, not ASR fine-tuning by themselves.
+- Common Voice English: optional English ASR test/augmentation resource. It does
+  not contain Gurindji or Australian Indigenous languages.
 
 Triage safety resources:
 
-- Australasian Triage Scale descriptors and Emergency Triage Education Kit
-  quick reference: rule source for conservative severity and emergency
-  escalation.
+- Australasian Triage Scale descriptors, ACEM ATS implementation guidance, and
+  Emergency Triage Education Kit quick reference: rule sources for conservative
+  severity and emergency escalation.
+- CARPA Standard Treatment Manual: optional remote NT clinical context if access
+  allows.
 
 ## Fine-Tuning Path
 
@@ -100,6 +113,25 @@ should stay behind the existing `AnalysisService` contract.
   datasets contain clinical triage labels.
 - Report diagnosis F1-score separately from safety-rule coverage.
 - Keep the safety layer conservative and independent from model confidence.
+- Treat language input as multilingual and code-switching by default:
+  Gurindji, English, and Gurindji-Kriol mixed language are all expected.
+- Prefer character TF-IDF n-grams over word-only tokenization for small mixed
+  Gurindji corpora because spelling variation and switching inside a single
+  utterance are common.
+- Keep `language` as explicit structured feature with normalized values
+  `english`, `gurindji`, `gurindji-kriol`, `unknown`.
+- Preserve original text and Whisper transcript text side by side during data
+  prep, then merge into one classifier text field.
+
+Local classifier script now exists at `python_pipeline/train_classifier.py`.
+It trains:
+
+- baseline `LogisticRegression` with class balancing;
+- main `XGBClassifier` with `GridSearchCV` on macro-F1;
+- structured categorical + numeric follow-up features;
+- SHAP top features for XGBoost;
+- mobile-oriented export artifacts and ONNX best-effort path for Logistic
+  Regression.
 
 ## Data Governance
 
@@ -112,11 +144,16 @@ Known constraints:
 - Public medical datasets are synthetic or curated, not clinical deployment
   evidence.
 - There is no public Gurindji medical speech dataset.
+- There is no directly usable public ATS-labelled Australian triage dataset in
+  this repo workflow; public severity must be derived conservatively from
+  ATS/ETEK rules unless credentialed PhysioNet access is added later.
 - The local DoReCo data contains annotations only; PARADISEC audio is not
   present locally.
-- Gurindji dictionary and corpus sources require careful attribution and cultural
-  respect.
+- Gurindji dictionary and corpus sources require careful attribution, cultural
+  respect, and community review before medical wording is presented as correct.
 - DoReCo notes that Gurindji language mixing is common in the dataset.
+- Gurindji medical vocabulary in this project is curated prototype wording, not
+  community-validated clinical terminology.
 
 ## References
 

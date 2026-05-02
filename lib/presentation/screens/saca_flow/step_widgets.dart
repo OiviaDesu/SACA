@@ -449,6 +449,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           _localizer.t(state.language, 'severityTitle'),
           _localizer.t(state.language, 'severitySubtitle'),
         ),
+        _voiceQuestionControls(state),
         const SizedBox(height: 18),
         SacaSeveritySlider(
           value: severity,
@@ -509,6 +510,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           _localizer.t(state.language, 'relatedTitle'),
           _localizer.t(state.language, 'relatedSubtitle'),
         ),
+        _voiceQuestionControls(state),
         const SizedBox(height: 18),
         Wrap(
           spacing: 10,
@@ -644,18 +646,15 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       state: state,
       children: [
         _title(style, title, subtitle),
+        _voiceQuestionControls(state),
         const SizedBox(height: 18),
-        for (final choice in choices) ...[
-          _AnswerButton(
-            label: choice.label,
-            selected: selected == choice.value,
-            onPressed: () => _controller.answerQuestion(
-              questionId,
-              choice.value,
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
+        _singleChoiceOptionsGrid(
+          state: state,
+          style: style,
+          questionId: questionId,
+          selected: selected,
+          choices: choices,
+        ),
         const SizedBox(height: 18),
         SacaPrimaryButton(
           label: nextLabel,
@@ -666,6 +665,46 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           onPressed: selected == null ? null : onNext,
         ),
       ],
+    );
+  }
+
+  Widget _singleChoiceOptionsGrid({
+    required SacaFlowState state,
+    required SacaPlatformStyle style,
+    required String questionId,
+    required String? selected,
+    required List<_Choice> choices,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useTwoColumns = style == SacaPlatformStyle.windowsDesktop &&
+            constraints.maxWidth >= 920 &&
+            choices.length > 2;
+        final spacing = useTwoColumns ? 12.0 : 10.0;
+        final itemWidth = useTwoColumns
+            ? (constraints.maxWidth - spacing) / 2
+            : constraints.maxWidth;
+
+        return Wrap(
+          key: const ValueKey('singleChoiceOptionsGrid'),
+          spacing: spacing,
+          runSpacing: 10,
+          children: [
+            for (final choice in choices)
+              SizedBox(
+                width: itemWidth,
+                child: _AnswerButton(
+                  label: choice.label,
+                  selected: selected == choice.value,
+                  onPressed: () => _controller.answerQuestion(
+                    questionId,
+                    choice.value,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -773,6 +812,58 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       onInfo: () => _showPrototypeInfo(context),
       localizer: _localizer,
       children: children,
+    );
+  }
+
+  Widget _voiceQuestionControls(SacaFlowState state) {
+    if (state.inputMethod != InputMethod.voice) {
+      return const SizedBox.shrink();
+    }
+
+    final heard = state.voiceAnswerTranscript.trim();
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SacaPrimaryButton(
+            key: const ValueKey('voiceQuestionRecordButton'),
+            label: state.isRecording
+                ? _localizer.t(state.language, 'stopVoiceAnswer')
+                : _localizer.t(state.language, 'answerByVoice'),
+            icon: state.isRecording
+                ? CupertinoIcons.stop_circle
+                : CupertinoIcons.mic,
+            onPressed: state.isBusy
+                ? null
+                : () {
+                    if (state.isRecording) {
+                      _controller.stopRecording();
+                    } else {
+                      _controller.startRecording();
+                    }
+                  },
+          ),
+          if (heard.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              '${_localizer.t(state.language, 'voiceAnswerHeard')} $heard',
+              key: const ValueKey('voiceQuestionHeard'),
+              textAlign: TextAlign.center,
+              style: SacaTheme.small,
+            ),
+          ],
+          if (!state.voiceAnswerMatched) ...[
+            const SizedBox(height: 6),
+            Text(
+              _localizer.t(state.language, 'voiceAnswerNotMatched'),
+              key: const ValueKey('voiceQuestionNotMatched'),
+              textAlign: TextAlign.center,
+              style: SacaTheme.small.copyWith(color: SacaTheme.emergency),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
