@@ -19,6 +19,8 @@ class SacaSeveritySlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clampedValue = value.clamp(1, 10);
+    final color = _colorFor(clampedValue);
+    final descriptor = _descriptorFor(clampedValue);
     const labelWidth = 74.0;
     const sliderHorizontalPadding = 28.0;
 
@@ -50,7 +52,7 @@ class SacaSeveritySlider extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(
-                    height: 116,
+                    height: 142,
                     child: Stack(
                       children: [
                         Positioned(
@@ -76,12 +78,37 @@ class SacaSeveritySlider extends StatelessWidget {
                           ),
                         ),
                         Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 58,
+                          child: AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 160),
+                            style: SacaTheme.body.copyWith(
+                              color: color,
+                              fontWeight: FontWeight.w800,
+                            ),
+                            child: Text(
+                              descriptor,
+                              key: ValueKey<String>(
+                                  'severityDescriptor-$descriptor'),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                        Positioned(
                           left: sliderHorizontalPadding,
                           right: sliderHorizontalPadding,
-                          top: 82,
+                          top: 108,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE7F2F6),
+                              gradient: const LinearGradient(
+                                colors: [
+                                  SacaTheme.safe,
+                                  SacaTheme.warning,
+                                  Color(0xFFFF8A3D),
+                                  SacaTheme.emergency,
+                                ],
+                              ),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: const SizedBox(height: 10),
@@ -90,7 +117,7 @@ class SacaSeveritySlider extends StatelessWidget {
                         Positioned(
                           left: 0,
                           right: 0,
-                          top: 58,
+                          top: 84,
                           child: SizedBox(
                             height: 58,
                             child: CupertinoSlider(
@@ -99,10 +126,15 @@ class SacaSeveritySlider extends StatelessWidget {
                               min: 1,
                               max: 10,
                               divisions: 9,
-                              activeColor: SacaTheme.selectedBorder,
+                              activeColor: color,
                               thumbColor: SacaTheme.text,
-                              onChanged: (nextValue) =>
-                                  onChanged(nextValue.round()),
+                              onChanged: (nextValue) {
+                                final next = nextValue.round();
+                                if (next != clampedValue) {
+                                  HapticFeedback.selectionClick();
+                                }
+                                onChanged(next);
+                              },
                             ),
                           ),
                         ),
@@ -128,5 +160,19 @@ class SacaSeveritySlider extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _colorFor(int value) {
+    if (value <= 3) return SacaTheme.safe;
+    if (value <= 6) return SacaTheme.warning;
+    if (value <= 8) return const Color(0xFFFF8A3D);
+    return SacaTheme.emergency;
+  }
+
+  String _descriptorFor(int value) {
+    if (value <= 3) return 'Low pain';
+    if (value <= 6) return 'Moderate pain';
+    if (value <= 8) return 'High pain';
+    return 'Emergency level';
   }
 }

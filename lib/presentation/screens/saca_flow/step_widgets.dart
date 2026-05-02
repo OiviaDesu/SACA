@@ -252,17 +252,50 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
               _localizer.t(state.language, 'visualSymptomsSubtitle'),
             ),
             const SizedBox(height: 18),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final symptom in SacaFlowState.symptoms)
-                  SacaChipButton(
-                    label: _localizer.symptomLabel(state.language, symptom),
-                    selected: state.selectedSymptomIds.contains(symptom.id),
-                    onPressed: () => _controller.toggleSymptom(symptom.id),
-                  ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 620 ? 3 : 2;
+                final cardWidth =
+                    (constraints.maxWidth - (columns - 1) * 12) / columns;
+
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    for (final symptom in SacaFlowState.symptoms)
+                      SizedBox(
+                        width: cardWidth,
+                        child: _VisualSymptomCard(
+                          label: _localizer.symptomLabel(
+                            state.language,
+                            symptom,
+                          ),
+                          secondaryLabel:
+                              state.language == SacaLanguage.gurindji
+                                  ? symptom.label
+                                  : null,
+                          icon: _symptomIconFor(symptom.id),
+                          selected:
+                              state.selectedSymptomIds.contains(symptom.id),
+                          onPressed: () =>
+                              _controller.toggleSymptom(symptom.id),
+                        ),
+                      ),
+                    SizedBox(
+                      width: cardWidth,
+                      child: _VisualSymptomCard(
+                        label: _localizer.t(state.language, 'visualOtherTitle'),
+                        secondaryLabel:
+                            _localizer.t(state.language, 'visualOtherSubtitle'),
+                        icon: CupertinoIcons.ellipsis_circle,
+                        selected: false,
+                        onPressed: () =>
+                            _controller.chooseInputMethod(InputMethod.text),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 18),
             _SelectedSummary(
@@ -276,7 +309,9 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
               label: _localizer.t(state.language, 'continue'),
               icon: CupertinoIcons.arrow_right_circle,
               filled: true,
-              onPressed: () => _setVisualStage(_VisualInputStage.front),
+              onPressed: hasSelection
+                  ? () => _setVisualStage(_VisualInputStage.front)
+                  : null,
             ),
           ],
         ),
@@ -842,6 +877,108 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           ],
         );
       },
+    );
+  }
+
+  IconData _symptomIconFor(String symptomId) {
+    return switch (symptomId) {
+      'headache' => CupertinoIcons.bandage,
+      'fever' => CupertinoIcons.thermometer,
+      'stomachache' => CupertinoIcons.circle_grid_hex,
+      'sore_throat' => CupertinoIcons.waveform_path_ecg,
+      'chest_pain' => CupertinoIcons.heart,
+      'breathing_trouble' => CupertinoIcons.wind,
+      'vomiting' => CupertinoIcons.drop,
+      'bloating' => CupertinoIcons.circle,
+      _ => CupertinoIcons.staroflife,
+    };
+  }
+}
+
+class _VisualSymptomCard extends StatelessWidget {
+  const _VisualSymptomCard({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onPressed,
+    this.secondaryLabel,
+  });
+
+  final String label;
+  final String? secondaryLabel;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: secondaryLabel == null ? label : '$label, $secondaryLabel',
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        minimumSize: const Size(
+          SacaTheme.minTapTarget,
+          SacaTheme.minTapTarget,
+        ),
+        onPressed: onPressed,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          constraints: const BoxConstraints(minHeight: 142),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            gradient: selected
+                ? SacaTheme.selectedGradient
+                : SacaTheme.surfaceGradient,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? SacaTheme.selectedBorder : SacaTheme.border,
+              width: selected ? 2 : 1,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x12000000),
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: selected
+                      ? const Color(0x268FC8DE)
+                      : const Color(0x14D9D4D1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Icon(icon, size: 28, color: SacaTheme.text),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: SacaTheme.body.copyWith(fontWeight: FontWeight.w800),
+              ),
+              if (secondaryLabel != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  secondaryLabel!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: SacaTheme.small,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
