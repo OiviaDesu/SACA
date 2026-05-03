@@ -35,3 +35,5 @@ flutter:
     - assets/data/gurindji_lexicon.json
     - assets/models/
     - assets/models/sherpa-onnx-whisper-base/
+    - assets/Images/
+    
