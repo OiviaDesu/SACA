@@ -3853,5 +3853,251 @@
     "gurindji": "jaaj",
     "english": "to beg / plead",
     "type": "verb"
+  },
+  { 
+    "gurindji": "kangarnta",
+    "english": "mouth", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "ngalyanu", 
+    "english": "tongue", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "kamparrak", 
+    "english": "chest", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "kawurru", 
+    "english": "lower chest", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "maparta", 
+    "english": "hand", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "murna", 
+    "english": "hand", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "wartan", 
+    "english": "arm", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "kurlpak", 
+    "english": "vomit", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "yurlpak", 
+    "english": "vomit", 
+    "type": "symptom" 
+  },
+  { 
+    "gurindji": "ngamurlmurl", 
+    "english": "sore eye", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "ngayirr", 
+    "english": "shortness of breath", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "kupupuk", 
+    "english": "shiver from cold", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "yakayaka", 
+    "english": "pain", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "jurlan", 
+    "english": "thirsty", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "murnta", 
+    "english": "stomach", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "nyinyji", 
+    "english": "lower back", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "wirri", 
+    "english": "neck", 
+    "type": "body" 
+  },
+  { 
+    "gurindji": "pampila", 
+    "english": "shoulder", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "lawartka", 
+    "english": "collar bone", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "wartiny", 
+    "english": "collar bone", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "karlngarrng", 
+    "english": "knee cap", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "ngapulu", 
+    "english": "breast", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "purlkamarlang", 
+    "english": "bowel", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "julu", 
+    "english": "navel", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "ngajurrujurru", 
+    "english": "navel", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "kumpu", 
+    "english": "urine", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "ngajirrp", 
+    "english": "sneeze", 
+    "type": "symptom" 
+  },
+  { 
+    "gurindji": "kupupuk", 
+    "english": "shiver from cold", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "talalap", 
+    "english": "shiver", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "runmurunmu", 
+    "english": "bruising", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "majarta", 
+    "english": "cramped", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "majartawuk", 
+    "english": "stiff", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "walarljap", 
+    "english": "very sick", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "marlurlumpurr", 
+    "english": "weak", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "lup", 
+    "english": "swell up", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "rimpu", 
+    "english": "swell up", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "turturlk", 
+    "english": "sores swell and burst", 
+    "type": "symptom"
+  },
+  { 
+    "gurindji": "karnali", 
+    "english": "small of back", 
+    "type": "body"
+  },
+  { 
+    "gurindji": "kantarta", 
+    "english": "backbone", 
+    "type": "body" 
+  },
+  { 
+    "gurindji": "kumungku", 
+    "english": "backbone", 
+    "type": "body" 
+  },
+  { 
+    "gurindji": "murlku", 
+    "english": "upper arm", 
+    "type": "body" 
+  },
+  { 
+    "gurindji": "minti", 
+    "english": "anus", 
+    "type": "body" 
+  },
+
+  { 
+    "gurindji": "kungkurr", 
+    "english": "mucus", 
+    "type": "symptom" 
+  },
+  { 
+    "gurindji": "jirrkalyp", 
+    "english": "diarrhoea", 
+    "type": "symptom" 
+  },
+  { 
+    "gurindji": "parraly", 
+    "english": "diarrhoea", 
+    "type": "symptom" 
+  },
+  { 
+    "gurindji": "marlp", 
+    "english": "racing pulse", 
+    "type": "symptom" 
+  },
+  { 
+    "gurindji": "wilyjirrij", 
+    "english": "pus discharge", 
+    "type": "symptom" 
+  },
+  { 
+    "gurindji": "parrakak", 
+    "english": "sores", 
+    "type": "symptom" 
+  },
+  { 
+    "gurindji": "kurlupangkarra", 
+    "english": "ailing", 
+    "type": "symptom" 
   }
 ]
