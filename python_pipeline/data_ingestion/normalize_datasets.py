@@ -14,6 +14,18 @@ PIPELINE_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATA_DIR = PIPELINE_ROOT / "data" / "raw"
 DEFAULT_OUTPUT = PIPELINE_ROOT / "data" / "processed" / "normalized_diagnosis_dataset.csv"
 DEFAULT_MIN_CLASS_COUNT = 2
+DIAGNOSIS_SYNONYMS = {
+    "peptic ulcer diseae": "peptic ulcer disease",
+    "dimorphic hemorrhoids": "hemorrhoids",
+    "dimorphic haemorrhoids": "hemorrhoids",
+    "bronchial asthma": "asthma",
+    "cervical spondylosis": "spondylosis",
+    "gerd": "gastroesophageal reflux disease",
+    "gastro-oesophageal reflux disease": "gastroesophageal reflux disease",
+    "gastroesophageal reflux": "gastroesophageal reflux disease",
+    "urinary tract infection": "uti",
+    "fungal infection": "fungal infection",
+}
 
 
 def normalize_text(value: object) -> str:
@@ -23,7 +35,10 @@ def normalize_text(value: object) -> str:
 
 
 def normalize_label(value: object) -> str:
-    return normalize_text(value).casefold()
+    label = normalize_text(value).casefold()
+    label = re.sub(r"[_\-]+", " ", label)
+    label = re.sub(r"\s+", " ", label).strip()
+    return DIAGNOSIS_SYNONYMS.get(label, label)
 
 
 def extract_user_turns(value: object) -> str:
@@ -83,6 +98,25 @@ def load_healthcare(path: Path) -> pd.DataFrame:
     return out
 
 
+def load_final_augmented(path: Path, *, max_rows: int | None = None) -> pd.DataFrame:
+    df = pd.read_csv(path, nrows=max_rows)
+    symptom_cols = [col for col in df.columns if col != "diseases"]
+
+    def active_symptoms(row: pd.Series) -> str:
+        active = [str(col) for col in symptom_cols if pd.to_numeric(row[col], errors="coerce") == 1]
+        return normalize_text("; ".join(active))
+
+    out = pd.DataFrame(
+        {
+            "symptoms_text": df.apply(active_symptoms, axis=1),
+            "diagnosis_label": df["diseases"].map(normalize_label),
+            "source": "final_augmented_diseases_symptoms",
+            "language": "english",
+        }
+    )
+    return out
+
+
 def load_medical_conversations(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
     out = pd.DataFrame(
@@ -117,6 +151,7 @@ SUPPORTED_DATASET_LOADERS: dict[str, Callable[[Path], pd.DataFrame]] = {
     "gretel_symptom_to_diagnosis.csv": load_gretel,
     "Symptom2Disease.csv": load_symptom2disease,
     "Healthcare.csv": load_healthcare,
+    "Final_Augmented_dataset_Diseases_and_Symptoms.csv": load_final_augmented,
     "medical_conversations.csv": load_medical_conversations,
     "normalized_diagnosis_dataset.csv": load_prebuilt_normalized,
 }
@@ -150,6 +185,8 @@ def default_input_paths(
 
     if include_healthcare:
         file_names.append("Healthcare.csv")
+    if include_healthcare:
+        file_names.append("Final_Augmented_dataset_Diseases_and_Symptoms.csv")
     if include_medical_conversations:
         file_names.append("medical_conversations.csv")
     if include_prebuilt_normalized:
@@ -207,6 +244,15 @@ def build_diagnosis_dataset(
     combined = pd.concat(frames, ignore_index=True, sort=False)
     rows_before_combined_dedupe = len(combined)
     combined = combined.drop_duplicates(subset=["symptoms_text", "diagnosis_label", "source"]).copy()
+
+    text_key = combined["symptoms_text"].fillna("").astype(str).str.strip().str.casefold()
+    label_key = combined["diagnosis_label"].fillna("").astype(str).str.strip().str.casefold()
+    conflict_counts = pd.DataFrame({"text": text_key, "label": label_key}).groupby("text")["label"].nunique()
+    conflicting_texts = set(conflict_counts[conflict_counts > 1].index)
+    rows_before_conflict_filter = len(combined)
+    if conflicting_texts:
+        combined = combined[~text_key.isin(conflicting_texts)].copy()
+
     combined.reset_index(drop=True, inplace=True)
 
     train_ready_df, cleaning_summary = trainer.clean_training_frame(
@@ -224,8 +270,10 @@ def build_diagnosis_dataset(
         "processed_files": processed_files,
         "skipped_files": skipped_files,
         "rows_before_combined_dedupe": int(rows_before_combined_dedupe),
-        "rows_after_combined_dedupe": int(len(combined)),
-        "combined_duplicate_rows_removed": int(rows_before_combined_dedupe - len(combined)),
+        "rows_after_combined_dedupe_and_conflict_filter": int(len(combined)),
+        "combined_duplicate_rows_removed": int(rows_before_combined_dedupe - rows_before_conflict_filter),
+        "conflicting_texts_removed": int(len(conflicting_texts)),
+        "conflicting_rows_removed": int(rows_before_conflict_filter - len(combined)),
         "rows_after_training_cleaning": int(len(train_ready_df)),
         "label_count": int(train_ready_df["diagnosis_label"].nunique()),
         "source_distribution": train_ready_df["source"].value_counts().to_dict(),

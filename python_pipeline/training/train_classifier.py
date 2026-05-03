@@ -19,7 +19,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
 from sklearn.model_selection import ParameterGrid, StratifiedKFold, train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
 
 try:
     from xgboost import XGBClassifier
@@ -209,6 +209,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=1,
         help="Emit live progress after every N completed CV fits.",
     )
+    parser.add_argument(
+        "--include-text-length-features",
+        action="store_true",
+        help="Add text_char_len/text_word_len numeric features. Disabled by default because unscaled text length hurt LR accuracy.",
+    )
     return parser.parse_args(argv)
 
 
@@ -290,6 +295,7 @@ def add_derived_features(
     text_cols: list[str],
     categorical_cols: list[str],
     numeric_cols: list[str],
+    include_text_length_features: bool = False,
 ) -> tuple[pd.DataFrame, list[str], list[str], list[str]]:
     frame = df.copy()
 
@@ -318,9 +324,10 @@ def add_derived_features(
         actual_categorical.append("source")
 
     actual_numeric = detect_present_columns(frame, numeric_cols)
-    for derived_numeric in ["text_char_len", "text_word_len"]:
-        if derived_numeric not in actual_numeric:
-            actual_numeric.append(derived_numeric)
+    if include_text_length_features:
+        for derived_numeric in ["text_char_len", "text_word_len"]:
+            if derived_numeric not in actual_numeric:
+                actual_numeric.append(derived_numeric)
 
     feature_columns = ["combined_text", *actual_categorical, *actual_numeric]
     return frame, ["combined_text"], actual_categorical, actual_numeric
@@ -537,7 +544,10 @@ def build_preprocessor(categorical_cols: list[str], numeric_cols: list[str], max
             (
                 "num",
                 Pipeline(
-                    steps=[("imputer", SimpleImputer(strategy="median"))]
+                    steps=[
+                        ("imputer", SimpleImputer(strategy="median")),
+                        ("scaler", StandardScaler(with_mean=False)),
+                    ]
                 ),
                 numeric_cols,
             )
@@ -559,7 +569,7 @@ def build_lr_pipeline(categorical_cols: list[str], numeric_cols: list[str], max_
                     max_iter=5000,
                     tol=1e-3,
                     class_weight="balanced",
-                    solver="saga",
+                    solver="lbfgs",
                     random_state=random_state,
                 ),
             ),
@@ -1083,6 +1093,7 @@ def main(argv: list[str] | None = None) -> None:
         args.text_cols,
         args.categorical_cols,
         args.numeric_cols,
+        include_text_length_features=args.include_text_length_features,
     )
     emit_progress(
         f"[features] Text columns: {text_feature_cols}",

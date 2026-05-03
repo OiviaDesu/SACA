@@ -131,6 +131,9 @@ The trainer now defaults to a **balanced** tuning budget for faster iteration:
 - `--tuning-profile balanced` by default, which trims the XGBoost search space
 - `--skip-shap` is available for quick-turn tuning runs when explanations are
    not needed immediately
+- text length numeric features are disabled by default; add
+  `--include-text-length-features` only when you need them. The trainer scales
+  numeric features, but diagnosis quality is best with text + source/language only.
 
 Use `--tuning-profile full` if you need the original exhaustive XGBoost grid.
 
@@ -179,9 +182,9 @@ python python_pipeline/training/train_classifier.py `
    --data python_pipeline/data/processed/normalized_diagnosis_dataset.csv `
    --label-col diagnosis_label `
    --task diagnosis `
-   --text-cols symptoms_text transcript_text `
-   --categorical-cols body_location prior_medications language source `
-   --numeric-cols duration_hours duration_days `
+   --text-cols symptoms_text `
+   --categorical-cols language source `
+   --numeric-cols `
    --model lr `
    --cv-folds 2 `
    --verbose `
@@ -199,9 +202,9 @@ python python_pipeline/training/train_classifier.py `
    --data python_pipeline/data/processed/normalized_diagnosis_dataset.csv `
    --label-col diagnosis_label `
    --task diagnosis `
-   --text-cols symptoms_text transcript_text `
-   --categorical-cols body_location prior_medications language source `
-   --numeric-cols duration_hours duration_days `
+   --text-cols symptoms_text `
+   --categorical-cols language source `
+   --numeric-cols `
    --model both `
    --tuning-profile balanced `
    --skip-shap `
@@ -337,9 +340,9 @@ python python_pipeline/training/train_classifier.py `
    --data python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.csv `
    --label-col diagnosis_label `
    --task diagnosis `
-   --text-cols symptoms_text transcript_text `
-   --categorical-cols body_location prior_medications language source `
-   --numeric-cols duration_hours duration_days `
+   --text-cols symptoms_text `
+   --categorical-cols language source `
+   --numeric-cols `
    --model both `
    --tuning-profile balanced `
    --skip-shap `
