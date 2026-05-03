@@ -61,8 +61,8 @@ class BodyDiagram extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           child: Image.asset(
                             view == BodyView.front
-                                ? 'assets/images/Body_front.png'
-                                : 'assets/images/Body_back.png',
+                                ? 'assets/Images/Body_front.png'
+                                : 'assets/Images/Body_back.png',
                             fit: BoxFit.contain,
                           ),
                         ),
