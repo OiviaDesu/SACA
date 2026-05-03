@@ -422,6 +422,58 @@ converter support and mobile string ops can differ across runtimes. Keep XGBoost
 as main research model and SHAP explanation source; deploy only after device
 parity tests pass.
 
+### Experimental Dart export for the current `quick xgboost` winner
+
+For the current winning `multi` diagnosis model, the repo now includes a local
+experimental Dart export path built around:
+
+1. a generated `m2cgen` Dart scorer;
+2. a JSON preprocessing/tree bundle;
+3. a parity checker that rebuilds the held-out split and compares export-time
+    predictions against the original Python model.
+
+Export the local bundle and scorer:
+
+```bash
+python python_pipeline/export_xgb_to_dart.py \
+   --model-dir /fred/oz396/dunguyen/saca_whisper/outputs/classifier_campaigns/diagnosis_profile_ladder_20260503_154451/quick/xgb/multi \
+   --bundle-output-dir assets/models/classifier-xgb-quick \
+   --dart-model-output lib/infrastructure/analysis/generated_local/xgb_quick_model.dart \
+   --write-python-scorer
+```
+
+Verify parity on the rebuilt held-out split from the same campaign dataset:
+
+```bash
+python python_pipeline/verify_xgb_dart_export.py \
+   --model-dir /fred/oz396/dunguyen/saca_whisper/outputs/classifier_campaigns/diagnosis_profile_ladder_20260503_154451/quick/xgb/multi \
+   --bundle-dir assets/models/classifier-xgb-quick \
+   --data /fred/oz396/dunguyen/saca_whisper/outputs/classifier_campaigns/diagnosis_profile_ladder_20260503_154451/quick/xgb/intermediate/diagnosis_multi_dataset.csv \
+   --label-col diagnosis_label
+```
+
+For binary XGBoost logistic exports, do **not** assume the generated scorer is
+already returning class probabilities. Depending on the conversion path it may
+emit raw margins/logits instead. The parity checker now tests those
+interpretations against Python `predict_proba` before reporting the result.
+
+Interpretation of the current results:
+
+- the **bundle runtime** path is parity-safe for this model (`top1_agreement = 1.0`,
+   `max_abs_diff < 1e-6` on the rebuilt held-out split);
+- the **raw m2cgen scorer** path is still slightly off for a small number of
+   rows, so treat it as experimental unless you accept that residual drift.
+
+Why the bundle runtime is more stable right now:
+
+- it preserves sparse-missing semantics with `NaN` for absent features;
+- it quantizes inputs and thresholds to `float32`, which matches native XGBoost
+   branch behavior more closely.
+
+The generated files under `assets/models/classifier-xgb-quick/` and
+`lib/infrastructure/analysis/generated_local/` are intentionally local-only and
+ignored by Git.
+
 ## Whisper Fine-Tuning Path
 
 DoReCo annotations exist locally under the sibling `../Data` folder, but the

@@ -9,3 +9,4 @@ seaborn>=0.13
 skl2onnx>=1.16
 onnxmltools>=1.12
 onnxruntime>=1.17
+m2cgen>=0.10

@@ -72,6 +72,14 @@ windows/flutter/ephemeral/
 # Local model assets. See docs/MODEL_ASSETS.md.
 assets/models/sherpa-onnx-whisper-base/*.onnx
 assets/models/sherpa-onnx-whisper-base/tokens.txt
+assets/models/classifier-xgb-quick/**
+!assets/models/classifier-xgb-quick/
+!assets/models/classifier-xgb-quick/README.md
+
+# Local generated classifier source. Regenerate with python_pipeline/export_xgb_to_dart.py.
+lib/infrastructure/analysis/generated_local/**
+!lib/infrastructure/analysis/generated_local/
+!lib/infrastructure/analysis/generated_local/README.md
 
 # Internal assistant/automation artifacts (kept locally, not tracked)
 .agents/

@@ -133,6 +133,15 @@ It trains:
 - mobile-oriented export artifacts and ONNX best-effort path for Logistic
   Regression.
 
+Current diagnosis-model deployment note:
+
+- `quick xgboost` remains the strongest practical winner on the expanded
+  `multi` diagnosis dataset.
+- A local Dart export experiment now exists for that winner.
+- Exact parity has been verified with the **JSON tree bundle runtime** path.
+- Direct `m2cgen` scorer export is close but not exact yet, so it should still
+  be treated as experimental rather than default-safe app runtime behavior.
+
 ## Data Governance
 
 Do not commit Hugging Face, Kaggle, DoReCo, PARADISEC, AIATSIS, or course audio

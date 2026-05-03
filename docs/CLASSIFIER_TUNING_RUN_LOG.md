@@ -84,3 +84,98 @@ Snapshot captured after the first ~30 minutes of scheduler/runtime activity:
 - This matches the previously locked quick LR baseline to the displayed precision,
   which is a good sign that the new campaign plumbing did not perturb the quick
   LR path.
+
+## Final status after all six jobs completed
+
+All submitted jobs completed successfully with exit code `0:0`.
+
+| Job ID | Job name | Final state | Elapsed | Timelimit |
+| --- | --- | --- | --- | --- |
+| 11813149 | `saca_lr_quick` | `COMPLETED` | `00:18:06` | `01:00:00` |
+| 11813150 | `saca_xgb_quick` | `COMPLETED` | `00:10:13` | `03:00:00` |
+| 11813151 | `saca_lr_balanced` | `COMPLETED` | `00:53:55` | `01:00:00` |
+| 11813152 | `saca_xgb_balanced` | `COMPLETED` | `00:44:40` | `03:00:00` |
+| 11813153 | `saca_lr_full` | `COMPLETED` | `01:41:24` | `02:00:00` |
+| 11813154 | `saca_xgb_full` | `COMPLETED` | `03:06:10` | `08:00:00` |
+
+## Final results by profile
+
+### Multi scope (primary comparison target)
+
+| Profile | Model | Macro-F1 | Accuracy | Best CV score | Summary |
+| --- | --- | ---: | ---: | ---: | --- |
+| quick | LR | `0.1929` | `0.0701` | `0.1519` | Reproduced the locked LR baseline almost exactly. |
+| quick | XGB | `0.3782` | `0.1256` | `0.3688` | Best overall test result in this campaign. |
+| balanced | LR | `0.1926` | `0.0701` | `0.1531` | Slightly better CV score, but no practical test gain. |
+| balanced | XGB | `0.3780` | `0.1249` | `0.3703` | Slightly better CV score than quick, but slightly worse test macro-F1. |
+| full | LR | `0.1926` | `0.0701` | `0.1531` | Same outcome as balanced despite the larger search. |
+| full | XGB | `0.3780` | `0.1249` | `0.3703` | Same outcome as balanced despite the much larger search. |
+
+### Single scope (normalized diagnosis dataset)
+
+| Profile | Model | Macro-F1 | Accuracy | Best CV score |
+| --- | --- | ---: | ---: | ---: |
+| quick | LR | `0.0985` | `0.1147` | `0.0731` |
+| quick | XGB | `0.9687` | `0.9676` | `0.9345` |
+| balanced | LR | `0.0985` | `0.1147` | `0.0742` |
+| balanced | XGB | `0.9654` | `0.9651` | `0.9385` |
+| full | LR | `0.0985` | `0.1147` | `0.0742` |
+| full | XGB | `0.9654` | `0.9651` | `0.9385` |
+
+## Interpretation
+
+### 1. Winner by profile
+
+- `XGBoost` won every profile on the primary `multi` scope.
+- The practical ranking on `multi` was:
+  1. `quick xgb` (`macro-F1 0.3782`)
+  2. `balanced xgb` (`macro-F1 0.3780`)
+  3. `full xgb` (`macro-F1 0.3780`)
+  4. all LR variants around `0.1926`–`0.1929`
+
+### 2. ROI of tuning profiles
+
+- `quick` already captured essentially the best observed `multi` test result for
+  both LR and XGB.
+- `balanced` improved the **cross-validation** score slightly for both models,
+  but that did not translate into better held-out `multi` performance.
+- `full` gave no measurable gain over `balanced` for either LR or XGB.
+
+### 3. Runtime efficiency
+
+- `quick xgb` finished in `10m 13s` and still delivered the best `multi`
+  macro-F1 in this campaign.
+- `balanced xgb` took `44m 40s` for essentially the same result.
+- `full xgb` took `3h 06m 10s` and still converged to the same winning params as
+  `balanced` on the `multi` scope.
+- `lr full` also failed to beat `lr balanced`, so the larger LR search was not
+  worth the extra runtime either.
+
+### 4. Data difficulty gap: single vs multi
+
+- The `single` scope remains dramatically easier than the expanded `multi`
+  scope.
+- `xgb` achieved about `0.965`–`0.969` macro-F1 on `single`, but only about
+  `0.378` on `multi`.
+- This confirms the real bottleneck is not search-budget size alone: the
+  expanded dataset (`27941` rows / `47` labels) is simply a much harder problem
+  than the normalized single dataset (`2002` rows / `24` labels).
+
+### 5. Resource notes
+
+- All jobs were safely under their walltime limits; none timed out.
+- The job footers consistently reported low CPU usage and over-provisioned RAM.
+- `full xgb` also used only about `38.8%` of its `8h` fallback walltime, so the
+  fallback was safe but conservative.
+
+## Practical recommendation after this campaign
+
+1. Freeze `quick xgb` as the strongest practical winner from the current tuning
+   ladder.
+2. Do **not** spend more compute on `balanced` or `full` profile escalation for
+   the current dataset setup.
+3. Move the next improvement cycle to **data / label policy work**:
+   - label consolidation,
+   - text-quality filtering,
+   - adapter work for additional usable sources,
+   - then rerun the ladder starting from `quick` again.

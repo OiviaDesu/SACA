@@ -7,6 +7,43 @@ runtime assets or release artifacts.
 The same policy applies to generated classifier artifacts from
 `python_pipeline/`, including `*.joblib`, `*.onnx`, and campaign run outputs.
 
+## Experimental Classifier Dart Export
+
+The current winning diagnosis artifact is still the local-only `quick xgboost`
+run from the expanded `multi` campaign dataset. This repo now includes an
+**experimental** Dart export path for that model:
+
+```text
+assets/models/classifier-xgb-quick/
+  README.md
+  bundle.json                  # local-only, generated
+  export_summary.json          # local-only, generated
+
+lib/infrastructure/analysis/generated_local/
+  README.md
+  xgb_quick_model.dart         # local-only, generated m2cgen scorer
+```
+
+Tracked source files that support this flow:
+
+- `python_pipeline/export_xgb_to_dart.py`
+- `python_pipeline/verify_xgb_dart_export.py`
+- `python_pipeline/xgb_flutter_bundle.py`
+- `lib/infrastructure/analysis/xgb_m2cgen_runtime.dart`
+
+Current parity status on the real held-out test split rebuilt from the winning
+campaign dataset:
+
+- **JSON tree bundle runtime:** exact top-1 agreement with the original Python
+  model and `max_abs_diff < 1e-6`
+- **raw m2cgen-generated scorer path:** still slightly off (`~0.9986`
+  top-1 agreement on the same split, with worst-case probability drift around
+  `0.0568`)
+
+Because of that result, treat the local `m2cgen` scorer as a useful export
+experiment/debug artifact, **not** the default-safe deployment path yet. If you
+need parity-first local runtime behavior, prefer the JSON tree bundle runtime.
+
 ## Mobile English STT
 
 Android and iOS use `whisper_kit`.
@@ -63,6 +100,8 @@ The following files are ignored:
 ```text
 assets/models/sherpa-onnx-whisper-base/*.onnx
 assets/models/sherpa-onnx-whisper-base/tokens.txt
+assets/models/classifier-xgb-quick/**
+lib/infrastructure/analysis/generated_local/**
 ```
 
 Keep only the placeholder README in Git.
