@@ -49,9 +49,9 @@ except ImportError:  # pragma: no cover
     set_seed = None
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DATA_ROOT = REPO_ROOT.parent / "Data"
-DEFAULT_OUTPUT_ROOT = REPO_ROOT / "python_pipeline" / "outputs" / "whisper_gurindji"
+PIPELINE_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_DATA_ROOT = PIPELINE_ROOT.parent / "Data"
+DEFAULT_OUTPUT_ROOT = PIPELINE_ROOT / "outputs" / "whisper_gurindji"
 SUPPORTED_AUDIO_SUFFIXES = {".wav", ".flac", ".mp3", ".m4a", ".ogg", ".opus"}
 LANGUAGE_NORMALIZATION = {
     "en": "english",
@@ -297,7 +297,7 @@ def prepare_dataset_builder(processor: Any, forward_attention_mask: bool):
 def train_whisper(args: argparse.Namespace, manifest_path: Path) -> None:
     if not has_training_dependencies():
         raise ImportError(
-            "Missing Whisper training dependencies. Run: python -m pip install -r python_pipeline/requirements-whisper.txt"
+            "Missing Whisper training dependencies. Run: python -m pip install -r python_pipeline/requirements/whisper.txt"
         )
     if torch is None or not torch.cuda.is_available():
         raise RuntimeError("CUDA GPU required for Whisper fine-tuning on this local setup.")

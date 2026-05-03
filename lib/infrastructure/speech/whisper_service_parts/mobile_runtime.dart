@@ -14,7 +14,7 @@ extension _WhisperMobileRuntime on WhisperService {
 
       if (!File(modelPath).existsSync()) {
         debugPrint(
-          '[SACA] Gurindji model not found at $modelPath – falling back to whisper-small.',
+          '[SACA] Gurindji model not found at $modelPath â€“ falling back to whisper-small.',
         );
         _whisper = const Whisper(model: WhisperModel.small);
         return;

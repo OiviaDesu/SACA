@@ -68,7 +68,7 @@ def write_text(path: Path, content: str) -> None:
 def build_dart_header(*, source_model_path: Path) -> str:
     return "\n".join(
         [
-            "// Generated locally by python_pipeline/export_xgb_to_dart.py.",
+            "// Generated locally by python_pipeline/export/export_xgb_to_dart.py.",
             f"// Source model: {source_model_path}",
             "// Experimental export: keep missing features as double.nan to preserve sparse XGBoost semantics.",
             "// Do not hand-edit this file; regenerate it from the Python exporter instead.",
@@ -80,7 +80,7 @@ def build_dart_header(*, source_model_path: Path) -> str:
 def build_python_header(*, source_model_path: Path) -> str:
     return "\n".join(
         [
-            '"""Generated locally by python_pipeline/export_xgb_to_dart.py.',
+            '"""Generated locally by python_pipeline/export/export_xgb_to_dart.py.',
             f"Source model: {source_model_path}",
             "Experimental parity/debug scorer for the Dart export path.",
             '"""',

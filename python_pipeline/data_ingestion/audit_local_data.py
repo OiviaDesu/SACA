@@ -2,15 +2,15 @@ from pathlib import Path
 import json
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent
-DATA = ROOT / "data"
-OUT = ROOT / "outputs" / "local_data_audit"
+PIPELINE_ROOT = Path(__file__).resolve().parents[1]
+DATA = PIPELINE_ROOT / "data"
+OUT = PIPELINE_ROOT / "outputs" / "local_data_audit"
 OUT.mkdir(parents=True, exist_ok=True)
 
-files = sorted([p for p in DATA.iterdir() if p.suffix.lower() in {'.csv', '.json', '.jsonl', '.xlsx', '.xls'}])
+files = sorted([p for p in DATA.rglob("*") if p.is_file() and p.suffix.lower() in {'.csv', '.json', '.jsonl', '.xlsx', '.xls'}])
 summary = []
 for p in files:
-    item = {"file": str(p.relative_to(ROOT)), "size_bytes": p.stat().st_size}
+    item = {"file": str(p.relative_to(PIPELINE_ROOT)), "size_bytes": p.stat().st_size}
     print(f"\n=== {p.name} ===", flush=True)
     try:
         if p.suffix.lower() == '.csv':

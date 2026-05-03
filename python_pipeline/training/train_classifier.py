@@ -576,7 +576,7 @@ def build_xgb_pipeline(
     xgb_device: str,
 ) -> Pipeline:
     if XGBClassifier is None:
-        raise ImportError("xgboost not installed. Run pip install -r python_pipeline/requirements-classifier.txt")
+        raise ImportError("xgboost not installed. Run pip install -r python_pipeline/requirements/classifier.txt")
     objective = "multi:softprob" if num_classes > 2 else "binary:logistic"
     return Pipeline(
         steps=[
@@ -907,7 +907,7 @@ def extract_lr_top_features(estimator: Pipeline, top_k: int = 30) -> list[dict[s
 
 def compute_xgb_shap(estimator: Pipeline, X_sample: pd.DataFrame, top_k: int = 50) -> list[dict[str, Any]]:
     if shap is None:
-        raise ImportError("shap not installed. Run pip install -r python_pipeline/requirements-classifier.txt")
+        raise ImportError("shap not installed. Run pip install -r python_pipeline/requirements/classifier.txt")
 
     features = estimator.named_steps["features"]
     model = estimator.named_steps["clf"]

@@ -19,7 +19,7 @@
 #SBATCH --error=/fred/oz396/dunguyen/saca_whisper/outputs/logs/whisper_%j.err
 
 # --- Time & resources --------------------------------------------------------
-# Whisper-small fine-tuning on ~500–5000 samples typically finishes in 2–6 h.
+# Whisper-small fine-tuning on ~500â€“5000 samples typically finishes in 2â€“6 h.
 # Request 12 h to be safe; Slurm will release the allocation early if it exits.
 #SBATCH --time=12:00:00
 
@@ -32,7 +32,7 @@
 # Local SSD scratch for caching HuggingFace datasets during the run
 #SBATCH --tmp=40G
 
-# Send email notifications (optional — comment out if not wanted)
+# Send email notifications (optional â€” comment out if not wanted)
 #SBATCH --mail-type=BEGIN,END,FAIL
 
 # =============================================================================
@@ -83,7 +83,7 @@ echo "----------------"
 # =============================================================================
 # Run fine-tuning
 # =============================================================================
-python "${CODE_DIR}/02_finetune_whisper.py" \
+python "${CODE_DIR}/training/finetune_whisper.py" \
   --mode train \
   --data-root        "${DATA_DIR}/corpus" \
   --manifest         "${DATA_DIR}/manifests/manifest.csv" \

@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-TRAIN_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "train_classifier.py"
+TRAIN_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "training" / "train_classifier.py"
 sys.path.insert(0, str(TRAIN_SCRIPT_PATH.parent))
 
 TRAIN_SPEC = importlib.util.spec_from_file_location("train_classifier", TRAIN_SCRIPT_PATH)
@@ -14,7 +14,7 @@ assert TRAIN_SPEC.loader is not None
 sys.modules[TRAIN_SPEC.name] = trainer
 TRAIN_SPEC.loader.exec_module(trainer)
 
-MERGE_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "merge_classifier_runs.py"
+MERGE_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "analysis" / "merge_classifier_runs.py"
 MERGE_SPEC = importlib.util.spec_from_file_location("merge_classifier_runs", MERGE_SCRIPT_PATH)
 merge_runner = importlib.util.module_from_spec(MERGE_SPEC)
 assert MERGE_SPEC.loader is not None

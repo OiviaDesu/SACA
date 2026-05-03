@@ -49,13 +49,23 @@ python_pipeline/.config/
 /ios/
 
 # Local dataset/cache outputs. Keep raw corpora and generated artifacts out of Git.
-python_pipeline/data/*
+python_pipeline/data/**
 !python_pipeline/data/
 !python_pipeline/data/.gitkeep
 !python_pipeline/data/README.md
-!python_pipeline/data/*.csv
-python_pipeline/data/Final_Augmented_dataset_Diseases_and_Symptoms.csv
-!python_pipeline/data/*.xlsx
+!python_pipeline/data/raw/
+!python_pipeline/data/raw/.gitkeep
+!python_pipeline/data/raw/*.csv
+!python_pipeline/data/raw/*.xlsx
+python_pipeline/data/raw/Final_Augmented_dataset_Diseases_and_Symptoms.csv
+!python_pipeline/data/processed/
+!python_pipeline/data/processed/.gitkeep
+!python_pipeline/data/processed/*.csv
+!python_pipeline/data/processed/*.xlsx
+!python_pipeline/data/samples/
+!python_pipeline/data/samples/.gitkeep
+!python_pipeline/data/samples/*.csv
+!python_pipeline/data/samples/*.xlsx
 python_pipeline/outputs/
 python_pipeline/artifacts/
 *.joblib

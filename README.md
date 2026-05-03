@@ -91,14 +91,19 @@ default.
 lib/
   core/              shared errors and theme
   domain/            stable models and service contracts
-  infrastructure/    adapters for analysis, localization, speech, window setup
-  presentation/      adaptive UI, controller, localization, widgets
-  services/          recorder and Whisper runtime services
+  infrastructure/    analysis, localization, speech, and window adapters
+  presentation/      adaptive UI, controllers, localization, screens, widgets
 assets/
   data/              tracked Gurindji lexicon
   models/            local-only model assets
-docs/                architecture and setup notes
-python_pipeline/     future ML/STT training pipeline notes
+docs/                architecture, release, model, and dataset notes
+python_pipeline/
+  data_ingestion/    dataset download, extraction, audit, and normalization
+  training/          classifier and Whisper training entry points
+  export/            model export and Flutter bundle verification
+  analysis/          dataset analysis and run aggregation
+  hpc/               Slurm and HPC preparation scripts
+  data/              raw, processed, and sample datasets
 test/                unit and widget tests
 ```
 

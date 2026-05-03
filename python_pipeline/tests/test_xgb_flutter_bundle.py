@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
 
-TRAIN_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "train_classifier.py"
+TRAIN_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "training" / "train_classifier.py"
 sys.path.insert(0, str(TRAIN_SCRIPT_PATH.parent))
 TRAIN_SPEC = importlib.util.spec_from_file_location("train_classifier", TRAIN_SCRIPT_PATH)
 trainer = importlib.util.module_from_spec(TRAIN_SPEC)
@@ -20,7 +20,7 @@ assert TRAIN_SPEC.loader is not None
 sys.modules[TRAIN_SPEC.name] = trainer
 TRAIN_SPEC.loader.exec_module(trainer)
 
-BUNDLE_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "xgb_flutter_bundle.py"
+BUNDLE_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "export" / "xgb_flutter_bundle.py"
 BUNDLE_SPEC = importlib.util.spec_from_file_location(
     "xgb_flutter_bundle", BUNDLE_SCRIPT_PATH
 )

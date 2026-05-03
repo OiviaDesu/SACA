@@ -20,7 +20,8 @@ class XgbM2cgenTextFeature {
       sublinearTf: json['sublinear_tf'] as bool? ?? false,
       vocabulary: Map<String, int>.from(json['vocabulary'] as Map),
       idf: List<double>.from(
-        (json['idf'] as List<dynamic>).map((value) => (value as num).toDouble()),
+        (json['idf'] as List<dynamic>)
+            .map((value) => (value as num).toDouble()),
       ),
     );
   }

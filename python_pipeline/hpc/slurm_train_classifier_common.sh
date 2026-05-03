@@ -145,14 +145,14 @@ run_classifier_audit() {
 
   echo ""
   echo "--- Step 1: audit_local_data ---"
-  python -u "${CODE_DIR}/audit_local_data.py"
+  python -u "${CODE_DIR}/data_ingestion/audit_local_data.py"
   echo "Audit done. Summary: ${WORK_DIR}/outputs/local_data_audit/audit_summary.json"
 }
 
 run_classifier_single_dataset() {
   echo ""
   echo "--- Step 2: train ${MODEL_KIND} on normalized_diagnosis_dataset.csv ---"
-  python -u "${CODE_DIR}/train_classifier.py" \
+  python -u "${CODE_DIR}/training/train_classifier.py" \
     --data "${SINGLE_DATASET}" \
     --label-col "${LABEL_COL}" \
     --model "${MODEL_KIND}" \
@@ -181,7 +181,7 @@ run_classifier_multi_dataset_build() {
 
   echo ""
   echo "--- Step 3: build intermediate diagnosis dataset ---"
-  python -u "${CODE_DIR}/normalize_datasets.py" \
+  python -u "${CODE_DIR}/data_ingestion/normalize_datasets.py" \
     --input-paths "${build_inputs[@]}" \
     --output "${MULTI_INTERMEDIATE_DATASET}" \
     --summary-output "${MULTI_INTERMEDIATE_SUMMARY}" \
@@ -194,7 +194,7 @@ run_classifier_multi_dataset_build() {
 run_classifier_multi_dataset() {
   echo ""
   echo "--- Step 4: train ${MODEL_KIND} on built intermediate dataset ---"
-  python -u "${CODE_DIR}/train_classifier.py" \
+  python -u "${CODE_DIR}/training/train_classifier.py" \
     --data "${MULTI_INTERMEDIATE_DATASET}" \
     --label-col "${LABEL_COL}" \
     --model "${MODEL_KIND}" \
@@ -218,7 +218,7 @@ run_classifier_optional_onnx_export() {
 
   echo ""
   echo "--- Step 5: export LR ONNX ---"
-  python -u "${CODE_DIR}/train_classifier.py" \
+  python -u "${CODE_DIR}/training/train_classifier.py" \
     --data "${SINGLE_DATASET}" \
     --label-col "${LABEL_COL}" \
     --model lr \

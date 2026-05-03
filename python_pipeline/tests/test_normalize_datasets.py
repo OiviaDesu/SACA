@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "normalize_datasets.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[1] / "data_ingestion" / "normalize_datasets.py"
 SPEC = importlib.util.spec_from_file_location("normalize_datasets", SCRIPT_PATH)
 normalizer = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None

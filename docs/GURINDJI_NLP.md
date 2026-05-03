@@ -86,7 +86,7 @@ Use the extractor to inspect local DoReCo annotations without committing source
 or generated corpus outputs:
 
 ```powershell
-python python_pipeline/01_extract_doreco_gurindji.py
+python python_pipeline/data_ingestion/extract_doreco_gurindji.py
 ```
 
 The default input is the sibling `../Data` folder. Outputs are written under
@@ -123,7 +123,7 @@ should stay behind the existing `AnalysisService` contract.
 - Preserve original text and Whisper transcript text side by side during data
   prep, then merge into one classifier text field.
 
-Local classifier script now exists at `python_pipeline/train_classifier.py`.
+Local classifier script now exists at `python_pipeline/training/train_classifier.py`.
 It trains:
 
 - baseline `LogisticRegression` with class balancing;

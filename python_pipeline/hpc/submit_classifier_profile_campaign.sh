@@ -63,10 +63,10 @@ job_time_for() {
 script_for() {
   local model="$1"
   if [[ "${model}" == "lr" ]]; then
-    printf '%s' "${CODE_DIR}/slurm_train_classifier_lr.sh"
+    printf '%s' "${CODE_DIR}/hpc/slurm_train_classifier_lr.sh"
     return
   fi
-  printf '%s' "${CODE_DIR}/slurm_train_classifier_xgb.sh"
+  printf '%s' "${CODE_DIR}/hpc/slurm_train_classifier_xgb.sh"
 }
 
 manifest_entries=()

@@ -18,7 +18,7 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Paths — adjust FRED_PROJECT if the project ID ever changes
+# Paths ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â adjust FRED_PROJECT if the project ID ever changes
 # ---------------------------------------------------------------------------
 FRED_PROJECT="/fred/oz396"
 WORK_DIR="${FRED_PROJECT}/dunguyen/saca_whisper"
@@ -107,17 +107,17 @@ echo "==> Installing / upgrading Python dependencies"
 pip install --upgrade pip --quiet
 pip install --quiet \
   torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-pip install --quiet -r "${CODE_DIR}/requirements-whisper.txt"
-pip install --quiet -r "${CODE_DIR}/requirements-classifier.txt"
+pip install --quiet -r "${CODE_DIR}/requirements/whisper.txt"
+pip install --quiet -r "${CODE_DIR}/requirements/classifier.txt"
 
 echo "==> Python environment ready: $(python --version)"
 
 # ---------------------------------------------------------------------------
-# 4. Validate manifest (no GPU required — runs on login node quickly)
+# 4. Validate manifest (no GPU required ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â runs on login node quickly)
 # ---------------------------------------------------------------------------
 if [[ -f "${DATA_DIR}/manifests/manifest.csv" ]]; then
   echo "==> Validating manifest (--mode validate)"
-  python "${CODE_DIR}/02_finetune_whisper.py" \
+  python "${CODE_DIR}/training/finetune_whisper.py" \
     --mode validate \
     --data-root "${DATA_ROOT}" \
     --manifest "${DATA_DIR}/manifests/manifest.csv" \
@@ -127,7 +127,7 @@ else
   echo "    Place a CSV or JSONL file there with columns:"
   echo "      audio, text, language, speaker_id, source_id"
   echo "    Then re-run this script or call validate manually:"
-  echo "      python ${CODE_DIR}/02_finetune_whisper.py \\"
+  echo "      python ${CODE_DIR}/training/finetune_whisper.py \\"
   echo "        --mode validate \\"
   echo "        --data-root ${DATA_ROOT} \\"
   echo "        --manifest ${DATA_DIR}/manifests/manifest.csv \\"
@@ -143,24 +143,24 @@ cat <<EOF
 Setup complete.  Directory layout:
 
   ${WORK_DIR}/
-  ├── code/          ← python_pipeline scripts (synced from repo)
-  ├── data/
-  │   ├── local/     ← classifier CSV datasets (synced from repo)
-  │   ├── corpus/    ← Whisper audio files (upload manually)
-  │   ├── manifests/ ← manifest.csv / manifest.jsonl for Whisper
-  │   └── assets/    ← Gurindji lexicon (synced from repo)
-  ├── outputs/
-  │   ├── checkpoints/
-  │   ├── logs/
-  │   └── local_data_audit/
-  └── venv/          ← Python virtual environment
+  ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ code/          ÃƒÂ¢Ã¢â‚¬Â Ã‚Â python_pipeline scripts (synced from repo)
+  ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ data/
+  ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ local/     ÃƒÂ¢Ã¢â‚¬Â Ã‚Â classifier CSV datasets (synced from repo)
+  ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ corpus/    ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Whisper audio files (upload manually)
+  ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ manifests/ ÃƒÂ¢Ã¢â‚¬Â Ã‚Â manifest.csv / manifest.jsonl for Whisper
+  ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ assets/    ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Gurindji lexicon (synced from repo)
+  ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ outputs/
+  ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ checkpoints/
+  ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ logs/
+  ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ local_data_audit/
+  ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ venv/          ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Python virtual environment
 
-Next steps — Branch 1 (Classifier):
-  sbatch ${CODE_DIR}/slurm_train_classifier.sh
+Next steps ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Branch 1 (Classifier):
+  sbatch ${CODE_DIR}/hpc/slurm_train_classifier.sh
 
-Next steps — Branch 2 (Whisper ASR):
+Next steps ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Branch 2 (Whisper ASR):
   1. Upload audio to ${DATA_DIR}/corpus/
   2. Create manifest at ${DATA_DIR}/manifests/manifest.csv
-  3. sbatch ${CODE_DIR}/slurm_finetune_whisper.sh
+  3. sbatch ${CODE_DIR}/hpc/slurm_finetune_whisper.sh
 =============================================================================
 EOF

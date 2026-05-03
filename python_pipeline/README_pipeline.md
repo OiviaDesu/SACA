@@ -3,6 +3,20 @@
 This folder contains local research scripts for SACA. Raw datasets, DoReCo
 annotations, audio, trained models, and generated outputs must stay outside Git.
 
+## Folder Layout
+
+```text
+python_pipeline/
+  data_ingestion/    download, extraction, audit, and normalization scripts
+  training/          classifier and Whisper training entry points
+  export/            GGML, XGBoost, Dart bundle, and parity tools
+  analysis/          TF-IDF dataset analysis and run aggregation
+  hpc/               Slurm jobs and HPC preparation scripts
+  requirements/      dependency lists by workflow
+  data/raw/          source CSV/XLSX datasets
+  data/processed/    normalized training-ready datasets
+  data/samples/      small examples and smoke-test manifests
+```
 ## Environment Setup
 
 Python `3.9+` is recommended.
@@ -13,7 +27,7 @@ Python `3.9+` is recommended.
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -r python_pipeline/requirements-classifier.txt
+python -m pip install -r python_pipeline/requirements/classifier.txt
 ```
 
 **Windows (PowerShell)**
@@ -22,7 +36,7 @@ python -m pip install -r python_pipeline/requirements-classifier.txt
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -r python_pipeline/requirements-classifier.txt
+python -m pip install -r python_pipeline/requirements/classifier.txt
 ```
 
 Generated outputs, model binaries, campaign manifests, and intermediate build
@@ -38,7 +52,7 @@ research, not for medical symptom classification.
 Run:
 
 ```powershell
-python python_pipeline/01_extract_doreco_gurindji.py
+python python_pipeline/data_ingestion/extract_doreco_gurindji.py
 ```
 
 Outputs are local-only under `python_pipeline/outputs/doreco_gurindji/`:
@@ -70,7 +84,7 @@ Recommended datasets:
 Decision summary and source URLs are tracked in
 `docs/DATASET_RESEARCH_SUMMARY.md`.
 
-Keep raw downloads under `python_pipeline/data/`, which is ignored by Git.
+Keep raw downloads under `python_pipeline/data/raw/`, which is ignored by Git.
 Public symptom datasets usually contain diagnosis labels, not real clinical
 triage acuity. Train diagnosis and severity as separate tasks. Derive emergency
 red-flag severity from ATS/ETEK-style rules and keep that safety layer
@@ -82,7 +96,7 @@ prototype training data only, not clinical evidence.
 Install dependencies:
 
 ```powershell
-python -m pip install -r python_pipeline/requirements-classifier.txt
+python -m pip install -r python_pipeline/requirements/classifier.txt
 ```
 
 Optional pip update first:
@@ -134,7 +148,7 @@ Recommended run order:
 2. **Inspect the trainer CLI**
 
     ```powershell
-    python python_pipeline/train_classifier.py --help
+    python python_pipeline/training/train_classifier.py --help
     ```
 
 3. **Run a small severity smoke test**
@@ -142,8 +156,8 @@ Recommended run order:
     The checked-in sample file is suitable for severity smoke validation.
 
 ```powershell
-python python_pipeline/train_classifier.py `
-   --data python_pipeline/sample_triage_dataset.csv `
+python python_pipeline/training/train_classifier.py `
+   --data python_pipeline/data/samples/triage_dataset.csv `
    --label-col severity_label `
    --task severity `
    --model lr `
@@ -155,14 +169,14 @@ python python_pipeline/train_classifier.py `
 
 1. **Run a quick diagnosis validation**
 
-    The checked-in `sample_triage_dataset.csv` is not a reliable diagnosis smoke
+    The checked-in `data/samples/triage_dataset.csv` is not a reliable diagnosis smoke
     dataset because most diagnosis labels appear only once. For diagnosis,
     either use your own small CSV where each diagnosis label appears at least
     twice, or use the normalized diagnosis dataset already in the repo.
 
 ```powershell
-python python_pipeline/train_classifier.py `
-   --data python_pipeline/data/normalized_diagnosis_dataset.csv `
+python python_pipeline/training/train_classifier.py `
+   --data python_pipeline/data/processed/normalized_diagnosis_dataset.csv `
    --label-col diagnosis_label `
    --task diagnosis `
    --text-cols symptoms_text transcript_text `
@@ -178,11 +192,11 @@ python python_pipeline/train_classifier.py `
 
     Safest default in this repo:
 
-    - `python_pipeline/data/normalized_diagnosis_dataset.csv`
+    - `python_pipeline/data/processed/normalized_diagnosis_dataset.csv`
 
 ```powershell
-python python_pipeline/train_classifier.py `
-   --data python_pipeline/data/normalized_diagnosis_dataset.csv `
+python python_pipeline/training/train_classifier.py `
+   --data python_pipeline/data/processed/normalized_diagnosis_dataset.csv `
    --label-col diagnosis_label `
    --task diagnosis `
    --text-cols symptoms_text transcript_text `
@@ -204,10 +218,10 @@ python python_pipeline/train_classifier.py `
     label-cleaning rules the trainer expects.
 
 ```powershell
-python python_pipeline/normalize_datasets.py `
+python python_pipeline/data_ingestion/normalize_datasets.py `
    --input-paths `
-      python_pipeline/data/gretel_symptom_to_diagnosis.csv `
-      python_pipeline/data/Symptom2Disease.csv `
+      python_pipeline/data/raw/gretel_symptom_to_diagnosis.csv `
+      python_pipeline/data/raw/Symptom2Disease.csv `
    --output python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.csv `
    --summary-output python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.summary.json
 ```
@@ -289,7 +303,7 @@ After submission, inspect the manifest and then monitor the whole batch with:
 squeue -j <comma-separated-job-ids>
 ```
 
-The legacy combined script `python_pipeline/slurm_train_classifier.sh` is still
+The legacy combined script `python_pipeline/hpc/slurm_train_classifier.sh` is still
 available as a compatibility fallback, but the split scripts are the preferred
 path for production runs.
 
@@ -312,14 +326,14 @@ extra sources can be enabled in the Slurm environment:
 1. **Train from multiple diagnosis files at once**
 
 ```powershell
-python python_pipeline/normalize_datasets.py `
+python python_pipeline/data_ingestion/normalize_datasets.py `
    --input-paths `
-      python_pipeline/data/gretel_symptom_to_diagnosis.csv `
-      python_pipeline/data/Symptom2Disease.csv `
+      python_pipeline/data/raw/gretel_symptom_to_diagnosis.csv `
+      python_pipeline/data/raw/Symptom2Disease.csv `
    --output python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.csv `
    --summary-output python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.summary.json
 
-python python_pipeline/train_classifier.py `
+python python_pipeline/training/train_classifier.py `
    --data python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.csv `
    --label-col diagnosis_label `
    --task diagnosis `
@@ -354,7 +368,7 @@ Use the merge utility to build a unified leaderboard and copy the winning model
 artifact into a final output folder:
 
 ```bash
-python python_pipeline/merge_classifier_runs.py \
+python python_pipeline/analysis/merge_classifier_runs.py \
    --lr-dir /fred/oz396/dunguyen/saca_whisper/outputs/classifier_diagnosis_single_lr \
    --xgb-dir /fred/oz396/dunguyen/saca_whisper/outputs/classifier_diagnosis_single_xgb \
    --scope-name single \
@@ -367,8 +381,8 @@ Repeat the same command for the `multi` scope by pointing to the corresponding
 1. **Optional LR ONNX export**
 
 ```powershell
-python python_pipeline/train_classifier.py `
-   --data python_pipeline/data/normalized_diagnosis_dataset.csv `
+python python_pipeline/training/train_classifier.py `
+   --data python_pipeline/data/processed/normalized_diagnosis_dataset.csv `
    --label-col diagnosis_label `
    --task diagnosis `
    --model lr `
@@ -435,7 +449,7 @@ experimental Dart export path built around:
 Export the local bundle and scorer:
 
 ```bash
-python python_pipeline/export_xgb_to_dart.py \
+python python_pipeline/export/export_xgb_to_dart.py \
    --model-dir /fred/oz396/dunguyen/saca_whisper/outputs/classifier_campaigns/diagnosis_profile_ladder_20260503_154451/quick/xgb/multi \
    --bundle-output-dir assets/models/classifier-xgb-quick \
    --dart-model-output lib/infrastructure/analysis/generated_local/xgb_quick_model.dart \
@@ -445,7 +459,7 @@ python python_pipeline/export_xgb_to_dart.py \
 Verify parity on the rebuilt held-out split from the same campaign dataset:
 
 ```bash
-python python_pipeline/verify_xgb_dart_export.py \
+python python_pipeline/export/verify_xgb_dart_export.py \
    --model-dir /fred/oz396/dunguyen/saca_whisper/outputs/classifier_campaigns/diagnosis_profile_ladder_20260503_154451/quick/xgb/multi \
    --bundle-dir assets/models/classifier-xgb-quick \
    --data /fred/oz396/dunguyen/saca_whisper/outputs/classifier_campaigns/diagnosis_profile_ladder_20260503_154451/quick/xgb/intermediate/diagnosis_multi_dataset.csv \
@@ -482,7 +496,7 @@ metadata CSV). No `.wav`, `.flac`, `.mp3`, `.m4a`, `.ogg`, or `.opus` audio file
 were found in the current scan. Whisper fine-tuning cannot run from annotations
 alone; it needs waveform audio aligned to transcripts.
 
-The repo now includes `python_pipeline/02_finetune_whisper.py`, updated for the
+The repo now includes `python_pipeline/training/finetune_whisper.py`, updated for the
 current Transformers seq2seq Whisper API. It intentionally keeps English and
 Gurindji together:
 
@@ -497,7 +511,7 @@ Gurindji together:
 Install dependencies:
 
 ```powershell
-python -m pip install -r python_pipeline/requirements-whisper.txt
+python -m pip install -r python_pipeline/requirements/whisper.txt
 ```
 
 Required manifest format after audio is restored:
@@ -511,19 +525,19 @@ C:\path\to\clip_0002.wav,"I have chest pain",english,FVD,FM11_32_1,2.8
 Validate only:
 
 ```powershell
-python python_pipeline/02_finetune_whisper.py ^
+python python_pipeline/training/finetune_whisper.py ^
   --mode validate ^
   --data-root "C:\Users\OneGa\iCloudDrive\Documents\Major\COS70008\Demo\Data" ^
-  --manifest python_pipeline/data/gurindji_whisper_manifest.csv
+  --manifest python_pipeline/data/raw/gurindji_whisper_manifest.csv
 ```
 
 Train after audio exists and manifest validates:
 
 ```powershell
-python python_pipeline/02_finetune_whisper.py ^
+python python_pipeline/training/finetune_whisper.py ^
   --mode train ^
   --data-root "C:\Users\OneGa\iCloudDrive\Documents\Major\COS70008\Demo\Data" ^
-  --manifest python_pipeline/data/gurindji_whisper_manifest.csv ^
+  --manifest python_pipeline/data/raw/gurindji_whisper_manifest.csv ^
   --model-name openai/whisper-small ^
   --output-dir python_pipeline/outputs/whisper_gurindji ^
   --gradient-checkpointing ^

@@ -8,14 +8,14 @@ import numpy as np
 import pandas as pd
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "train_classifier.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[1] / "training" / "train_classifier.py"
 SPEC = importlib.util.spec_from_file_location("train_classifier", SCRIPT_PATH)
 trainer = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
 sys.modules[SPEC.name] = trainer
 SPEC.loader.exec_module(trainer)
 
-SAMPLE_TRIAGE_DATASET = Path(__file__).resolve().parents[1] / "sample_triage_dataset.csv"
+SAMPLE_TRIAGE_DATASET = Path(__file__).resolve().parents[1] / "data" / "samples" / "triage_dataset.csv"
 
 
 def _write_diagnosis_fixture(path: Path) -> None:

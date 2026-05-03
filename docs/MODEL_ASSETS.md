@@ -26,9 +26,9 @@ lib/infrastructure/analysis/generated_local/
 
 Tracked source files that support this flow:
 
-- `python_pipeline/export_xgb_to_dart.py`
-- `python_pipeline/verify_xgb_dart_export.py`
-- `python_pipeline/xgb_flutter_bundle.py`
+- `python_pipeline/export/export_xgb_to_dart.py`
+- `python_pipeline/export/verify_xgb_dart_export.py`
+- `python_pipeline/export/xgb_flutter_bundle.py`
 - `lib/infrastructure/analysis/xgb_m2cgen_runtime.dart`
 
 Current parity status on the real held-out test split rebuilt from the winning

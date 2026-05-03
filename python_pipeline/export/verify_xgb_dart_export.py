@@ -11,6 +11,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from xgb_flutter_bundle import (
     build_dense_feature_vector,
     compare_pipeline_and_bundle,
@@ -23,7 +24,7 @@ from xgb_flutter_bundle import (
 )
 
 
-TRAINER_PATH = Path(__file__).resolve().parent / "train_classifier.py"
+TRAINER_PATH = Path(__file__).resolve().parents[1] / "training" / "train_classifier.py"
 DEFAULT_REPORT_OUTPUT = "python_pipeline/outputs/xgb_quick_dart_export/parity_report.json"
 
 

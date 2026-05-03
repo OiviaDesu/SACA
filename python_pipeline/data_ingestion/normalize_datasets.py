@@ -10,9 +10,9 @@ from typing import Any, Callable
 
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DATA_DIR = REPO_ROOT / "python_pipeline" / "data"
-DEFAULT_OUTPUT = DEFAULT_DATA_DIR / "normalized_diagnosis_dataset.csv"
+PIPELINE_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_DATA_DIR = PIPELINE_ROOT / "data" / "raw"
+DEFAULT_OUTPUT = PIPELINE_ROOT / "data" / "processed" / "normalized_diagnosis_dataset.csv"
 DEFAULT_MIN_CLASS_COUNT = 2
 
 
@@ -127,7 +127,7 @@ def load_train_classifier_module() -> Any:
     if module_name in sys.modules:
         return sys.modules[module_name]
 
-    script_path = Path(__file__).with_name("train_classifier.py")
+    script_path = PIPELINE_ROOT / "training" / "train_classifier.py"
     spec = importlib.util.spec_from_file_location(module_name, script_path)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader is not None

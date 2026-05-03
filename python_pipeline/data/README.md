@@ -1,16 +1,15 @@
-# Local datasets
+﻿# Pipeline datasets
 
-Put local datasets here.
+This folder separates dataset inputs by lifecycle:
 
-Examples:
-- `gretel_symptom_to_diagnosis.csv`
-- `symptom2disease.csv`
-- `healthcare_symptoms_disease.csv`
-- `local_triage.csv`
-- `gurindji_whisper_manifest.csv`
+- `raw/`: source datasets and lexicons kept close to their original shape.
+- `processed/`: normalized or derived datasets used by training commands.
+- `samples/`: small fixtures and smoke-test manifests safe for examples/tests.
 
-Notes:
-- Folder is ignored by Git via `.gitignore`.
-- Safe for local CSV/JSON/JSONL/manifest files.
-- Do not commit raw Hugging Face, Kaggle, DoReCo, PARADISEC, or other restricted/community datasets.
-- Whisper fine-tuning still needs real audio files outside Git plus manifest paths pointing to them.
+Tracked data policy:
+
+- CSV and XLSX files under `raw/`, `processed/`, and `samples/` can be committed when each file stays below GitHub's 100 MB limit.
+- `raw/Final_Augmented_dataset_Diseases_and_Symptoms.csv` is intentionally ignored because it is larger than 100 MB.
+- Generated model outputs, audits, caches, and binary artifacts stay under ignored `python_pipeline/outputs/` or `python_pipeline/artifacts/`.
+
+Whisper fine-tuning still needs real audio files outside Git plus manifest paths pointing to those audio files.
