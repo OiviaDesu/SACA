@@ -25,6 +25,16 @@ migrate_working_dir/
 Microsoft/
 note.txt
 
+# Local environment / HPC overrides
+.env
+.env.*
+!.env.example
+.hpc_config
+.slurm_vars.sh
+python_pipeline/*.local.sh
+python_pipeline/slurm_*.sh.local
+python_pipeline/.config/
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id

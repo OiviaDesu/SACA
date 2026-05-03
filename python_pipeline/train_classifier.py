@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from dataclasses import dataclass
 from math import prod
 from pathlib import Path
@@ -16,7 +17,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
+from sklearn.model_selection import ParameterGrid, StratifiedKFold, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
@@ -32,6 +33,10 @@ except ImportError:  # pragma: no cover
 
 
 DEFAULT_SEVERITY_ORDER = ["emergency", "urgent", "routine", "self-care"]
+DEFAULT_CV_FOLDS = 3
+DEFAULT_MAX_TEXT_FEATURES = 10000
+DEFAULT_TUNING_PROFILE = "balanced"
+FULL_TEXT_NGRAM_RANGE_SEARCH = [(3, 5), (2, 5)]
 
 
 @dataclass
@@ -43,9 +48,44 @@ class TrainingArtifacts:
     probabilities: np.ndarray | None
 
 
+@dataclass
+class SearchResult:
+    best_estimator_: Pipeline
+    best_params_: dict[str, Any]
+    best_score_: float
+    cv_results_: dict[str, list[Any]]
+    candidate_summaries: list[dict[str, Any]]
+
+
 def emit_progress(message: str, *, verbose: bool, always: bool = False) -> None:
     if always or verbose:
         print(message, flush=True)
+
+
+def unique_preserving_order(values: list[Any]) -> list[Any]:
+    unique_values: list[Any] = []
+    seen: set[Any] = set()
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        unique_values.append(value)
+    return unique_values
+
+
+def format_elapsed(seconds: float) -> str:
+    rounded = max(0, int(round(seconds)))
+    hours, remainder = divmod(rounded, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+
+def render_progress_bar(completed: int, total: int, width: int = 20) -> str:
+    if total <= 0:
+        return "[" + ("-" * width) + "]"
+    ratio = min(1.0, max(0.0, completed / total))
+    filled = min(width, int(round(ratio * width)))
+    return "[" + ("#" * filled) + ("-" * (width - filled)) + "]"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -107,7 +147,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--cv-folds",
         type=int,
-        default=5,
+        default=DEFAULT_CV_FOLDS,
         help="Cross-validation folds for tuning.",
     )
     parser.add_argument(
@@ -117,6 +157,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Which models to train.",
     )
     parser.add_argument(
+        "--xgb-device",
+        choices=["cpu", "cuda"],
+        default="cpu",
+        help="XGBoost execution device. Use 'cuda' for GPU-enabled training.",
+    )
+    parser.add_argument(
+        "--tuning-profile",
+        choices=["quick", "balanced", "full"],
+        default=DEFAULT_TUNING_PROFILE,
+        help=(
+            "Hyperparameter search budget. 'balanced' reduces XGBoost fit count for faster HPC runs; "
+            "'full' restores the exhaustive grid."
+        ),
+    )
+    parser.add_argument(
         "--export-onnx",
         action="store_true",
         help="Try ONNX export. Best effort only.",
@@ -124,7 +179,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--max-text-features",
         type=int,
-        default=20000,
+        default=DEFAULT_MAX_TEXT_FEATURES,
         help="Default max TF-IDF features before tuning.",
     )
     parser.add_argument(
@@ -137,6 +192,22 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--verbose",
         action="store_true",
         help="Print progress messages and enable sklearn GridSearchCV chatter.",
+    )
+    parser.add_argument(
+        "--skip-shap",
+        action="store_true",
+        help="Skip XGBoost SHAP feature ranking to shorten tuning runs.",
+    )
+    parser.add_argument(
+        "--live-progress",
+        action="store_true",
+        help="Emit per-fit cross-validation progress lines with validation F1/accuracy.",
+    )
+    parser.add_argument(
+        "--progress-log-every-fits",
+        type=int,
+        default=1,
+        help="Emit live progress after every N completed CV fits.",
     )
     return parser.parse_args(argv)
 
@@ -186,6 +257,10 @@ def normalize_text(value: Any) -> str:
     if not text:
         return ""
     return " ".join(text.split())
+
+
+def normalize_label(value: Any) -> str:
+    return normalize_text(value).casefold()
 
 
 def merge_text_columns(df: pd.DataFrame, text_cols: list[str]) -> pd.Series:
@@ -259,7 +334,7 @@ def clean_labels(
 ) -> pd.DataFrame:
     frame = df.copy()
     original_rows = len(frame)
-    frame[label_col] = frame[label_col].map(normalize_text)
+    frame[label_col] = frame[label_col].map(normalize_label)
     frame = frame[frame[label_col] != ""].copy()
     counts = frame[label_col].value_counts()
     keep_labels = counts[counts >= min_class_count].index
@@ -279,6 +354,145 @@ def clean_labels(
     if frame.empty:
         raise ValueError("No rows left after label cleaning.")
     return frame
+
+
+def deduplicate_training_rows(
+    df: pd.DataFrame,
+    label_col: str,
+    text_cols: list[str],
+    categorical_cols: list[str],
+    numeric_cols: list[str],
+    verbose: bool = False,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    frame = df.copy()
+    present_text_cols = detect_present_columns(frame, text_cols)
+    present_categorical_cols = detect_present_columns(frame, categorical_cols)
+    present_numeric_cols = detect_present_columns(frame, numeric_cols)
+
+    dedupe_key = pd.DataFrame(index=frame.index)
+    dedupe_key[label_col] = frame[label_col].map(normalize_label)
+
+    for column in present_text_cols:
+        dedupe_key[column] = frame[column].map(normalize_text)
+
+    for column in present_categorical_cols:
+        if column == "language":
+            dedupe_key[column] = frame[column].map(normalize_language_tag)
+        else:
+            dedupe_key[column] = frame[column].map(normalize_text)
+
+    for column in present_numeric_cols:
+        dedupe_key[column] = pd.to_numeric(frame[column], errors="coerce")
+
+    duplicate_mask = dedupe_key.duplicated(keep="first")
+    duplicate_rows_removed = int(duplicate_mask.sum())
+
+    if duplicate_rows_removed:
+        frame = frame.loc[~duplicate_mask].copy()
+        frame.reset_index(drop=True, inplace=True)
+        emit_progress(
+            (
+                f"[clean] Removed {duplicate_rows_removed} duplicate row(s) using "
+                f"columns {dedupe_key.columns.tolist()}."
+            ),
+            verbose=verbose,
+            always=True,
+        )
+
+    return frame, {
+        "duplicate_rows_removed": duplicate_rows_removed,
+        "dedupe_columns": dedupe_key.columns.tolist(),
+    }
+
+
+def clean_training_frame(
+    df: pd.DataFrame,
+    label_col: str,
+    text_cols: list[str],
+    categorical_cols: list[str],
+    numeric_cols: list[str],
+    min_class_count: int,
+    verbose: bool = False,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    frame = df.copy()
+    original_rows = len(frame)
+    source_file_rows_before = (
+        frame["source_file"].fillna("missing").astype(str).value_counts().to_dict()
+        if "source_file" in frame.columns
+        else None
+    )
+
+    frame[label_col] = frame[label_col].map(normalize_label)
+    frame = frame[frame[label_col] != ""].copy()
+    rows_after_nonempty_label = len(frame)
+
+    frame, dedupe_summary = deduplicate_training_rows(
+        frame,
+        label_col,
+        text_cols,
+        categorical_cols,
+        numeric_cols,
+        verbose=verbose,
+    )
+
+    counts = frame[label_col].value_counts()
+    keep_labels = counts[counts >= min_class_count].index
+    dropped_labels = counts[counts < min_class_count].to_dict()
+    frame = frame[frame[label_col].isin(keep_labels)].copy()
+    frame.reset_index(drop=True, inplace=True)
+
+    source_file_rows_after = (
+        frame["source_file"].fillna("missing").astype(str).value_counts().to_dict()
+        if "source_file" in frame.columns
+        else None
+    )
+    dropped_source_files = (
+        sorted(set(source_file_rows_before) - set(source_file_rows_after))
+        if source_file_rows_before is not None and source_file_rows_after is not None
+        else []
+    )
+
+    emit_progress(
+        (
+            f"[labels] Kept {len(frame)} of {original_rows} row(s) after cleaning '{label_col}' "
+            f"with min_class_count={min_class_count}."
+        ),
+        verbose=verbose,
+    )
+    emit_progress(
+        (
+            f"[labels] Remaining rows after non-empty label filter: {rows_after_nonempty_label}; "
+            f"duplicates removed: {dedupe_summary['duplicate_rows_removed']}."
+        ),
+        verbose=verbose,
+    )
+    emit_progress(
+        f"[labels] Remaining label distribution: {frame[label_col].value_counts().to_dict()}",
+        verbose=verbose,
+    )
+    if dropped_source_files:
+        emit_progress(
+            (
+                "[labels] Warning: these input file(s) contributed 0 retained row(s) after cleaning: "
+                f"{dropped_source_files}"
+            ),
+            verbose=verbose,
+            always=True,
+        )
+    if frame.empty:
+        raise ValueError("No rows left after label cleaning.")
+
+    return frame, {
+        "label_normalization": "normalize_text + casefold",
+        "rows_before_cleaning": original_rows,
+        "rows_after_nonempty_label": rows_after_nonempty_label,
+        "rows_after_cleaning": int(len(frame)),
+        "source_file_rows_before_cleaning": source_file_rows_before,
+        "source_file_rows_after_cleaning": source_file_rows_after,
+        "dropped_source_files_after_cleaning": dropped_source_files,
+        "dropped_low_frequency_labels": dropped_labels,
+        **dedupe_summary,
+    }
 
 
 def build_preprocessor(categorical_cols: list[str], numeric_cols: list[str], max_text_features: int) -> ColumnTransformer:
@@ -342,10 +556,10 @@ def build_lr_pipeline(categorical_cols: list[str], numeric_cols: list[str], max_
             (
                 "clf",
                 LogisticRegression(
-                    max_iter=3000,
+                    max_iter=5000,
+                    tol=1e-3,
                     class_weight="balanced",
                     solver="saga",
-                    n_jobs=-1,
                     random_state=random_state,
                 ),
             ),
@@ -353,7 +567,14 @@ def build_lr_pipeline(categorical_cols: list[str], numeric_cols: list[str], max_
     )
 
 
-def build_xgb_pipeline(categorical_cols: list[str], numeric_cols: list[str], max_text_features: int, random_state: int, num_classes: int) -> Pipeline:
+def build_xgb_pipeline(
+    categorical_cols: list[str],
+    numeric_cols: list[str],
+    max_text_features: int,
+    random_state: int,
+    num_classes: int,
+    xgb_device: str,
+) -> Pipeline:
     if XGBClassifier is None:
         raise ImportError("xgboost not installed. Run pip install -r python_pipeline/requirements-classifier.txt")
     objective = "multi:softprob" if num_classes > 2 else "binary:logistic"
@@ -370,6 +591,7 @@ def build_xgb_pipeline(categorical_cols: list[str], numeric_cols: list[str], max
                     num_class=num_classes if num_classes > 2 else None,
                     eval_metric="mlogloss" if num_classes > 2 else "logloss",
                     tree_method="hist",
+                    device=xgb_device,
                     n_estimators=300,
                     max_depth=6,
                     learning_rate=0.1,
@@ -377,25 +599,66 @@ def build_xgb_pipeline(categorical_cols: list[str], numeric_cols: list[str], max
                     colsample_bytree=0.9,
                     reg_lambda=1.0,
                     random_state=random_state,
-                    n_jobs=-1,
                 ),
             ),
         ]
     )
 
 
-def make_lr_grid() -> dict[str, list[Any]]:
+def make_lr_grid(tuning_profile: str, max_text_features: int) -> dict[str, list[Any]]:
+    if tuning_profile == "quick":
+        return {
+            "features__text__ngram_range": [(3, 5)],
+            "features__text__max_features": [max_text_features],
+            "clf__C": [0.3, 1.0],
+        }
+
+    if tuning_profile == "balanced":
+        return {
+            "features__text__ngram_range": FULL_TEXT_NGRAM_RANGE_SEARCH,
+            "features__text__max_features": [max_text_features],
+            "clf__C": [0.3, 1.0, 3.0],
+        }
+
+    if tuning_profile != "full":
+        raise ValueError(f"Unsupported tuning profile: {tuning_profile}")
+
     return {
-        "features__text__ngram_range": [(3, 5), (2, 5)],
-        "features__text__max_features": [10000, 20000],
+        "features__text__ngram_range": FULL_TEXT_NGRAM_RANGE_SEARCH,
+        "features__text__max_features": unique_preserving_order([max_text_features, 20000]),
         "clf__C": [0.3, 1.0, 3.0],
     }
 
 
-def make_xgb_grid() -> dict[str, list[Any]]:
+def make_xgb_grid(tuning_profile: str, max_text_features: int) -> dict[str, list[Any]]:
+    if tuning_profile == "quick":
+        return {
+            "features__text__ngram_range": [(3, 5)],
+            "features__text__max_features": [max_text_features],
+            "clf__n_estimators": [150],
+            "clf__max_depth": [3, 6],
+            "clf__learning_rate": [0.05, 0.1],
+            "clf__subsample": [0.8, 1.0],
+            "clf__colsample_bytree": [0.9],
+        }
+
+    if tuning_profile == "balanced":
+        return {
+            "features__text__ngram_range": [(3, 5)],
+            "features__text__max_features": [max_text_features],
+            "clf__n_estimators": [150, 300],
+            "clf__max_depth": [3, 6],
+            "clf__learning_rate": [0.05, 0.1],
+            "clf__subsample": [0.8, 1.0],
+            "clf__colsample_bytree": [0.8, 1.0],
+        }
+
+    if tuning_profile != "full":
+        raise ValueError(f"Unsupported tuning profile: {tuning_profile}")
+
     return {
-        "features__text__ngram_range": [(3, 5), (2, 5)],
-        "features__text__max_features": [10000, 20000],
+        "features__text__ngram_range": FULL_TEXT_NGRAM_RANGE_SEARCH,
+        "features__text__max_features": unique_preserving_order([max_text_features, 20000]),
         "clf__n_estimators": [150, 300],
         "clf__max_depth": [3, 6],
         "clf__learning_rate": [0.05, 0.1],
@@ -410,6 +673,26 @@ def count_grid_combinations(grid: dict[str, list[Any]]) -> int:
     return prod(len(values) for values in grid.values())
 
 
+def build_cv_results(candidate_summaries: list[dict[str, Any]]) -> dict[str, list[Any]]:
+    sorted_scores = sorted(
+        [summary["mean_test_score"] for summary in candidate_summaries],
+        reverse=True,
+    )
+    score_ranks = {
+        score: rank
+        for rank, score in enumerate(unique_preserving_order(sorted_scores), start=1)
+    }
+
+    return {
+        "params": [summary["params"] for summary in candidate_summaries],
+        "mean_test_score": [summary["mean_test_score"] for summary in candidate_summaries],
+        "std_test_score": [summary["std_test_score"] for summary in candidate_summaries],
+        "mean_test_accuracy": [summary["mean_test_accuracy"] for summary in candidate_summaries],
+        "mean_fit_time_seconds": [summary["mean_fit_time_seconds"] for summary in candidate_summaries],
+        "rank_test_score": [score_ranks[summary["mean_test_score"]] for summary in candidate_summaries],
+    }
+
+
 def fit_search(
     name: str,
     pipeline: Pipeline,
@@ -419,19 +702,20 @@ def fit_search(
     cv_folds: int,
     random_state: int,
     verbose: bool = False,
-) -> GridSearchCV:
+    live_progress: bool = False,
+    progress_log_every_fits: int = 1,
+) -> SearchResult:
     cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=random_state)
-    total_combinations = count_grid_combinations(grid)
+    parameter_grid = list(ParameterGrid(grid)) or [{}]
+    total_combinations = len(parameter_grid)
     total_fits = total_combinations * cv_folds
-    search = GridSearchCV(
-        estimator=pipeline,
-        param_grid=grid,
-        scoring="f1_macro",
-        n_jobs=-1,
-        cv=cv,
-        verbose=1 if verbose else 0,
-        refit=True,
-    )
+    fold_splits = list(cv.split(X_train, y_train))
+    start_time = time.perf_counter()
+    completed_fits = 0
+    candidate_summaries: list[dict[str, Any]] = []
+    best_score = float("-inf")
+    best_params: dict[str, Any] | None = None
+
     emit_progress(f"\n=== Training {name} ===", verbose=verbose, always=True)
     emit_progress(
         (
@@ -443,18 +727,133 @@ def fit_search(
     )
     if verbose:
         emit_progress(
-            f"[train] {name}: sklearn GridSearchCV progress output enabled.",
+            f"[train] {name}: live CV search logging enabled.",
             verbose=verbose,
         )
-    search.fit(X_train, y_train)
-    emit_progress(f"[train] {name}: tuning finished.", verbose=verbose, always=True)
-    emit_progress(f"{name} best params: {search.best_params_}", verbose=verbose, always=True)
+
+    for candidate_index, params in enumerate(parameter_grid, start=1):
+        fold_scores: list[float] = []
+        fold_accuracies: list[float] = []
+        fold_fit_times: list[float] = []
+        candidate_start = time.perf_counter()
+
+        if verbose:
+            emit_progress(
+                f"[candidate] {name} {candidate_index}/{total_combinations} params={params}",
+                verbose=verbose,
+            )
+
+        for fold_index, (train_idx, valid_idx) in enumerate(fold_splits, start=1):
+            estimator = clone(pipeline)
+            estimator.set_params(**params)
+
+            X_fold_train = X_train.iloc[train_idx]
+            X_fold_valid = X_train.iloc[valid_idx]
+            y_fold_train = y_train[train_idx]
+            y_fold_valid = y_train[valid_idx]
+
+            fit_start = time.perf_counter()
+            estimator.fit(X_fold_train, y_fold_train)
+            fit_elapsed = time.perf_counter() - fit_start
+
+            y_fold_pred = estimator.predict(X_fold_valid)
+            fold_f1 = float(f1_score(y_fold_valid, y_fold_pred, average="macro", zero_division=0))
+            fold_accuracy = float(accuracy_score(y_fold_valid, y_fold_pred))
+
+            fold_scores.append(fold_f1)
+            fold_accuracies.append(fold_accuracy)
+            fold_fit_times.append(fit_elapsed)
+            completed_fits += 1
+
+            progress_bar = render_progress_bar(completed_fits, total_fits)
+            candidate_mean_f1 = float(np.mean(fold_scores))
+            candidate_mean_accuracy = float(np.mean(fold_accuracies))
+            should_log_progress = live_progress and (
+                completed_fits == total_fits
+                or completed_fits % max(1, progress_log_every_fits) == 0
+            )
+
+            if should_log_progress:
+                best_cv_text = "n/a" if best_params is None else f"{best_score:.4f}"
+                emit_progress(
+                    (
+                        f"[progress] {name} {progress_bar} {completed_fits}/{total_fits} fit(s) "
+                        f"candidate={candidate_index}/{total_combinations} fold={fold_index}/{cv_folds} "
+                        f"val_f1={fold_f1:.4f} val_acc={fold_accuracy:.4f} "
+                        f"candidate_mean_f1={candidate_mean_f1:.4f} "
+                        f"candidate_mean_acc={candidate_mean_accuracy:.4f} "
+                        f"best_cv_f1={best_cv_text} "
+                        f"elapsed={format_elapsed(time.perf_counter() - start_time)} "
+                        f"fit_time={format_elapsed(fit_elapsed)}"
+                    ),
+                    verbose=True,
+                    always=True,
+                )
+
+        candidate_summary = {
+            "params": params,
+            "mean_test_score": float(np.mean(fold_scores)),
+            "std_test_score": float(np.std(fold_scores)),
+            "mean_test_accuracy": float(np.mean(fold_accuracies)),
+            "mean_fit_time_seconds": float(np.mean(fold_fit_times)),
+            "fold_scores": fold_scores,
+            "fold_accuracies": fold_accuracies,
+            "elapsed_seconds": float(time.perf_counter() - candidate_start),
+        }
+        candidate_summaries.append(candidate_summary)
+
+        emit_progress(
+            (
+                f"[candidate] {name} {candidate_index}/{total_combinations} "
+                f"mean_cv_f1={candidate_summary['mean_test_score']:.4f} "
+                f"mean_cv_acc={candidate_summary['mean_test_accuracy']:.4f} "
+                f"std_cv_f1={candidate_summary['std_test_score']:.4f} "
+                f"elapsed={format_elapsed(candidate_summary['elapsed_seconds'])}"
+            ),
+            verbose=verbose,
+            always=live_progress,
+        )
+
+        if candidate_summary["mean_test_score"] > best_score:
+            best_score = candidate_summary["mean_test_score"]
+            best_params = dict(params)
+            emit_progress(
+                (
+                    f"[train] {name}: new best candidate {candidate_index}/{total_combinations} "
+                    f"mean_cv_f1={best_score:.4f} "
+                    f"mean_cv_acc={candidate_summary['mean_test_accuracy']:.4f} "
+                    f"params={best_params}"
+                ),
+                verbose=verbose,
+                always=True,
+            )
+
+    if best_params is None:
+        raise ValueError(f"No candidate finished for {name}.")
+
     emit_progress(
-        f"{name} best CV macro-F1: {search.best_score_:.4f}",
+        f"[train] {name}: refitting best candidate on the full training split...",
         verbose=verbose,
         always=True,
     )
-    return search
+    best_estimator = clone(pipeline)
+    best_estimator.set_params(**best_params)
+    best_estimator.fit(X_train, y_train)
+
+    emit_progress(f"[train] {name}: tuning finished.", verbose=verbose, always=True)
+    emit_progress(f"{name} best params: {best_params}", verbose=verbose, always=True)
+    emit_progress(
+        f"{name} best CV macro-F1: {best_score:.4f}",
+        verbose=verbose,
+        always=True,
+    )
+    return SearchResult(
+        best_estimator_=best_estimator,
+        best_params_=best_params,
+        best_score_=best_score,
+        cv_results_=build_cv_results(candidate_summaries),
+        candidate_summaries=candidate_summaries,
+    )
 
 
 def compute_metrics(name: str, estimator: Pipeline, X_test: pd.DataFrame, y_test: np.ndarray, label_encoder: LabelEncoder) -> TrainingArtifacts:
@@ -576,6 +975,11 @@ def build_dataset_audit(df: pd.DataFrame, label_col: str, text_cols: list[str], 
         "sample_rows": df.head(5).replace({np.nan: None}).to_dict(orient="records"),
     }
 
+    if "source_file" in df.columns:
+        audit["source_file_distribution"] = (
+            df["source_file"].fillna("missing").astype(str).value_counts().to_dict()
+        )
+
     for column in text_cols:
         if column in df.columns:
             lengths = df[column].fillna("").astype(str).map(len)
@@ -605,8 +1009,24 @@ def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    lr_grid = make_lr_grid(args.tuning_profile, args.max_text_features)
+    xgb_grid = make_xgb_grid(args.tuning_profile, args.max_text_features)
     emit_progress(
         f"[setup] task={args.task} model={args.model} cv_folds={args.cv_folds} output={output_dir}",
+        verbose=args.verbose,
+        always=True,
+    )
+    emit_progress(
+        (
+            f"[setup] tuning_profile={args.tuning_profile} max_text_features={args.max_text_features} "
+            f"skip_shap={args.skip_shap} live_progress={args.live_progress} "
+            f"progress_log_every_fits={args.progress_log_every_fits}"
+        ),
+        verbose=args.verbose,
+        always=True,
+    )
+    emit_progress(
+        f"[setup] xgboost_device={args.xgb_device}",
         verbose=args.verbose,
         always=True,
     )
@@ -627,7 +1047,15 @@ def main(argv: list[str] | None = None) -> None:
         verbose=args.verbose,
         always=True,
     )
-    raw_df = clean_labels(raw_df, args.label_col, args.min_class_count, verbose=args.verbose)
+    raw_df, cleaning_summary = clean_training_frame(
+        raw_df,
+        args.label_col,
+        args.text_cols,
+        args.categorical_cols,
+        args.numeric_cols,
+        args.min_class_count,
+        verbose=args.verbose,
+    )
 
     present_text_cols = detect_present_columns(raw_df, args.text_cols)
     present_categorical_cols = detect_present_columns(raw_df, args.categorical_cols)
@@ -641,6 +1069,7 @@ def main(argv: list[str] | None = None) -> None:
         present_categorical_cols,
         present_numeric_cols,
     )
+    audit["cleaning_summary"] = cleaning_summary
     save_json(output_dir / "dataset_audit.json", audit)
     emit_progress(
         f"[audit] Wrote {output_dir / 'dataset_audit.json'}",
@@ -711,12 +1140,14 @@ def main(argv: list[str] | None = None) -> None:
         lr_search = fit_search(
             name="logistic_regression",
             pipeline=build_lr_pipeline(categorical_cols, numeric_cols, args.max_text_features, args.random_state),
-            grid=make_lr_grid(),
+            grid=lr_grid,
             X_train=X_train,
             y_train=y_train,
             cv_folds=args.cv_folds,
             random_state=args.random_state,
             verbose=args.verbose,
+            live_progress=args.live_progress,
+            progress_log_every_fits=args.progress_log_every_fits,
         )
         search_summaries["logistic_regression"] = {
             "best_params": lr_search.best_params_,
@@ -734,30 +1165,50 @@ def main(argv: list[str] | None = None) -> None:
     if args.model in {"xgb", "both"}:
         xgb_search = fit_search(
             name="xgboost",
-            pipeline=build_xgb_pipeline(categorical_cols, numeric_cols, args.max_text_features, args.random_state, len(label_encoder.classes_)),
-            grid=make_xgb_grid(),
+            pipeline=build_xgb_pipeline(
+                categorical_cols,
+                numeric_cols,
+                args.max_text_features,
+                args.random_state,
+                len(label_encoder.classes_),
+                args.xgb_device,
+            ),
+            grid=xgb_grid,
             X_train=X_train,
             y_train=y_train,
             cv_folds=args.cv_folds,
             random_state=args.random_state,
             verbose=args.verbose,
+            live_progress=args.live_progress,
+            progress_log_every_fits=args.progress_log_every_fits,
         )
         search_summaries["xgboost"] = {
             "best_params": xgb_search.best_params_,
             "best_cv_score": float(xgb_search.best_score_),
         }
         xgb_result = compute_metrics("xgboost", xgb_search.best_estimator_, X_test, y_test, label_encoder)
-        sample_size = min(200, len(X_test))
-        emit_progress(
-            f"[xgboost] Computing SHAP top features for {sample_size} held-out row(s)...",
-            verbose=args.verbose,
-            always=True,
-        )
-        xgb_result.metrics["shap_top_features"] = compute_xgb_shap(
-            xgb_search.best_estimator_, X_test.head(sample_size)
-        )
+        if args.skip_shap:
+            xgb_result.metrics["shap_top_features"] = None
+            xgb_result.metrics["shap_status"] = "skipped"
+            emit_progress(
+                "[xgboost] Skipping SHAP feature ranking (--skip-shap).",
+                verbose=args.verbose,
+                always=True,
+            )
+        else:
+            sample_size = min(200, len(X_test))
+            emit_progress(
+                f"[xgboost] Computing SHAP top features for {sample_size} held-out row(s)...",
+                verbose=args.verbose,
+                always=True,
+            )
+            xgb_result.metrics["shap_top_features"] = compute_xgb_shap(
+                xgb_search.best_estimator_, X_test.head(sample_size)
+            )
+            xgb_result.metrics["shap_status"] = "computed"
         results.append(xgb_result)
-        emit_progress("[xgboost] SHAP feature ranking ready.", verbose=args.verbose, always=True)
+        if not args.skip_shap:
+            emit_progress("[xgboost] SHAP feature ranking ready.", verbose=args.verbose, always=True)
         emit_progress(
             f"[metrics] xgboost test macro-F1: {xgb_result.metrics['f1_macro']:.4f}",
             verbose=args.verbose,
@@ -792,6 +1243,14 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     metrics_bundle = {
+        "search_config": {
+            "tuning_profile": args.tuning_profile,
+            "cv_folds": args.cv_folds,
+            "max_text_features": args.max_text_features,
+            "skip_shap": args.skip_shap,
+            "live_progress": args.live_progress,
+            "progress_log_every_fits": args.progress_log_every_fits,
+        },
         "leaderboard": leaderboard,
         "search_summaries": search_summaries,
         "models": {result.name: result.metrics for result in results},
@@ -803,7 +1262,14 @@ def main(argv: list[str] | None = None) -> None:
             "vectorizer": {
                 "type": "TfidfVectorizer",
                 "analyzer": "char_wb",
-                "ngram_range_search": [(3, 5), (2, 5)],
+                "ngram_range_search": unique_preserving_order(
+                    lr_grid.get("features__text__ngram_range", [])
+                    + xgb_grid.get("features__text__ngram_range", [])
+                ),
+                "max_features_search": unique_preserving_order(
+                    lr_grid.get("features__text__max_features", [])
+                    + xgb_grid.get("features__text__max_features", [])
+                ),
                 "why": "Robust for Gurindji, English, Gurindji-Kriol spelling variation and code-switching.",
             },
             "language_note": "language feature normalized into english/gurindji/gurindji-kriol/unknown.",
@@ -812,6 +1278,7 @@ def main(argv: list[str] | None = None) -> None:
             "primary_runtime": "joblib/python",
             "preferred_mobile_export": "ONNX for logistic regression only after parity test",
             "warning": "XGBoost + TF-IDF ONNX conversion may fail or differ. Test on device before shipping.",
+            "xgboost_device": args.xgb_device,
         },
     }
     save_json(output_dir / "metrics.json", metrics_bundle)

@@ -3,6 +3,32 @@
 This folder contains local research scripts for SACA. Raw datasets, DoReCo
 annotations, audio, trained models, and generated outputs must stay outside Git.
 
+## Environment Setup
+
+Python `3.9+` is recommended.
+
+**Linux / macOS**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r python_pipeline/requirements-classifier.txt
+```
+
+**Windows (PowerShell)**
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r python_pipeline/requirements-classifier.txt
+```
+
+Generated outputs, model binaries, campaign manifests, and intermediate build
+artifacts are intentionally ignored by Git. Commit source, docs, and tracked
+input datasets only.
+
 ## Local DoReCo Gurindji Annotations
 
 The current workspace has DoReCo Gurindji core/extended annotation files in a
@@ -84,6 +110,16 @@ That prints milestone logs for dataset loading, audit generation, train/test
 split, model tuning, SHAP computation, ONNX export, and artifact writes. In
 PowerShell, use the backtick `` ` `` for line continuation.
 
+The trainer now defaults to a **balanced** tuning budget for faster iteration:
+
+- `--cv-folds 3` by default (instead of 5)
+- `--max-text-features 10000` by default (instead of 20000)
+- `--tuning-profile balanced` by default, which trims the XGBoost search space
+- `--skip-shap` is available for quick-turn tuning runs when explanations are
+   not needed immediately
+
+Use `--tuning-profile full` if you need the original exhaustive XGBoost grid.
+
 Recommended run order:
 
 1. **Audit local data first**
@@ -153,24 +189,146 @@ python python_pipeline/train_classifier.py `
    --categorical-cols body_location prior_medications language source `
    --numeric-cols duration_hours duration_days `
    --model both `
+   --tuning-profile balanced `
+   --skip-shap `
    --verbose `
    --output-dir python_pipeline/outputs/classifier_diagnosis_run1
 ```
 
+1. **Build an intermediate multi-source diagnosis dataset before training**
+
+    Instead of pointing the trainer at raw files with mixed schemas, build one
+    training-ready CSV first. This keeps `multi` runs honest: the builder
+    normalizes source-specific columns, strips bot turns from
+    `medical_conversations.csv`, de-duplicates rows, and applies the same
+    label-cleaning rules the trainer expects.
+
+```powershell
+python python_pipeline/normalize_datasets.py `
+   --input-paths `
+      python_pipeline/data/gretel_symptom_to_diagnosis.csv `
+      python_pipeline/data/Symptom2Disease.csv `
+   --output python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.csv `
+   --summary-output python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.summary.json
+```
+
+The JSON summary records which source files were processed or skipped plus the
+post-cleaning row count that will actually reach the trainer.
+
+### Split LR and XGBoost into Separate OzSTAR Jobs
+
+For OzSTAR, the repo now includes dedicated split-job scripts so LR and XGBoost
+can use different Slurm budgets while each job still runs **both** the
+normalized single dataset and the built multi-dataset flow.
+
+- `python_pipeline/slurm_train_classifier_lr.sh`
+   - historical recommendation: `16 CPU`, `1h`, `12G RAM`, **no GPU**
+   - reason: historical combined jobs reached XGBoost after about 15 minutes on
+      both 16 CPU and 32 CPU, so LR did not benefit much from extra CPU
+- `python_pipeline/slurm_train_classifier_xgb.sh`
+   - historical recommendation: `32 CPU`, `3h`, `20G RAM`, `gpu:1`
+   - reason: historical combined jobs saturated CPU/GPU and timed out in the
+      XGBoost phase at 4h, so XGBoost needs its own GPU-backed budget
+
+Recommended submission on OzSTAR:
+
+```bash
+sbatch /fred/oz396/dunguyen/saca_whisper/code/slurm_train_classifier_lr.sh
+sbatch /fred/oz396/dunguyen/saca_whisper/code/slurm_train_classifier_xgb.sh
+```
+
+If you want to submit the entire `quick -> balanced -> full` ladder in one go,
+use the campaign helper:
+
+```bash
+bash /fred/oz396/dunguyen/saca_whisper/code/submit_classifier_profile_campaign.sh
+```
+
+The helper submits **6 isolated jobs** (`lr/xgb x quick/balanced/full`) and
+writes a submission manifest under:
+
+```text
+/fred/oz396/dunguyen/saca_whisper/outputs/classifier_campaigns/<campaign_name>/submission_manifest.json
+```
+
+Each job gets its own:
+
+- `OUT_SINGLE`
+- `OUT_MULTI`
+- intermediate dataset CSV
+- intermediate dataset summary JSON
+
+This matters because concurrent profile runs would otherwise overwrite the same
+`OUT_MULTI` and `outputs/intermediate_datasets/diagnosis_multi_dataset.csv`
+paths.
+
+Default campaign knobs are tuned for the current expanded diagnosis ladder:
+
+- `MULTI_BUILD_INCLUDE_HEALTHCARE=1`
+- `MULTI_BUILD_INCLUDE_MEDICAL_CONVERSATIONS=1`
+- `MULTI_BUILD_INCLUDE_PREBUILT_NORMALIZED=0`
+- `CV_FOLDS=3`
+- `MAX_TEXT_FEATURES=10000`
+- `SKIP_SHAP=1`
+- `RUN_AUDIT=0` (to avoid rerunning the same audit 6 times)
+
+The helper also bumps walltime automatically for the heavy profiles:
+
+- LR `full` -> `02:00:00`
+- XGB `full` -> `08:00:00`
+
+Track baseline numbers, submitted job IDs, and future rung-by-rung results in:
+
+```text
+docs/CLASSIFIER_TUNING_RUN_LOG.md
+```
+
+After submission, inspect the manifest and then monitor the whole batch with:
+
+```bash
+squeue -j <comma-separated-job-ids>
+```
+
+The legacy combined script `python_pipeline/slurm_train_classifier.sh` is still
+available as a compatibility fallback, but the split scripts are the preferred
+path for production runs.
+
+Both split jobs now include an explicit intermediate build step before the
+multi-file train step:
+
+1. audit local data
+2. train the single normalized dataset
+3. build `outputs/intermediate_datasets/diagnosis_multi_dataset.csv`
+4. train on that built dataset
+
+To preserve the current runtime budget, the intermediate builder defaults to the
+two natural-language diagnosis sources (`gretel` + `Symptom2Disease`). Optional
+extra sources can be enabled in the Slurm environment:
+
+- `MULTI_BUILD_INCLUDE_HEALTHCARE=1`
+- `MULTI_BUILD_INCLUDE_MEDICAL_CONVERSATIONS=1`
+- `MULTI_BUILD_INCLUDE_PREBUILT_NORMALIZED=1`
+
 1. **Train from multiple diagnosis files at once**
 
 ```powershell
-python python_pipeline/train_classifier.py `
-   --data `
+python python_pipeline/normalize_datasets.py `
+   --input-paths `
       python_pipeline/data/gretel_symptom_to_diagnosis.csv `
       python_pipeline/data/Symptom2Disease.csv `
-      python_pipeline/data/normalized_diagnosis_dataset.csv `
+   --output python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.csv `
+   --summary-output python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.summary.json
+
+python python_pipeline/train_classifier.py `
+   --data python_pipeline/outputs/intermediate_datasets/diagnosis_multi_dataset.csv `
    --label-col diagnosis_label `
    --task diagnosis `
    --text-cols symptoms_text transcript_text `
    --categorical-cols body_location prior_medications language source `
    --numeric-cols duration_hours duration_days `
    --model both `
+   --tuning-profile balanced `
+   --skip-shap `
    --verbose `
    --output-dir python_pipeline/outputs/classifier_diagnosis_multi
 ```
@@ -189,6 +347,22 @@ Typical files:
 - `metrics.json`
 - `run_summary.json`
 - `onnx_export_status.json` when `--export-onnx` is used
+
+1. **Merge LR and XGBoost results after both jobs finish**
+
+Use the merge utility to build a unified leaderboard and copy the winning model
+artifact into a final output folder:
+
+```bash
+python python_pipeline/merge_classifier_runs.py \
+   --lr-dir /fred/oz396/dunguyen/saca_whisper/outputs/classifier_diagnosis_single_lr \
+   --xgb-dir /fred/oz396/dunguyen/saca_whisper/outputs/classifier_diagnosis_single_xgb \
+   --scope-name single \
+   --output-dir /fred/oz396/dunguyen/saca_whisper/outputs/classifier_diagnosis_single_merged
+```
+
+Repeat the same command for the `multi` scope by pointing to the corresponding
+`multi_lr` and `multi_xgb` directories.
 
 1. **Optional LR ONNX export**
 
@@ -215,11 +389,19 @@ Pipeline behavior:
 5. Handles class imbalance with `class_weight="balanced"` for Logistic Regression;
    XGBoost is tuned with macro-F1 so minority classes matter.
 6. Trains Logistic Regression baseline and XGBoost main model using
-   `GridSearchCV`; `--verbose` also enables visible tuning progress.
+   a manual cross-validation search loop; `--verbose` and `--live-progress`
+   enable visible tuning progress. Use
+   `--tuning-profile quick` for shortest turnaround, `balanced` for the default
+   HPC compromise, or `full` to restore the exhaustive search.
 7. Reports accuracy, macro-F1, weighted-F1, confusion matrix, classification
-   report, LR coefficients, and XGBoost SHAP top features.
+   report, LR coefficients, and XGBoost SHAP top features. Add `--skip-shap`
+   when you only need model selection artifacts quickly.
 8. Saves `best_model.joblib`, per-model metrics, label metadata, and run summary
    under the requested output directory.
+
+When LR and XGBoost are trained in separate Slurm jobs, use
+`merge_classifier_runs.py` to rebuild the cross-model leaderboard and copy the
+winning `best_model.joblib` into one merged output directory per scope.
 
 ### Offline Mobile Export Strategy
 

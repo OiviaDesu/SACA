@@ -7,6 +7,21 @@ escalation.
 
 SACA is not a diagnostic system and does not replace clinician judgement.
 
+## Safety & Disclaimer
+
+SACA is a **research prototype**, not a clinical decision system. It can support
+offline demos, workflow exploration, and model experimentation, but it must not
+be treated as medical advice or a substitute for clinician judgement.
+
+When in doubt, keep the safety layer conservative and escalate to human care.
+
+## Prerequisites
+
+- Flutter `3.3.0+` on the stable channel
+- Android SDK / toolchain for mobile builds
+- Windows desktop toolchain for `flutter build windows` when targeting Windows
+- Python `3.9+` if you want to use `python_pipeline/`
+
 ## Current Features
 
 - Adaptive Flutter UI for Windows desktop and Android mobile.
@@ -21,6 +36,7 @@ SACA is not a diagnostic system and does not replace clinician judgement.
 
 ```bash
 flutter pub get
+git config core.hooksPath .githooks
 flutter analyze
 flutter test
 flutter run
@@ -29,12 +45,25 @@ flutter run
 For Windows offline speech-to-text, add the local model assets first. See
 [docs/MODEL_ASSETS.md](docs/MODEL_ASSETS.md).
 
+If Android Gradle complains that `flutter.sdk` is missing, copy
+`android/local.properties.example` to `android/local.properties` and update the
+path for your machine.
+
 ## Platform Support
 
 - Windows: desktop UI, local audio recording, `sherpa_onnx` offline Whisper
   runtime with local ONNX assets.
 - Android: mobile UI, local audio recording, `whisper_kit` path.
 - Web: fallback/stub behavior for speech services.
+
+## Platform Setup Notes
+
+- **Windows:** `flutter build windows` compiles without local model binaries, but
+  runtime offline speech still needs the Whisper ONNX assets described in
+  `docs/MODEL_ASSETS.md`.
+- **Android:** the app builds with the normal Flutter Android toolchain. Voice
+  runtime behavior still depends on local/bundled model assets at runtime.
+- **Web:** speech services use stub/fallback behavior only.
 
 ## Model Assets
 
@@ -52,6 +81,10 @@ assets/models/sherpa-onnx-whisper-base/
 
 The placeholder README in that folder is tracked. The model files are ignored.
 
+Classifier research artifacts from `python_pipeline/` such as `*.joblib`,
+`*.onnx`, run outputs, and intermediate datasets are also kept out of Git by
+default.
+
 ## Project Structure
 
 ```text
@@ -68,6 +101,15 @@ docs/                architecture and setup notes
 python_pipeline/     future ML/STT training pipeline notes
 test/                unit and widget tests
 ```
+
+## Python Research Pipeline
+
+The Python training and HPC utilities live under `python_pipeline/`. They are
+optional for app development, but important for dataset normalization,
+classifier training, and Whisper fine-tuning research.
+
+See [python_pipeline/README_pipeline.md](python_pipeline/README_pipeline.md) for
+setup, Slurm usage, and artifact policy.
 
 ## Git Workflow
 
@@ -150,4 +192,8 @@ recognition on Windows still requires local model files.
 - [Gurindji NLP and dataset strategy](docs/GURINDJI_NLP.md)
 - [Dataset research summary](docs/DATASET_RESEARCH_SUMMARY.md)
 - [Model assets](docs/MODEL_ASSETS.md)
+- [Release checklist](docs/RELEASE_CHECKLIST.md)
 - [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
+- [Changelog](CHANGELOG.md)

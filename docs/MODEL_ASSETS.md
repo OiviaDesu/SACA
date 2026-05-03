@@ -4,6 +4,9 @@ Large speech model files are not committed to this repository. They make the
 Git history heavy and slow to clone, and they are easier to manage as local
 runtime assets or release artifacts.
 
+The same policy applies to generated classifier artifacts from
+`python_pipeline/`, including `*.joblib`, `*.onnx`, and campaign run outputs.
+
 ## Mobile English STT
 
 Android and iOS use `whisper_kit`.
@@ -63,6 +66,21 @@ assets/models/sherpa-onnx-whisper-base/tokens.txt
 ```
 
 Keep only the placeholder README in Git.
+
+## Release Distribution Guidance
+
+If you publish builds or demos outside the repository, distribute model bundles
+as separate release artifacts instead of committing them into Git history.
+
+Recommended practice:
+
+1. store model bundles in GitHub Releases, internal object storage, or another
+  artifact store;
+2. publish checksums alongside the download;
+3. document the expected asset path and fallback behavior in release notes.
+
+Without the required local model files, CI builds can still compile, but runtime
+speech recognition will not be available until the model assets are installed.
 
 ## CI Notes
 
