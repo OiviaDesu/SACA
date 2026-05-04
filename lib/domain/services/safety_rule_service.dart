@@ -5,7 +5,7 @@ class SafetyRuleService {
 
   static const _redFlagTerms = <String>[
     'chest pain',
-    'chest tight',
+    'chest tightness',
     'difficulty breathing',
     'shortness of breath',
     'short of breath',
@@ -18,12 +18,12 @@ class SafetyRuleService {
     'fainting',
     'seizure',
     'stroke',
-    'confusion',
+    'severe confusion',
+    'sudden confusion',
     'severe bleeding',
-    'bleeding',
-    'blood',
     'vomiting blood',
     'blood in stool',
+    'coughing blood',
   ];
 
   bool hasRedFlag(AnalysisRequest request) {

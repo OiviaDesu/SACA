@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -27,11 +28,13 @@ class OnnxDiagnosisClassifier implements DiagnosisClassifier {
     OnnxRuntime? runtime,
     this.modelAsset = 'assets/models/diagnosis_lr_flutter.onnx',
     this.labelsAsset = 'assets/models/diagnosis_lr_flutter_labels.json',
+    this.inferenceTimeout = const Duration(seconds: 5),
   }) : _runtime = runtime ?? OnnxRuntime();
 
   final OnnxRuntime _runtime;
   final String modelAsset;
   final String labelsAsset;
+  final Duration inferenceTimeout;
 
   Future<OrtSession>? _sessionFuture;
   Future<List<String>>? _labelsFuture;
@@ -51,7 +54,13 @@ class OnnxDiagnosisClassifier implements DiagnosisClassifier {
 
     Map<String, OrtValue>? outputs;
     try {
-      outputs = await session.run(inputs);
+      outputs = await session.run(inputs).timeout(
+            inferenceTimeout,
+            onTimeout: () => throw TimeoutException(
+              'ONNX inference timed out',
+              inferenceTimeout,
+            ),
+          );
       final outputLabel = outputs['output_label'];
       if (outputLabel == null) {
         throw StateError(
