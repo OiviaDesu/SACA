@@ -25,6 +25,8 @@ class BodyDiagram extends StatelessWidget {
         .where((area) => area.view == view)
         .toList(growable: false);
 
+    final visibleIds = areas.map((area) => area.id).toSet();
+
     return KeyedSubtree(
       key: ValueKey<String>('bodyDiagram-${view.name}'),
       child: AspectRatio(
@@ -56,10 +58,44 @@ class BodyDiagram extends StatelessWidget {
                 return Stack(
                   children: [
                     Positioned.fill(
-                      child: CustomPaint(
-                        painter: _BodyPanelPainter(view: view),
+                      child: IgnorePointer(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Image.asset(
+                            view == BodyView.front
+                                ? 'assets/Images/Body-front.png'
+                                : 'assets/Images/Body-back.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
                       ),
                     ),
+
+                    // Red highlight points for selected body parts
+                    // on the current view only.
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: _BodyHighlightPainter(
+                            selectedIds: selectedIds,
+                            visibleIds: visibleIds,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Connector lines between labels and body parts.
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: _BodyConnectorPainter(
+                            areas: areas,
+                            view: view,
+                          ),
+                        ),
+                      ),
+                    ),
+
                     for (final area in areas)
                       _PositionedAreaChip(
                         area: area,
@@ -97,18 +133,28 @@ class _PositionedAreaChip extends StatelessWidget {
   final Size size;
   final VoidCallback onPressed;
 
+  static const double chipWidth = 150;
+  static const double chipHeight = 60;
+
   @override
   Widget build(BuildContext context) {
-    final point = _positionFor(area.id);
+    final y = _BodyDiagramLayout.verticalPositionFor(area.id);
+    final sidePadding = size.width * _BodyDiagramLayout.sidePaddingRatio;
+
+    final left = _BodyDiagramLayout.isRightColumn(area.id)
+        ? size.width - sidePadding - chipWidth
+        : sidePadding;
+
     return Positioned(
-      left: point.dx * size.width,
-      top: point.dy * size.height,
+      left: left,
+      top: y * size.height,
       child: Semantics(
         button: true,
         selected: selected,
         label: '$semanticsPrefix ${label.replaceAll('\n', ' ')}',
         child: SizedBox(
-          width: label.length > 12 ? 126 : 96,
+          width: chipWidth,
+          height: chipHeight,
           child: SacaChipButton(
             label: label,
             selected: selected,
@@ -118,195 +164,192 @@ class _PositionedAreaChip extends StatelessWidget {
       ),
     );
   }
-
-  Offset _positionFor(String id) {
-    return switch (id) {
-      'head' => const Offset(0.02, 0.06),
-      'eyes' => const Offset(0.69, 0.09),
-      'throat' => const Offset(0.03, 0.21),
-      'heart' => const Offset(0.67, 0.24),
-      'chest' => const Offset(0.02, 0.35),
-      'stomach' => const Offset(0.02, 0.52),
-      'hand' => const Offset(0.70, 0.58),
-      'leg' => const Offset(0.03, 0.76),
-      'knees' => const Offset(0.68, 0.80),
-      'toes' => const Offset(0.64, 0.92),
-      'ears' => const Offset(0.68, 0.09),
-      'neck' => const Offset(0.03, 0.19),
-      'shoulder' => const Offset(0.66, 0.19),
-      'back' => const Offset(0.03, 0.34),
-      'arm' => const Offset(0.69, 0.39),
-      'lower_back' => const Offset(0.03, 0.51),
-      'finger' => const Offset(0.68, 0.66),
-      'lower_leg' => const Offset(0.03, 0.79),
-      'ankle' => const Offset(0.02, 0.93),
-      _ => const Offset(0.05, 0.05),
-    };
-  }
 }
 
-class _BodyPanelPainter extends CustomPainter {
-  const _BodyPanelPainter({required this.view});
+class _BodyHighlightPainter extends CustomPainter {
+  const _BodyHighlightPainter({
+    required this.selectedIds,
+    required this.visibleIds,
+  });
 
-  final BodyView view;
+  final Set<String> selectedIds;
+  final Set<String> visibleIds;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final panel = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Color(0xFFFDF8F6),
-          Color(0xFFF2FBFD),
-        ],
-      ).createShader(Offset.zero & size);
-    final guide = Paint()
-      ..color = const Color(0xFFD9E7EB)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
+    if (selectedIds.isEmpty) return;
 
-    final frame = RRect.fromRectAndRadius(
-      Offset.zero & size,
-      const Radius.circular(22),
-    );
-    canvas.drawRRect(frame, panel);
-    canvas.drawRRect(frame, guide);
+    for (final id in selectedIds) {
+      // Only draw highlight points for body parts visible
+      // in the current Front or Back view.
+      if (!visibleIds.contains(id)) continue;
 
-    final silhouetteFill = Paint()
-      ..color = const Color(0x22B9DCEA)
-      ..style = PaintingStyle.fill;
-    final silhouetteLine = Paint()
-      ..color = const Color(0xFF8FAAB0)
-      ..strokeWidth = 2.2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+      final center = _BodyTargetPoints.positionFor(id, size);
+      if (center == null) continue;
 
-    final centerX = size.width * 0.52;
-    final top = size.height * 0.06;
+      final outerPaint = Paint()
+        ..color = const Color(0x44E85B5B)
+        ..style = PaintingStyle.fill;
 
-    final head = Rect.fromCenter(
-      center: Offset(centerX, top + size.height * 0.10),
-      width: size.width * 0.16,
-      height: size.height * 0.14,
-    );
-    canvas.drawOval(head, silhouetteFill);
-    canvas.drawOval(head, silhouetteLine);
+      final middlePaint = Paint()
+        ..color = const Color(0x77E85B5B)
+        ..style = PaintingStyle.fill;
 
-    final shoulderY = top + size.height * 0.18;
-    final hipY = top + size.height * 0.54;
-    final legEndY = top + size.height * 0.90;
-    final bodyWidth = size.width * 0.18;
-    final armReach = size.width * 0.13;
+      final innerPaint = Paint()
+        ..color = const Color(0xFFE85B5B)
+        ..style = PaintingStyle.fill;
 
-    final torso = Path()
-      ..moveTo(centerX - bodyWidth, shoulderY)
-      ..quadraticBezierTo(
-        centerX - bodyWidth * 1.25,
-        shoulderY + size.height * 0.08,
-        centerX - bodyWidth * 0.92,
-        hipY,
-      )
-      ..quadraticBezierTo(
-        centerX - bodyWidth * 0.15,
-        hipY + size.height * 0.03,
-        centerX,
-        hipY,
-      )
-      ..quadraticBezierTo(
-        centerX + bodyWidth * 0.15,
-        hipY + size.height * 0.03,
-        centerX + bodyWidth * 0.92,
-        hipY,
-      )
-      ..quadraticBezierTo(
-        centerX + bodyWidth * 1.25,
-        shoulderY + size.height * 0.08,
-        centerX + bodyWidth,
-        shoulderY,
-      )
-      ..close();
-    canvas.drawPath(torso, silhouetteFill);
-    canvas.drawPath(torso, silhouetteLine);
-
-    final leftArm = Path()
-      ..moveTo(centerX - bodyWidth, shoulderY + size.height * 0.02)
-      ..quadraticBezierTo(
-        centerX - bodyWidth - armReach,
-        shoulderY + size.height * 0.16,
-        centerX - bodyWidth * 1.05,
-        shoulderY + size.height * 0.38,
-      )
-      ..quadraticBezierTo(
-        centerX - bodyWidth * 0.9,
-        shoulderY + size.height * 0.46,
-        centerX - bodyWidth * 0.85,
-        shoulderY + size.height * 0.54,
-      );
-    final rightArm = Path()
-      ..moveTo(centerX + bodyWidth, shoulderY + size.height * 0.02)
-      ..quadraticBezierTo(
-        centerX + bodyWidth + armReach,
-        shoulderY + size.height * 0.16,
-        centerX + bodyWidth * 1.05,
-        shoulderY + size.height * 0.38,
-      )
-      ..quadraticBezierTo(
-        centerX + bodyWidth * 0.9,
-        shoulderY + size.height * 0.46,
-        centerX + bodyWidth * 0.85,
-        shoulderY + size.height * 0.54,
-      );
-    canvas.drawPath(leftArm, silhouetteLine);
-    canvas.drawPath(rightArm, silhouetteLine);
-
-    final leftLeg = Path()
-      ..moveTo(centerX - size.width * 0.04, hipY)
-      ..quadraticBezierTo(
-        centerX - size.width * 0.09,
-        hipY + size.height * 0.20,
-        centerX - size.width * 0.07,
-        legEndY,
-      );
-    final rightLeg = Path()
-      ..moveTo(centerX + size.width * 0.04, hipY)
-      ..quadraticBezierTo(
-        centerX + size.width * 0.09,
-        hipY + size.height * 0.20,
-        centerX + size.width * 0.07,
-        legEndY,
-      );
-    canvas.drawPath(leftLeg, silhouetteLine);
-    canvas.drawPath(rightLeg, silhouetteLine);
-
-    if (view == BodyView.front) {
-      canvas.drawLine(
-        Offset(centerX - size.width * 0.03, shoulderY + size.height * 0.10),
-        Offset(centerX + size.width * 0.05, shoulderY + size.height * 0.10),
-        silhouetteLine,
-      );
-      canvas.drawCircle(
-        Offset(centerX + size.width * 0.05, shoulderY + size.height * 0.08),
-        5,
-        silhouetteLine,
-      );
-    } else {
-      canvas.drawLine(
-        Offset(centerX, shoulderY + size.height * 0.01),
-        Offset(centerX, hipY - size.height * 0.01),
-        silhouetteLine,
-      );
-      canvas.drawLine(
-        Offset(centerX - size.width * 0.07, shoulderY + size.height * 0.12),
-        Offset(centerX + size.width * 0.07, shoulderY + size.height * 0.12),
-        silhouetteLine,
-      );
+      canvas.drawCircle(center, 24, outerPaint);
+      canvas.drawCircle(center, 14, middlePaint);
+      canvas.drawCircle(center, 6, innerPaint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _BodyPanelPainter oldDelegate) {
-    return oldDelegate.view != view;
+  bool shouldRepaint(covariant _BodyHighlightPainter oldDelegate) {
+    return oldDelegate.selectedIds != selectedIds ||
+        oldDelegate.visibleIds != visibleIds;
+  }
+}
+
+class _BodyConnectorPainter extends CustomPainter {
+  const _BodyConnectorPainter({
+    required this.areas,
+    required this.view,
+  });
+
+  final List<BodyArea> areas;
+  final BodyView view;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF5F7F91)
+      ..strokeWidth = 1.4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    for (final area in areas) {
+      final start = _labelAnchorFor(area.id, size);
+      final end = _BodyTargetPoints.positionFor(area.id, size);
+
+      if (start == null || end == null) continue;
+
+      canvas.drawLine(start, end, paint);
+    }
+  }
+
+  Offset? _labelAnchorFor(String id, Size size) {
+    final y = _BodyDiagramLayout.verticalPositionFor(id);
+    final sidePadding = size.width * _BodyDiagramLayout.sidePaddingRatio;
+    final isRight = _BodyDiagramLayout.isRightColumn(id);
+
+    final chipLeft = isRight
+        ? size.width - sidePadding - _PositionedAreaChip.chipWidth
+        : sidePadding;
+
+    final chipTop = y * size.height;
+
+    // Left column lines start from right edge of chip.
+    // Right column lines start from left edge of chip.
+    final x = isRight
+        ? chipLeft
+        : chipLeft + _PositionedAreaChip.chipWidth;
+
+    final centerY = chipTop + _PositionedAreaChip.chipHeight / 2;
+
+    return Offset(x, centerY);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BodyConnectorPainter oldDelegate) {
+    return oldDelegate.areas != areas || oldDelegate.view != view;
+  }
+}
+
+class _BodyTargetPoints {
+  static Offset? positionFor(String id, Size size) {
+    final point = switch (id) {
+      // Front view target points
+      'head' => const Offset(0.50, 0.06),
+      'eyes' => const Offset(0.54, 0.10),
+      'throat' => const Offset(0.50, 0.17),
+      'chest' => const Offset(0.48, 0.29),
+      'heart' => const Offset(0.54, 0.29),
+      'stomach' => const Offset(0.50, 0.43),
+      'hand' => const Offset(0.66, 0.52),
+      'leg' => const Offset(0.45, 0.60),
+      'knees' => const Offset(0.54, 0.68),
+      'toes' => const Offset(0.52, 0.94),
+
+      // Back view target points
+      'neck' => const Offset(0.50, 0.16),
+      'ears' => const Offset(0.55, 0.10),
+      'back' => const Offset(0.50, 0.28),
+      'shoulder' => const Offset(0.61, 0.20),
+      'elbow' => const Offset(0.37, 0.35),
+      'lower_back' => const Offset(0.50, 0.42),
+      'arm' => const Offset(0.63,0.31),
+      'finger' => const Offset(0.65, 0.53),
+      'lower_leg' => const Offset(0.47, 0.78),
+      'ankle' => const Offset(0.53, 0.91),
+
+      _ => null,
+    };
+
+    if (point == null) return null;
+
+    return Offset(point.dx * size.width, point.dy * size.height);
+  }
+}
+
+class _BodyDiagramLayout {
+  static const double sidePaddingRatio = 0.08;
+
+  static bool isRightColumn(String id) {
+    return switch (id) {
+      // Front view - right column
+      'eyes' || 'heart' || 'hand' || 'knees' || 'toes' => true,
+
+      // Back view - right column
+      'ears' || 'shoulder' || 'arm' || 'finger' || 'ankle' => true,
+
+      _ => false,
+    };
+  }
+
+  static double verticalPositionFor(String id) {
+    return switch (id) {
+      // Front view - left column
+      'head' => 0.06,
+      'throat' => 0.21,
+      'chest' => 0.36,
+      'stomach' => 0.51,
+      'leg' => 0.73,
+
+      // Front view - right column
+      'eyes' => 0.06,
+      'heart' => 0.21,
+      'hand' => 0.51,
+      'knees' => 0.73,
+      'toes' => 0.86,
+
+      // Back view - left column
+      'neck' => 0.06,
+      'back' => 0.21,
+      'lower_back' => 0.51,
+      'lower_leg' => 0.73,
+      'elbow' => 0.36,
+
+
+      // Back view - right column
+      'ears' => 0.06,
+      'shoulder' => 0.21,
+      'arm' => 0.36,
+      'finger' => 0.51,
+      'ankle' => 0.86,
+    
+      _ => 0.06,
+    };
   }
 }
