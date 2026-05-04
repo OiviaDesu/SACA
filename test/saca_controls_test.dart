@@ -128,6 +128,33 @@ void main() {
       expect(_surfaceOpacity(tester, 'disabled').opacity, equals(0.44));
     });
 
+    testWidgets('error banner renders centered emergency copy', (tester) async {
+      await _pumpHarness(
+        tester,
+        child: const SacaErrorBanner(
+          message: 'Voice model is not ready. Use text input.',
+        ),
+      );
+
+      final text = tester.widget<Text>(
+        find.text('Voice model is not ready. Use text input.'),
+      );
+      final box = tester.widget<DecoratedBox>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is DecoratedBox &&
+              widget.decoration is BoxDecoration &&
+              (widget.decoration as BoxDecoration).color ==
+                  const Color(0xFFFFE7E4),
+        ),
+      );
+      final decoration = box.decoration as BoxDecoration;
+
+      expect(text.textAlign, TextAlign.center);
+      expect(text.style!.color, SacaTheme.emergency);
+      expect(decoration.color, const Color(0xFFFFE7E4));
+      expect(decoration.borderRadius, BorderRadius.circular(SacaTheme.radius));
+    });
     testWidgets('chip button shows focus indicator without layout shift', (
       tester,
     ) async {
