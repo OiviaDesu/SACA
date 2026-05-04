@@ -1,4 +1,4 @@
-"""
+﻿"""
 Step 4: Build a synthetic Gurindji audio dataset for Phase 2 fine-tuning.
 
 Strategy (no native audio exists):
@@ -7,9 +7,9 @@ Strategy (no native audio exists):
   3. Synthesize audio using gTTS (Australian English accent proxy) or Kokoro TTS
   4. Export as HuggingFace dataset (audio array + text label)
 
-Note: Synthetic audio is an approximation only. Ideally collect 50–200 real recordings
-      from native Gurindji speakers. This script generates enough data for initial
-      fine-tuning and forced-decoding experiments.
+Note: Synthetic audio/text is an approximation only. Ideally collect 50-200 real recordings
+      from native Gurindji speakers and validate every generated utterance with a
+      human reviewer before clinical or model-training use.
 
 pip install gtts pydub openpyxl datasets soundfile
 """
@@ -22,9 +22,9 @@ from datasets import Dataset, Audio as HFAudio
 import soundfile as sf
 import numpy as np
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Config
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 DICT_PATH = "../../gurindji_dict_full.xlsx"   # adjust relative path
 OUTPUT_DIR = Path("./data/gurindji_synthetic")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -32,14 +32,35 @@ SAMPLE_RATE = 16_000
 
 # Health-relevant types to include
 HEALTH_TYPES = {"body", "symptom", "disease", "emotion", "question", "greeting"}
+LLM_SYMPTOM_PROMPT = """You are a linguistic assistant helping generate training data for a low-resource
+Indigenous language clinical triage system targeting Gurindji speakers in the
+Northern Territory, Australia.
 
-# Sentence templates: {gurindji_word} used as spoken target
+Produce realistic Gurindji-language symptom descriptions that a community member
+might say to a health worker. These are spoken, informal expressions, not formal
+translations.
+
+Guidelines:
+- Use everyday vocabulary, not clinical jargon.
+- Include common code-switching with English where natural.
+- Keep utterances short: 1-2 sentences maximum.
+- Vary phrasing and do not repeat the same sentence structure.
+- Keep the clinical disease/symptom label accurate.
+- Do not hallucinate Gurindji vocabulary. If uncertain, use English or mark the
+  term [UNCERTAIN] so a human reviewer can validate it.
+
+For each entry, output one JSON object:
+{"gurindji_text": "...", "english_gloss": "...", "symptom_label": "..."}
+"""
+
+# Safe local templates: only use Gurindji words already present in the dictionary;
+# otherwise keep the symptom meaning in English for reviewer validation.
 TEMPLATES = [
-    "I have {english} ({gurindji})",
-    "My {english} hurts ({gurindji})",
-    "{gurindji}",                           # bare word for vocabulary injection
-    "Pain in {english}",
-    "I feel {english}",
+    "{gurindji}, {english} now",
+    "{english} bad, I tell clinic",
+    "{gurindji}",
+    "My {english} sore",
+    "I feel {english}, need health worker",
 ]
 
 
@@ -93,13 +114,16 @@ def build_dataset(n_per_entry: int = 3) -> Dataset:
     ds = Dataset.from_list(records)
     ds = ds.cast_column("audio", HFAudio(sampling_rate=SAMPLE_RATE))
     ds.save_to_disk(str(OUTPUT_DIR / "gurindji_synthetic_v1"))
-    print(f"[SACA] Saved {len(ds):,} synthetic samples → {OUTPUT_DIR}")
+    print(f"[SACA] Saved {len(ds):,} synthetic samples â†’ {OUTPUT_DIR}")
     return ds
 
 
 if __name__ == "__main__":
     build_dataset(n_per_entry=3)
-    # Total: ~172 health entries × 3 templates ≈ 516 samples
+    # Total: ~172 health entries Ã— 3 templates â‰ˆ 516 samples
     # Sufficient for vocabulary injection fine-tuning experiment.
     print("\nNext step: run 02_finetune_whisper.py with DATA_PATH pointing to")
     print("  ./data/gurindji_synthetic/gurindji_synthetic_v1")
+
+
+
