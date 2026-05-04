@@ -3,6 +3,8 @@
 # slurm_train_classifier_xgb.sh
 #
 # XGBoost-only classifier job for OzSTAR.
+# Experimental after job 11822367: quick XGB underfit badly on the expanded multi
+# dataset. Prefer LR balanced for production unless retuning XGB deliberately.
 # Runs both the single normalized dataset and the merged multi-dataset pipeline.
 #
 # Resource choice is based on historical combined jobs:

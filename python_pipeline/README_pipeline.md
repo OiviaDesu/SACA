@@ -124,6 +124,8 @@ That prints milestone logs for dataset loading, audit generation, train/test
 split, model tuning, SHAP computation, ONNX export, and artifact writes. In
 PowerShell, use the backtick `` ` `` for line continuation.
 
+Latest completed campaign result: LR `balanced` is the best stop point. Single dataset reaches about `0.99` macro-F1; expanded multi-source dataset reaches about `0.37` macro-F1. LR `full` matched `balanced`, so full is not worth the extra time. XGBoost quick underfit badly in the latest run and should be treated as experimental until retuned.
+
 The trainer now defaults to a **balanced** tuning budget for faster iteration:
 
 - `--cv-folds 3` by default (instead of 5)
@@ -135,7 +137,7 @@ The trainer now defaults to a **balanced** tuning budget for faster iteration:
   `--include-text-length-features` only when you need them. The trainer scales
   numeric features, but diagnosis quality is best with text + source/language only.
 
-Use `--tuning-profile full` if you need the original exhaustive XGBoost grid.
+Use `--tuning-profile full` only for diagnostics; latest LR full matched balanced exactly while taking longer.
 
 Recommended run order:
 
@@ -205,7 +207,7 @@ python python_pipeline/training/train_classifier.py `
    --text-cols symptoms_text `
    --categorical-cols language source `
    --numeric-cols `
-   --model both `
+   --model lr `
    --tuning-profile balanced `
    --skip-shap `
    --verbose `
@@ -234,9 +236,13 @@ post-cleaning row count that will actually reach the trainer.
 
 ### Split LR and XGBoost into Separate OzSTAR Jobs
 
-For OzSTAR, the repo now includes dedicated split-job scripts so LR and XGBoost
-can use different Slurm budgets while each job still runs **both** the
-normalized single dataset and the built multi-dataset flow.
+For OzSTAR, LR balanced is now the recommended production job. XGBoost remains
+available as an experimental comparison, but latest completed jobs show quick XGB
+underfits badly on the expanded multi-source dataset.
+
+The repo includes dedicated split-job scripts so LR and XGBoost can use different
+Slurm budgets while each job still runs **both** the normalized single dataset and
+the built multi-dataset flow.
 
 - `python_pipeline/slurm_train_classifier_lr.sh`
    - historical recommendation: `16 CPU`, `1h`, `12G RAM`, **no GPU**
@@ -250,19 +256,22 @@ normalized single dataset and the built multi-dataset flow.
 Recommended submission on OzSTAR:
 
 ```bash
-sbatch /fred/oz396/dunguyen/saca_whisper/code/slurm_train_classifier_lr.sh
-sbatch /fred/oz396/dunguyen/saca_whisper/code/slurm_train_classifier_xgb.sh
+TUNING_PROFILE=balanced sbatch /fred/oz396/dunguyen/saca_whisper/code/slurm_train_classifier_lr.sh
 ```
 
-If you want to submit the entire `quick -> balanced -> full` ladder in one go,
-use the campaign helper:
+Optional XGBoost experiment only:
+
+```bash
+TUNING_PROFILE=balanced sbatch /fred/oz396/dunguyen/saca_whisper/code/slurm_train_classifier_xgb.sh
+```
+
+Do not submit the entire `quick -> balanced -> full` ladder for routine runs anymore: latest LR `full` matched `balanced`, and XGB quick underfit. Use the campaign helper only when doing ablations:
 
 ```bash
 bash /fred/oz396/dunguyen/saca_whisper/code/submit_classifier_profile_campaign.sh
 ```
 
-The helper submits **6 isolated jobs** (`lr/xgb x quick/balanced/full`) and
-writes a submission manifest under:
+The helper submits isolated jobs (`lr/xgb x quick/balanced/full`) and writes a submission manifest under:
 
 ```text
 /fred/oz396/dunguyen/saca_whisper/outputs/classifier_campaigns/<campaign_name>/submission_manifest.json
@@ -343,7 +352,7 @@ python python_pipeline/training/train_classifier.py `
    --text-cols symptoms_text `
    --categorical-cols language source `
    --numeric-cols `
-   --model both `
+   --model lr `
    --tuning-profile balanced `
    --skip-shap `
    --verbose `
@@ -405,11 +414,12 @@ Pipeline behavior:
    with median imputation.
 5. Handles class imbalance with `class_weight="balanced"` for Logistic Regression;
    XGBoost is tuned with macro-F1 so minority classes matter.
-6. Trains Logistic Regression baseline and XGBoost main model using
-   a manual cross-validation search loop; `--verbose` and `--live-progress`
-   enable visible tuning progress. Use
-   `--tuning-profile quick` for shortest turnaround, `balanced` for the default
-   HPC compromise, or `full` to restore the exhaustive search.
+6. Trains Logistic Regression as the recommended production model. XGBoost is
+   available for experiments, but latest quick-XGB underfit the expanded multi
+   dataset. Use a manual cross-validation search loop; `--verbose` and
+   `--live-progress` enable visible tuning progress. Use `--tuning-profile quick`
+   for shortest turnaround, `balanced` for the default/best LR stop point, and
+   `full` only for diagnostics.
 7. Reports accuracy, macro-F1, weighted-F1, confusion matrix, classification
    report, LR coefficients, and XGBoost SHAP top features. Add `--skip-shap`
    when you only need model selection artifacts quickly.

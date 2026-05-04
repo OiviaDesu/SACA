@@ -132,6 +132,7 @@ class SacaFlowState {
     this.textInput = '',
     this.selectedSymptomIds = const <String>{},
     this.selectedBodyAreaIds = const <String>{},
+    this.suggestedRelatedSymptomIds = const <String>[],
     this.questionAnswers = const <String, String>{},
     this.voiceAnswerTranscript = '',
     this.voiceAnswerMatched = true,
@@ -149,6 +150,7 @@ class SacaFlowState {
   final String textInput;
   final Set<String> selectedSymptomIds;
   final Set<String> selectedBodyAreaIds;
+  final List<String> suggestedRelatedSymptomIds;
   final Map<String, String> questionAnswers;
   final String voiceAnswerTranscript;
   final bool voiceAnswerMatched;
@@ -182,6 +184,7 @@ class SacaFlowState {
     String? textInput,
     Set<String>? selectedSymptomIds,
     Set<String>? selectedBodyAreaIds,
+    List<String>? suggestedRelatedSymptomIds,
     Map<String, String>? questionAnswers,
     String? voiceAnswerTranscript,
     bool? voiceAnswerMatched,
@@ -201,6 +204,8 @@ class SacaFlowState {
       textInput: textInput ?? this.textInput,
       selectedSymptomIds: selectedSymptomIds ?? this.selectedSymptomIds,
       selectedBodyAreaIds: selectedBodyAreaIds ?? this.selectedBodyAreaIds,
+      suggestedRelatedSymptomIds:
+          suggestedRelatedSymptomIds ?? this.suggestedRelatedSymptomIds,
       questionAnswers: questionAnswers ?? this.questionAnswers,
       voiceAnswerTranscript:
           voiceAnswerTranscript ?? this.voiceAnswerTranscript,

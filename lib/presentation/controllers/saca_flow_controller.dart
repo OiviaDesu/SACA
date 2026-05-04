@@ -3,16 +3,21 @@ import 'package:flutter/cupertino.dart';
 import '../../domain/models/saca_models.dart';
 import '../../domain/services/analysis_service.dart';
 import '../../domain/services/speech_input_service.dart';
+import '../../domain/services/symptom_suggestion_service.dart';
 
 class SacaFlowController extends ChangeNotifier {
   SacaFlowController({
     required SpeechInputService speechInput,
     required AnalysisService analysisService,
+    SymptomSuggestionService symptomSuggestionService =
+        const RuleBasedSymptomSuggestionService(),
   })  : _speechInput = speechInput,
-        _analysisService = analysisService;
+        _analysisService = analysisService,
+        _symptomSuggestionService = symptomSuggestionService;
 
   final SpeechInputService _speechInput;
   final AnalysisService _analysisService;
+  final SymptomSuggestionService _symptomSuggestionService;
 
   SacaFlowState _state = const SacaFlowState();
   SacaFlowState get state => _state;
@@ -267,8 +272,15 @@ class SacaFlowController extends ChangeNotifier {
         return;
       }
 
+      final suggestions = _symptomSuggestionService.suggestRelatedSymptoms(
+        _state.analysisRequest,
+      );
       _setState(
-        _state.copyWith(step: SacaStep.questionSeverity, clearError: true),
+        _state.copyWith(
+          step: SacaStep.questionSeverity,
+          suggestedRelatedSymptomIds: suggestions,
+          clearError: true,
+        ),
       );
     }
   }
@@ -292,6 +304,17 @@ class SacaFlowController extends ChangeNotifier {
         clearError: true,
       ),
     );
+    if (nextStep == SacaStep.questionRelatedSymptoms) {
+      _refineRelatedSymptomSuggestions();
+    }
+  }
+
+  Future<void> _refineRelatedSymptomSuggestions() async {
+    final request = _state.analysisRequest;
+    final suggestions =
+        await _symptomSuggestionService.refineRelatedSymptoms(request);
+    if (_state.step != SacaStep.questionRelatedSymptoms) return;
+    _setState(_state.copyWith(suggestedRelatedSymptomIds: suggestions));
   }
 
   Future<void> analyse() async {

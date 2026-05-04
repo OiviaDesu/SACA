@@ -1,4 +1,4 @@
-import csv
+﻿import csv
 import importlib.util
 import json
 import sys
@@ -15,7 +15,7 @@ assert SPEC.loader is not None
 sys.modules[SPEC.name] = trainer
 SPEC.loader.exec_module(trainer)
 
-SAMPLE_TRIAGE_DATASET = Path(__file__).resolve().parents[1] / "data" / "samples" / "triage_dataset.csv"
+SAMPLE_TRIAGE_DATASET = Path(__file__).resolve().parents[1] / "sample_triage_dataset.csv"
 
 
 def _write_diagnosis_fixture(path: Path) -> None:

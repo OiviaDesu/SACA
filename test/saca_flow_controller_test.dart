@@ -5,6 +5,7 @@ import 'package:saca_demo/core/errors/app_error.dart';
 import 'package:saca_demo/domain/models/saca_models.dart';
 import 'package:saca_demo/domain/services/analysis_service.dart';
 import 'package:saca_demo/domain/services/speech_input_service.dart';
+import 'package:saca_demo/domain/services/symptom_suggestion_service.dart';
 import 'package:saca_demo/presentation/controllers/saca_flow_controller.dart';
 
 void main() {
@@ -77,6 +78,46 @@ void main() {
 
       expect(controller.state.step, SacaStep.result);
       expect(controller.state.analysisResult?.disease, 'Influenza');
+    });
+
+    test('initial input prepares related symptom suggestions', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.updateTextInput('fever');
+      controller.continueFromInput();
+
+      expect(controller.state.suggestedRelatedSymptomIds,
+          containsAll(<String>['cough', 'sore_throat', 'headache']));
+    });
+
+    test('entering related symptom step refines suggestions', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+        symptomSuggestionService: _FakeSymptomSuggestionService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.updateTextInput('fever');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'one to three days');
+      controller.nextQuestion();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.state.step, SacaStep.questionRelatedSymptoms);
+      expect(controller.state.suggestedRelatedSymptomIds, <String>['cough']);
     });
 
     test('voice prepare failure is exposed as plain recovery text', () async {
@@ -335,5 +376,17 @@ class _FakeAnalysisService implements AnalysisService {
         disclaimer: 'Prototype guidance only.',
       ),
     );
+  }
+}
+
+class _FakeSymptomSuggestionService implements SymptomSuggestionService {
+  @override
+  List<String> suggestRelatedSymptoms(AnalysisRequest request) {
+    return const <String>['sore_throat'];
+  }
+
+  @override
+  Future<List<String>> refineRelatedSymptoms(AnalysisRequest request) async {
+    return const <String>['cough'];
   }
 }

@@ -24,6 +24,7 @@ migrate_working_dir/
 .pytest_cache/
 Microsoft/
 note.txt
+session_logs/
 
 # Local environment / HPC overrides
 .env
@@ -70,6 +71,7 @@ python_pipeline/outputs/
 python_pipeline/artifacts/
 *.joblib
 *.onnx
+!assets/models/diagnosis_lr_flutter.onnx
 
 # Local platform/dev machine files
 android/local.properties

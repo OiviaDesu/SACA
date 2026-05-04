@@ -1,0 +1,3863 @@
+{
+  "search_config": {
+    "tuning_profile": "balanced",
+    "cv_folds": 3,
+    "max_text_features": 10000,
+    "skip_shap": true,
+    "live_progress": false,
+    "progress_log_every_fits": 1
+  },
+  "leaderboard": [
+    {
+      "model_name": "logistic_regression",
+      "accuracy": 0.9800498753117207,
+      "f1_macro": 0.9812960537660614,
+      "f1_weighted": 0.9801445156670676
+    }
+  ],
+  "search_summaries": {
+    "logistic_regression": {
+      "best_params": {
+        "clf__C": 3.0,
+        "features__text__max_features": 10000,
+        "features__text__ngram_range": [
+          1,
+          2
+        ]
+      },
+      "best_cv_score": 0.9685440249276992
+    }
+  },
+  "models": {
+    "logistic_regression": {
+      "model_name": "logistic_regression",
+      "accuracy": 0.9800498753117207,
+      "f1_macro": 0.9812960537660614,
+      "f1_weighted": 0.9801445156670676,
+      "classification_report": {
+        "acne": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 9.0
+        },
+        "allergy": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 18.0
+        },
+        "arthritis": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 17.0
+        },
+        "asthma": {
+          "precision": 0.9473684210526315,
+          "recall": 1.0,
+          "f1-score": 0.972972972972973,
+          "support": 18.0
+        },
+        "chicken pox": {
+          "precision": 0.85,
+          "recall": 0.9444444444444444,
+          "f1-score": 0.8947368421052632,
+          "support": 18.0
+        },
+        "common cold": {
+          "precision": 1.0,
+          "recall": 0.9444444444444444,
+          "f1-score": 0.9714285714285714,
+          "support": 18.0
+        },
+        "dengue": {
+          "precision": 1.0,
+          "recall": 0.8888888888888888,
+          "f1-score": 0.9411764705882353,
+          "support": 18.0
+        },
+        "diabetes": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 18.0
+        },
+        "drug reaction": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 18.0
+        },
+        "fungal infection": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 18.0
+        },
+        "gastroesophageal reflux disease": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 17.0
+        },
+        "hemorrhoids": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 8.0
+        },
+        "hypertension": {
+          "precision": 0.9473684210526315,
+          "recall": 1.0,
+          "f1-score": 0.972972972972973,
+          "support": 18.0
+        },
+        "impetigo": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 18.0
+        },
+        "jaundice": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 14.0
+        },
+        "malaria": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 17.0
+        },
+        "migraine": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 16.0
+        },
+        "peptic ulcer disease": {
+          "precision": 1.0,
+          "recall": 0.8823529411764706,
+          "f1-score": 0.9375,
+          "support": 17.0
+        },
+        "pneumonia": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 17.0
+        },
+        "psoriasis": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 18.0
+        },
+        "spondylosis": {
+          "precision": 0.9444444444444444,
+          "recall": 0.9444444444444444,
+          "f1-score": 0.9444444444444444,
+          "support": 18.0
+        },
+        "typhoid": {
+          "precision": 0.8947368421052632,
+          "recall": 1.0,
+          "f1-score": 0.9444444444444444,
+          "support": 17.0
+        },
+        "uti": {
+          "precision": 1.0,
+          "recall": 0.9444444444444444,
+          "f1-score": 0.9714285714285714,
+          "support": 18.0
+        },
+        "varicose veins": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 18.0
+        },
+        "accuracy": 0.9800498753117207,
+        "macro avg": {
+          "precision": 0.9826632553606238,
+          "recall": 0.9812091503267975,
+          "f1-score": 0.9812960537660614,
+          "support": 401.0
+        },
+        "weighted avg": {
+          "precision": 0.9815855099094369,
+          "recall": 0.9800498753117207,
+          "f1-score": 0.9801445156670676,
+          "support": 401.0
+        }
+      },
+      "confusion_matrix": [
+        [
+          9,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          18,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          17,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          18,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          17,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          17,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          16,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          18,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          18,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          18,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          18,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          18,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          14,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          15,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          18,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          17,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          18
+        ]
+      ],
+      "top_features": [
+        {
+          "class_index": 0,
+          "top_features": [
+            {
+              "feature": "text__blackheads",
+              "weight": 3.316328264187034
+            },
+            {
+              "feature": "text__pus",
+              "weight": 3.2737856238672216
+            },
+            {
+              "feature": "text__pimples",
+              "weight": 2.899462433462961
+            },
+            {
+              "feature": "text__skin has",
+              "weight": 2.5155518372628007
+            },
+            {
+              "feature": "text__filled",
+              "weight": 2.2909623099688847
+            },
+            {
+              "feature": "text__my skin",
+              "weight": 2.003954931874271
+            },
+            {
+              "feature": "text__filled pimples",
+              "weight": 1.9584090418103721
+            },
+            {
+              "feature": "text__pus filled",
+              "weight": 1.9584090418103721
+            },
+            {
+              "feature": "cat__source_symptom2disease",
+              "weight": 1.8947187407260009
+            },
+            {
+              "feature": "text__skin",
+              "weight": 1.8878306801463527
+            },
+            {
+              "feature": "text__blackheads and",
+              "weight": 1.8607621940788677
+            },
+            {
+              "feature": "text__rash",
+              "weight": 1.7027042421389753
+            },
+            {
+              "feature": "cat__source_gretel_symptom_to_diagnosis",
+              "weight": -1.562377925991326
+            },
+            {
+              "feature": "text__and blackheads",
+              "weight": 1.440410797942857
+            },
+            {
+              "feature": "text__with pus",
+              "weight": 1.4329426714972986
+            },
+            {
+              "feature": "text__has",
+              "weight": 1.3471986090999515
+            },
+            {
+              "feature": "text__scurrying",
+              "weight": 1.264303303327751
+            },
+            {
+              "feature": "text__with",
+              "weight": 1.2114348424540045
+            },
+            {
+              "feature": "text__pimples and",
+              "weight": 1.2108918871358254
+            },
+            {
+              "feature": "text__and pimples",
+              "weight": 1.1245744396944932
+            },
+            {
+              "feature": "text__has also",
+              "weight": 1.1110608735024718
+            },
+            {
+              "feature": "text__this morning",
+              "weight": 1.058861343510042
+            },
+            {
+              "feature": "text__morning",
+              "weight": 1.0303848589568991
+            },
+            {
+              "feature": "text__and pus",
+              "weight": 0.95785800364393
+            },
+            {
+              "feature": "text__also been",
+              "weight": 0.9374524504799621
+            },
+            {
+              "feature": "text__pimples that",
+              "weight": 0.8841433230767072
+            },
+            {
+              "feature": "text__been scurrying",
+              "weight": 0.8790943519888557
+            },
+            {
+              "feature": "text__there are",
+              "weight": 0.8410023534668738
+            },
+            {
+              "feature": "text__with blackheads",
+              "weight": 0.8323284940836961
+            },
+            {
+              "feature": "text__rash all",
+              "weight": 0.830317906372535
+            }
+          ]
+        },
+        {
+          "class_index": 1,
+          "top_features": [
+            {
+              "feature": "text__throat",
+              "weight": 2.798161096722529
+            },
+            {
+              "feature": "text__eyes",
+              "weight": 2.59943761323927
+            },
+            {
+              "feature": "text__sometimes",
+              "weight": 2.232144313763602
+            },
+            {
+              "feature": "text__nose",
+              "weight": 1.8950332529930864
+            },
+            {
+              "feature": "text__occasionally",
+              "weight": 1.7340501005486806
+            },
+            {
+              "feature": "text__have sore",
+              "weight": 1.729263824125135
+            },
+            {
+              "feature": "text__sore throat",
+              "weight": 1.692670925996304
+            },
+            {
+              "feature": "text__my eyes",
+              "weight": 1.6820197075654926
+            },
+            {
+              "feature": "text__always",
+              "weight": 1.6565577557218512
+            },
+            {
+              "feature": "text__my throat",
+              "weight": 1.558122588717871
+            },
+            {
+              "feature": "text__sore",
+              "weight": 1.5450176946491583
+            },
+            {
+              "feature": "text__night",
+              "weight": 1.461013010977603
+            },
+            {
+              "feature": "text__breathing",
+              "weight": 1.4604162485696475
+            },
+            {
+              "feature": "text__asthma",
+              "weight": 1.444461536809381
+            },
+            {
+              "feature": "text__wheezing",
+              "weight": 1.444461536809381
+            },
+            {
+              "feature": "text__runny",
+              "weight": 1.3625875147619948
+            },
+            {
+              "feature": "text__running",
+              "weight": 1.324555053189698
+            },
+            {
+              "feature": "text__the night",
+              "weight": 1.2959239365260864
+            },
+            {
+              "feature": "text__lips",
+              "weight": 1.2717494967489817
+            },
+            {
+              "feature": "text__been",
+              "weight": -1.2005854835356542
+            },
+            {
+              "feature": "text__taste",
+              "weight": 1.200554126341838
+            },
+            {
+              "feature": "text__wheezing and",
+              "weight": 1.1905640586320807
+            },
+            {
+              "feature": "text__is swollen",
+              "weight": 1.1783049095545988
+            },
+            {
+              "feature": "text__throat and",
+              "weight": 1.1776563550993027
+            },
+            {
+              "feature": "text__swelling",
+              "weight": 1.1655664554887333
+            },
+            {
+              "feature": "text__throat is",
+              "weight": 1.1635663150666364
+            },
+            {
+              "feature": "text__have headaches",
+              "weight": 1.1537102294692405
+            },
+            {
+              "feature": "text__been running",
+              "weight": 1.12895504386264
+            },
+            {
+              "feature": "text__nose has",
+              "weight": 1.1229886017258062
+            },
+            {
+              "feature": "text__my lips",
+              "weight": 1.1012535187151409
+            }
+          ]
+        },
+        {
+          "class_index": 2,
+          "top_features": [
+            {
+              "feature": "text__joints",
+              "weight": 3.6030384492273426
+            },
+            {
+              "feature": "text__my joints",
+              "weight": 3.042548884327266
+            },
+            {
+              "feature": "text__stiff",
+              "weight": 2.570644557173277
+            },
+            {
+              "feature": "text__walking",
+              "weight": 2.2970029952108186
+            },
+            {
+              "feature": "text__my neck",
+              "weight": 2.1205828971740184
+            },
+            {
+              "feature": "text__to move",
+              "weight": 1.9454337169407785
+            },
+            {
+              "feature": "text__neck",
+              "weight": 1.8886024799951389
+            },
+            {
+              "feature": "text__move",
+              "weight": 1.8708665015191253
+            },
+            {
+              "feature": "text__joints have",
+              "weight": 1.774481276449381
+            },
+            {
+              "feature": "text__stiffness",
+              "weight": 1.756778875376753
+            },
+            {
+              "feature": "text__walking has",
+              "weight": 1.7086940504984667
+            },
+            {
+              "feature": "text__swollen",
+              "weight": 1.572324352910174
+            },
+            {
+              "feature": "text__muscles",
+              "weight": 1.540163613841223
+            },
+            {
+              "feature": "text__around",
+              "weight": 1.4770939216682462
+            },
+            {
+              "feature": "text__walk",
+              "weight": 1.4679948163018501
+            },
+            {
+              "feature": "text__neck has",
+              "weight": 1.4646562864917654
+            },
+            {
+              "feature": "text__tight",
+              "weight": 1.364639565579349
+            },
+            {
+              "feature": "text__has",
+              "weight": 1.3068381047729927
+            },
+            {
+              "feature": "text__move around",
+              "weight": 1.2514586994116532
+            },
+            {
+              "feature": "text__without",
+              "weight": 1.220279396239336
+            },
+            {
+              "feature": "text__has been",
+              "weight": 1.218489768561371
+            },
+            {
+              "feature": "text__uncomfortable",
+              "weight": 1.2071510262907132
+            },
+            {
+              "feature": "text__weak",
+              "weight": 1.143713790402659
+            },
+            {
+              "feature": "text__to walk",
+              "weight": 1.1137878524923484
+            },
+            {
+              "feature": "text__my muscles",
+              "weight": 1.0790282188605058
+            },
+            {
+              "feature": "text__muscles have",
+              "weight": 1.0562848958556241
+            },
+            {
+              "feature": "text__to",
+              "weight": 1.0353281872220397
+            },
+            {
+              "feature": "text__me to",
+              "weight": 1.0304245896320638
+            },
+            {
+              "feature": "text__been",
+              "weight": 1.0272166017236763
+            },
+            {
+              "feature": "text__weakness",
+              "weight": 1.0158732583906875
+            }
+          ]
+        },
+        {
+          "class_index": 3,
+          "top_features": [
+            {
+              "feature": "text__cough",
+              "weight": 2.9875046682264847
+            },
+            {
+              "feature": "text__breathing",
+              "weight": 2.655126203242633
+            },
+            {
+              "feature": "text__been coughing",
+              "weight": 2.473986292604882
+            },
+            {
+              "feature": "text__coughing",
+              "weight": 2.363045860352961
+            },
+            {
+              "feature": "text__up lot",
+              "weight": 2.0430672818226596
+            },
+            {
+              "feature": "text__thick",
+              "weight": 1.985854777167421
+            },
+            {
+              "feature": "text__of thick",
+              "weight": 1.964139467659112
+            },
+            {
+              "feature": "text__tired",
+              "weight": 1.8970323722785658
+            },
+            {
+              "feature": "text__fever",
+              "weight": 1.849415890771105
+            },
+            {
+              "feature": "text__dry cough",
+              "weight": 1.8220613908636625
+            },
+            {
+              "feature": "text__lot of",
+              "weight": 1.6630285027133038
+            },
+            {
+              "feature": "text__my fever",
+              "weight": 1.6589976507472877
+            },
+            {
+              "feature": "text__high",
+              "weight": 1.5890104206757536
+            },
+            {
+              "feature": "text__coughing up",
+              "weight": 1.5854792481379705
+            },
+            {
+              "feature": "text__mucus",
+              "weight": 1.4899150292476024
+            },
+            {
+              "feature": "text__of mucus",
+              "weight": 1.458257926343809
+            },
+            {
+              "feature": "text__of",
+              "weight": 1.3454471455077224
+            },
+            {
+              "feature": "text__fever is",
+              "weight": 1.3105914149437892
+            },
+            {
+              "feature": "text__mucoid",
+              "weight": 1.2793338332679902
+            },
+            {
+              "feature": "text__thick mucoid",
+              "weight": 1.2793338332679902
+            },
+            {
+              "feature": "text__lot",
+              "weight": 1.2726505258230956
+            },
+            {
+              "feature": "text__weak",
+              "weight": 1.2492537605420526
+            },
+            {
+              "feature": "text__dry",
+              "weight": 1.2459091502432624
+            },
+            {
+              "feature": "text__saliva",
+              "weight": 1.2238273503100459
+            },
+            {
+              "feature": "text__to breathe",
+              "weight": 1.1828607174125934
+            },
+            {
+              "feature": "text__producing",
+              "weight": 1.1593541378743306
+            },
+            {
+              "feature": "text__persistent cough",
+              "weight": 1.1535752604863363
+            },
+            {
+              "feature": "text__weak and",
+              "weight": 1.1368752483960725
+            },
+            {
+              "feature": "text__all of",
+              "weight": 1.1299240187243451
+            },
+            {
+              "feature": "text__my",
+              "weight": -1.1279534379889535
+            }
+          ]
+        },
+        {
+          "class_index": 4,
+          "top_features": [
+            {
+              "feature": "text__red spots",
+              "weight": 2.0970288791821745
+            },
+            {
+              "feature": "text__red",
+              "weight": 2.0694474351889167
+            },
+            {
+              "feature": "text__over my",
+              "weight": 1.9374975018895944
+            },
+            {
+              "feature": "text__spots",
+              "weight": 1.761516413820032
+            },
+            {
+              "feature": "text__all over",
+              "weight": 1.7613847464680619
+            },
+            {
+              "feature": "text__day",
+              "weight": 1.6027214948604178
+            },
+            {
+              "feature": "text__over",
+              "weight": 1.5400118983622355
+            },
+            {
+              "feature": "text__my appetite",
+              "weight": 1.5280284681961243
+            },
+            {
+              "feature": "text__lost my",
+              "weight": 1.497606050978755
+            },
+            {
+              "feature": "text__appetite",
+              "weight": 1.4789393632697234
+            },
+            {
+              "feature": "text__lethargic",
+              "weight": 1.4535997477007647
+            },
+            {
+              "feature": "text__me",
+              "weight": 1.447971661964969
+            },
+            {
+              "feature": "text__my arms",
+              "weight": 1.43587064957662
+            },
+            {
+              "feature": "text__what",
+              "weight": 1.4080669720264984
+            },
+            {
+              "feature": "text__lymph",
+              "weight": 1.3930156479630287
+            },
+            {
+              "feature": "text__lymph nodes",
+              "weight": 1.3930156479630287
+            },
+            {
+              "feature": "text__my body",
+              "weight": 1.3608615723967465
+            },
+            {
+              "feature": "text__arms and",
+              "weight": 1.3461786626532466
+            },
+            {
+              "feature": "text__sleep at",
+              "weight": 1.315410467021521
+            },
+            {
+              "feature": "text__nodes",
+              "weight": 1.311795120889151
+            },
+            {
+              "feature": "text__arms",
+              "weight": 1.309060905460095
+            },
+            {
+              "feature": "text__fever",
+              "weight": 1.2987193557695653
+            },
+            {
+              "feature": "text__causing",
+              "weight": 1.2381083833594435
+            },
+            {
+              "feature": "text__itchy and",
+              "weight": 1.2222470847542224
+            },
+            {
+              "feature": "text__small red",
+              "weight": 1.2168390284616943
+            },
+            {
+              "feature": "text__all",
+              "weight": 1.2121342813189186
+            },
+            {
+              "feature": "text__have been",
+              "weight": -1.2007032080894424
+            },
+            {
+              "feature": "text__have no",
+              "weight": 1.1952783682186743
+            },
+            {
+              "feature": "text__spots all",
+              "weight": 1.168368534033715
+            },
+            {
+              "feature": "text__and feel",
+              "weight": 1.1549014533067323
+            }
+          ]
+        },
+        {
+          "class_index": 5,
+          "top_features": [
+            {
+              "feature": "text__sneezing",
+              "weight": 2.5061723224196837
+            },
+            {
+              "feature": "text__and my",
+              "weight": 2.294841564864982
+            },
+            {
+              "feature": "text__nose",
+              "weight": 2.2224076195190516
+            },
+            {
+              "feature": "text__my nose",
+              "weight": 1.9416725287208
+            },
+            {
+              "feature": "text__throat",
+              "weight": 1.9227105444786183
+            },
+            {
+              "feature": "text__my sinuses",
+              "weight": 1.8353837975518323
+            },
+            {
+              "feature": "text__sinuses",
+              "weight": 1.8353837975518323
+            },
+            {
+              "feature": "text__nose is",
+              "weight": 1.7694139103005655
+            },
+            {
+              "feature": "text__smell anything",
+              "weight": 1.673360176431126
+            },
+            {
+              "feature": "text__can smell",
+              "weight": 1.5862193813983378
+            },
+            {
+              "feature": "text__exhausted",
+              "weight": 1.5728773015470232
+            },
+            {
+              "feature": "text__can",
+              "weight": 1.5696457073047232
+            },
+            {
+              "feature": "text__smell",
+              "weight": 1.5525820057174171
+            },
+            {
+              "feature": "text__exhausted and",
+              "weight": 1.538555334462221
+            },
+            {
+              "feature": "text__been sneezing",
+              "weight": 1.4567349908909948
+            },
+            {
+              "feature": "text__cold",
+              "weight": 1.3916325103710205
+            },
+            {
+              "feature": "text__congested",
+              "weight": 1.2771792256320782
+            },
+            {
+              "feature": "text__anything",
+              "weight": 1.261861571665104
+            },
+            {
+              "feature": "text__eyes are",
+              "weight": 1.2560060198487217
+            },
+            {
+              "feature": "text__really",
+              "weight": 1.253935373437366
+            },
+            {
+              "feature": "text__stuffy",
+              "weight": 1.215209688990704
+            },
+            {
+              "feature": "text__sneezing lot",
+              "weight": 1.2129202341120857
+            },
+            {
+              "feature": "text__my lymph",
+              "weight": 1.2058002539117425
+            },
+            {
+              "feature": "text__sinuses are",
+              "weight": 1.1792099571659476
+            },
+            {
+              "feature": "text__are",
+              "weight": 1.1682466830756661
+            },
+            {
+              "feature": "text__my throat",
+              "weight": 1.1577973431438435
+            },
+            {
+              "feature": "text__eyes",
+              "weight": 1.1444403083221957
+            },
+            {
+              "feature": "text__ve",
+              "weight": 1.1339003018044649
+            },
+            {
+              "feature": "text__lymph nodes",
+              "weight": 1.1283977483556322
+            },
+            {
+              "feature": "text__lymph",
+              "weight": 1.1283977483556322
+            }
+          ]
+        },
+        {
+          "class_index": 6,
+          "top_features": [
+            {
+              "feature": "text__pain",
+              "weight": 2.1194839228370914
+            },
+            {
+              "feature": "text__back",
+              "weight": 2.024280293320232
+            },
+            {
+              "feature": "text__my back",
+              "weight": 1.894951073162931
+            },
+            {
+              "feature": "text__body",
+              "weight": 1.8379932721640881
+            },
+            {
+              "feature": "text__behind my",
+              "weight": 1.7826471730974536
+            },
+            {
+              "feature": "text__red spots",
+              "weight": 1.7591074207815258
+            },
+            {
+              "feature": "text__behind",
+              "weight": 1.6878937020944347
+            },
+            {
+              "feature": "text__eyes",
+              "weight": 1.6656766784493988
+            },
+            {
+              "feature": "text__accompanied",
+              "weight": 1.6281876535778481
+            },
+            {
+              "feature": "text__my eyes",
+              "weight": 1.6281484841738463
+            },
+            {
+              "feature": "text__spots",
+              "weight": 1.5764767887264557
+            },
+            {
+              "feature": "text__lost my",
+              "weight": 1.5144193324031283
+            },
+            {
+              "feature": "text__developed",
+              "weight": 1.4584831175505604
+            },
+            {
+              "feature": "text__have been",
+              "weight": 1.4545212994066228
+            },
+            {
+              "feature": "text__chills",
+              "weight": 1.4476265030114377
+            },
+            {
+              "feature": "text__is accompanied",
+              "weight": 1.4187625414695126
+            },
+            {
+              "feature": "text__body pain",
+              "weight": 1.4178873210179654
+            },
+            {
+              "feature": "text__arms",
+              "weight": 1.383578713576012
+            },
+            {
+              "feature": "text__joint pain",
+              "weight": 1.377663239265737
+            },
+            {
+              "feature": "text__spots on",
+              "weight": 1.3693785658999231
+            },
+            {
+              "feature": "text__and chills",
+              "weight": 1.318555613525973
+            },
+            {
+              "feature": "text__appetite",
+              "weight": 1.296432437129754
+            },
+            {
+              "feature": "text__rashes on",
+              "weight": 1.2916493254140722
+            },
+            {
+              "feature": "text__joint",
+              "weight": 1.2734042700436814
+            },
+            {
+              "feature": "text__my arms",
+              "weight": 1.2379581299222868
+            },
+            {
+              "feature": "text__my appetite",
+              "weight": 1.228715032067862
+            },
+            {
+              "feature": "text__pain behind",
+              "weight": 1.2213760662285267
+            },
+            {
+              "feature": "text__feel",
+              "weight": 1.2005392501765748
+            },
+            {
+              "feature": "text__constant",
+              "weight": 1.200441272887308
+            },
+            {
+              "feature": "text__severe",
+              "weight": 1.179679797998619
+            }
+          ]
+        },
+        {
+          "class_index": 7,
+          "top_features": [
+            {
+              "feature": "text__infections",
+              "weight": 2.197435240409078
+            },
+            {
+              "feature": "text__thirsty",
+              "weight": 2.0484629503787963
+            },
+            {
+              "feature": "text__hungry",
+              "weight": 1.8395949763002886
+            },
+            {
+              "feature": "text__palpitations",
+              "weight": 1.7842670731264931
+            },
+            {
+              "feature": "text__yeast",
+              "weight": 1.3923018117784542
+            },
+            {
+              "feature": "text__yeast infections",
+              "weight": 1.3923018117784542
+            },
+            {
+              "feature": "text__dry",
+              "weight": 1.3769720441471398
+            },
+            {
+              "feature": "text__more",
+              "weight": 1.3632086869640296
+            },
+            {
+              "feature": "text__healing",
+              "weight": 1.316451856399058
+            },
+            {
+              "feature": "text__irritations",
+              "weight": 1.3101960123388823
+            },
+            {
+              "feature": "text__heal",
+              "weight": 1.3069147233069178
+            },
+            {
+              "feature": "text__bruises",
+              "weight": 1.2726027017667847
+            },
+            {
+              "feature": "text__pain",
+              "weight": -1.2481986162821337
+            },
+            {
+              "feature": "text__and throat",
+              "weight": 1.233462347603417
+            },
+            {
+              "feature": "text__thirsty and",
+              "weight": 1.2257471020251611
+            },
+            {
+              "feature": "text__have palpitations",
+              "weight": 1.1924226119781631
+            },
+            {
+              "feature": "text__especially",
+              "weight": 1.1697973738972363
+            },
+            {
+              "feature": "text__foggy",
+              "weight": 1.159293954895135
+            },
+            {
+              "feature": "text__cuts",
+              "weight": 1.149625729767411
+            },
+            {
+              "feature": "text__at times",
+              "weight": 1.122582352459093
+            },
+            {
+              "feature": "text__be",
+              "weight": 1.121473964321955
+            },
+            {
+              "feature": "text__skin irritations",
+              "weight": 1.1193029040660265
+            },
+            {
+              "feature": "text__and hungry",
+              "weight": 1.1144173455573056
+            },
+            {
+              "feature": "text__my vision",
+              "weight": 1.0814444657000581
+            },
+            {
+              "feature": "text__wound",
+              "weight": 1.0809482574199105
+            },
+            {
+              "feature": "text__and feet",
+              "weight": 1.0621544874188933
+            },
+            {
+              "feature": "text__hands and",
+              "weight": 1.0621544874188933
+            },
+            {
+              "feature": "text__to be",
+              "weight": 1.0606036015885485
+            },
+            {
+              "feature": "text__in my",
+              "weight": -1.0534997463954032
+            },
+            {
+              "feature": "text__is",
+              "weight": -1.0382561681318665
+            }
+          ]
+        },
+        {
+          "class_index": 8,
+          "top_features": [
+            {
+              "feature": "text__brain",
+              "weight": 1.7632571823026892
+            },
+            {
+              "feature": "text__fog",
+              "weight": 1.607868161950561
+            },
+            {
+              "feature": "text__brain fog",
+              "weight": 1.607868161950561
+            },
+            {
+              "feature": "text__migraines",
+              "weight": 1.5896545584532833
+            },
+            {
+              "feature": "text__sex",
+              "weight": 1.5870459885800599
+            },
+            {
+              "feature": "text__hair",
+              "weight": 1.5869178090016125
+            },
+            {
+              "feature": "text__migraines and",
+              "weight": 1.4611353448951272
+            },
+            {
+              "feature": "text__chest",
+              "weight": 1.4414633344721288
+            },
+            {
+              "feature": "text__sometimes",
+              "weight": 1.3256271846171181
+            },
+            {
+              "feature": "text__the",
+              "weight": -1.3172103613716637
+            },
+            {
+              "feature": "text__and everything",
+              "weight": 1.3039848247570873
+            },
+            {
+              "feature": "text__metallic",
+              "weight": 1.2949192476175573
+            },
+            {
+              "feature": "text__have rashes",
+              "weight": 1.238642131193672
+            },
+            {
+              "feature": "text__very",
+              "weight": 1.21756894019252
+            },
+            {
+              "feature": "text__shiver",
+              "weight": 1.217486428690146
+            },
+            {
+              "feature": "text__shiver lot",
+              "weight": 1.217486428690146
+            },
+            {
+              "feature": "text__vaginal",
+              "weight": 1.2106126717723256
+            },
+            {
+              "feature": "text__unexpected vaginal",
+              "weight": 1.2106126717723256
+            },
+            {
+              "feature": "text__vaginal discharge",
+              "weight": 1.2106126717723256
+            },
+            {
+              "feature": "text__cycle",
+              "weight": 1.2106126717723256
+            },
+            {
+              "feature": "text__chest has",
+              "weight": 1.1920727379936262
+            },
+            {
+              "feature": "text__things",
+              "weight": 1.1913804579054943
+            },
+            {
+              "feature": "text__unexpected",
+              "weight": 1.158996348833375
+            },
+            {
+              "feature": "text__discharge",
+              "weight": 1.156379411933724
+            },
+            {
+              "feature": "text__gained",
+              "weight": 1.1512473831994365
+            },
+            {
+              "feature": "text__gained lot",
+              "weight": 1.1512473831994365
+            },
+            {
+              "feature": "text__dry",
+              "weight": 1.150872469321545
+            },
+            {
+              "feature": "text__everything",
+              "weight": 1.1470945677969415
+            },
+            {
+              "feature": "text__dandruff",
+              "weight": 1.128959540505731
+            },
+            {
+              "feature": "text__lightheaded",
+              "weight": 1.1209664622381523
+            }
+          ]
+        },
+        {
+          "class_index": 9,
+          "top_features": [
+            {
+              "feature": "text__my skin",
+              "weight": 2.8114209090609616
+            },
+            {
+              "feature": "text__skin",
+              "weight": 2.746645342675924
+            },
+            {
+              "feature": "text__some",
+              "weight": 2.4606541334080854
+            },
+            {
+              "feature": "text__that",
+              "weight": 2.2919927284115467
+            },
+            {
+              "feature": "text__different",
+              "weight": 1.958792528523436
+            },
+            {
+              "feature": "text__bumps",
+              "weight": 1.8265918654412814
+            },
+            {
+              "feature": "text__lumps",
+              "weight": 1.785108026636453
+            },
+            {
+              "feature": "text__the rest",
+              "weight": 1.670613093313647
+            },
+            {
+              "feature": "text__rest",
+              "weight": 1.6478227638957195
+            },
+            {
+              "feature": "text__patches",
+              "weight": 1.6452928963274247
+            },
+            {
+              "feature": "text__that are",
+              "weight": 1.5787979103651804
+            },
+            {
+              "feature": "text__are different",
+              "weight": 1.5603281587208533
+            },
+            {
+              "feature": "text__rest of",
+              "weight": 1.5263157219097971
+            },
+            {
+              "feature": "text__there are",
+              "weight": 1.5128289011892075
+            },
+            {
+              "feature": "text__there",
+              "weight": 1.451481897673406
+            },
+            {
+              "feature": "text__are",
+              "weight": 1.4219184364214674
+            },
+            {
+              "feature": "text__skin that",
+              "weight": 1.3951265855154857
+            },
+            {
+              "feature": "text__bumps that",
+              "weight": 1.3771894422159354
+            },
+            {
+              "feature": "text__spots",
+              "weight": 1.3601517596307047
+            },
+            {
+              "feature": "text__over",
+              "weight": 1.299339785811888
+            },
+            {
+              "feature": "text__than",
+              "weight": 1.267585204808222
+            },
+            {
+              "feature": "text__over my",
+              "weight": 1.1880789512371988
+            },
+            {
+              "feature": "text__little",
+              "weight": 1.187690540718123
+            },
+            {
+              "feature": "text__color",
+              "weight": 1.1729127347928785
+            },
+            {
+              "feature": "text__areas",
+              "weight": 1.1609311372985107
+            },
+            {
+              "feature": "text__few",
+              "weight": 1.1419067727882937
+            },
+            {
+              "feature": "text__itching",
+              "weight": 1.132143239435173
+            },
+            {
+              "feature": "text__all over",
+              "weight": 1.126073026776588
+            },
+            {
+              "feature": "text__than the",
+              "weight": 1.1196017732356744
+            },
+            {
+              "feature": "text__skin also",
+              "weight": 1.1076955245509683
+            }
+          ]
+        },
+        {
+          "class_index": 10,
+          "top_features": [
+            {
+              "feature": "text__throat",
+              "weight": 2.54462214138607
+            },
+            {
+              "feature": "text__after",
+              "weight": 2.463517195118002
+            },
+            {
+              "feature": "text__my throat",
+              "weight": 2.2758630083231455
+            },
+            {
+              "feature": "text__heartburn",
+              "weight": 2.133385984540601
+            },
+            {
+              "feature": "text__after eating",
+              "weight": 1.9245996607477678
+            },
+            {
+              "feature": "text__in my",
+              "weight": 1.8214667534123659
+            },
+            {
+              "feature": "text__eating",
+              "weight": 1.7661016976647907
+            },
+            {
+              "feature": "text__sour",
+              "weight": 1.7540073415143742
+            },
+            {
+              "feature": "text__throw",
+              "weight": 1.555651645809944
+            },
+            {
+              "feature": "text__throw up",
+              "weight": 1.555651645809944
+            },
+            {
+              "feature": "text__chest",
+              "weight": 1.4868569572748551
+            },
+            {
+              "feature": "text__get",
+              "weight": 1.4844980504825687
+            },
+            {
+              "feature": "text__in",
+              "weight": 1.4720039235043525
+            },
+            {
+              "feature": "text__or",
+              "weight": 1.4658420675250408
+            },
+            {
+              "feature": "text__been",
+              "weight": -1.4178674814516876
+            },
+            {
+              "feature": "text__heartburn and",
+              "weight": 1.4069045793204165
+            },
+            {
+              "feature": "text__eat",
+              "weight": 1.4051545483273251
+            },
+            {
+              "feature": "text__acid",
+              "weight": 1.4016110517769902
+            },
+            {
+              "feature": "text__taste in",
+              "weight": 1.386250603335683
+            },
+            {
+              "feature": "text__my chest",
+              "weight": 1.3211160092503411
+            },
+            {
+              "feature": "text__arm",
+              "weight": 1.318313214936811
+            },
+            {
+              "feature": "text__especially after",
+              "weight": 1.2099888313804257
+            },
+            {
+              "feature": "text__jaw",
+              "weight": 1.1651892319649872
+            },
+            {
+              "feature": "text__jaw and",
+              "weight": 1.1651892319649872
+            },
+            {
+              "feature": "text__up",
+              "weight": 1.127442984374327
+            },
+            {
+              "feature": "text__my mouth",
+              "weight": 1.1239571271453233
+            },
+            {
+              "feature": "text__get chest",
+              "weight": 1.1225496509788395
+            },
+            {
+              "feature": "text__reflux",
+              "weight": 1.1132919260716883
+            },
+            {
+              "feature": "text__acid reflux",
+              "weight": 1.1132919260716883
+            },
+            {
+              "feature": "text__swallowing",
+              "weight": 1.108020582001873
+            }
+          ]
+        },
+        {
+          "class_index": 11,
+          "top_features": [
+            {
+              "feature": "text__anus",
+              "weight": 3.7156906017747513
+            },
+            {
+              "feature": "text__my anus",
+              "weight": 3.616361788202789
+            },
+            {
+              "feature": "text__stool",
+              "weight": 1.892562850374054
+            },
+            {
+              "feature": "text__my stool",
+              "weight": 1.892562850374054
+            },
+            {
+              "feature": "cat__source_symptom2disease",
+              "weight": 1.8923849228284368
+            },
+            {
+              "feature": "text__go",
+              "weight": 1.855994745582892
+            },
+            {
+              "feature": "text__anus has",
+              "weight": 1.6986409920758383
+            },
+            {
+              "feature": "text__when do",
+              "weight": 1.571665784884049
+            },
+            {
+              "feature": "cat__source_gretel_symptom_to_diagnosis",
+              "weight": -1.5559214872847216
+            },
+            {
+              "feature": "text__it hurts",
+              "weight": 1.5262507407579062
+            },
+            {
+              "feature": "text__do",
+              "weight": 1.3372744940016281
+            },
+            {
+              "feature": "text__bloody",
+              "weight": 1.3272202268603086
+            },
+            {
+              "feature": "text__when",
+              "weight": 1.2646874886595518
+            },
+            {
+              "feature": "text__it",
+              "weight": 1.2573185166942558
+            },
+            {
+              "feature": "text__the restroom",
+              "weight": 1.253601005561456
+            },
+            {
+              "feature": "text__restroom",
+              "weight": 1.253601005561456
+            },
+            {
+              "feature": "text__bowel",
+              "weight": 1.2514458028925013
+            },
+            {
+              "feature": "text__stool has",
+              "weight": 1.199123256873969
+            },
+            {
+              "feature": "text__has been",
+              "weight": 1.1277014649711272
+            },
+            {
+              "feature": "text__been bloody",
+              "weight": 1.1068016686547661
+            },
+            {
+              "feature": "text__and it",
+              "weight": 1.1067879161409004
+            },
+            {
+              "feature": "text__anus is",
+              "weight": 1.1024310223662237
+            },
+            {
+              "feature": "text__quite",
+              "weight": 1.0611417247213897
+            },
+            {
+              "feature": "text__hurts",
+              "weight": 1.0576060660589768
+            },
+            {
+              "feature": "text__when go",
+              "weight": 1.0088601359684686
+            },
+            {
+              "feature": "text__constipation",
+              "weight": 1.0075894387197284
+            },
+            {
+              "feature": "text__go it",
+              "weight": 1.0018768681455403
+            },
+            {
+              "feature": "text__been",
+              "weight": 0.9767912718072052
+            },
+            {
+              "feature": "text__really",
+              "weight": 0.9723300091421802
+            },
+            {
+              "feature": "text__going",
+              "weight": 0.9390111081498824
+            }
+          ]
+        },
+        {
+          "class_index": 12,
+          "top_features": [
+            {
+              "feature": "text__chest",
+              "weight": 3.251650573425276
+            },
+            {
+              "feature": "text__chest pain",
+              "weight": 3.2471624867038926
+            },
+            {
+              "feature": "text__dizziness",
+              "weight": 2.7858513249880175
+            },
+            {
+              "feature": "text__headache",
+              "weight": 2.449198880791009
+            },
+            {
+              "feature": "text__balance",
+              "weight": 2.244096043594311
+            },
+            {
+              "feature": "text__headache chest",
+              "weight": 1.940112573899172
+            },
+            {
+              "feature": "text__dizzy",
+              "weight": 1.8823005327419866
+            },
+            {
+              "feature": "text__concentrate",
+              "weight": 1.8683722680466859
+            },
+            {
+              "feature": "text__and dizziness",
+              "weight": 1.7715912508143046
+            },
+            {
+              "feature": "text__feeling dizzy",
+              "weight": 1.7341791513832057
+            },
+            {
+              "feature": "text__focus",
+              "weight": 1.7301342094787295
+            },
+            {
+              "feature": "text__focusing",
+              "weight": 1.575851142380014
+            },
+            {
+              "feature": "text__concentrating",
+              "weight": 1.5680716708154054
+            },
+            {
+              "feature": "text__dizzy and",
+              "weight": 1.5291619849281144
+            },
+            {
+              "feature": "text__pain",
+              "weight": 1.3441936829352374
+            },
+            {
+              "feature": "text__headache that",
+              "weight": 1.3439636125065402
+            },
+            {
+              "feature": "text__having headaches",
+              "weight": 1.2894879140092859
+            },
+            {
+              "feature": "text__to concentrate",
+              "weight": 1.2516300800588076
+            },
+            {
+              "feature": "text__pain and",
+              "weight": 1.1921405918444952
+            },
+            {
+              "feature": "text__chest pains",
+              "weight": 1.1864443656678463
+            },
+            {
+              "feature": "text__balance issues",
+              "weight": 1.1820326870059805
+            },
+            {
+              "feature": "text__having",
+              "weight": 1.1748747917724107
+            },
+            {
+              "feature": "text__headaches",
+              "weight": 1.1660795219421827
+            },
+            {
+              "feature": "text__since then",
+              "weight": 1.1651439990766774
+            },
+            {
+              "feature": "text__then",
+              "weight": 1.1651439990766774
+            },
+            {
+              "feature": "text__dizziness and",
+              "weight": 1.1594628582812645
+            },
+            {
+              "feature": "text__trouble concentrating",
+              "weight": 1.1423099083615578
+            },
+            {
+              "feature": "text__headaches chest",
+              "weight": 1.1323154684470311
+            },
+            {
+              "feature": "text__been having",
+              "weight": 1.124769308365155
+            },
+            {
+              "feature": "text__ve",
+              "weight": 1.0967607074751482
+            }
+          ]
+        },
+        {
+          "class_index": 13,
+          "top_features": [
+            {
+              "feature": "text__sores",
+              "weight": 4.355262973475546
+            },
+            {
+              "feature": "text__face",
+              "weight": 2.7896961988030613
+            },
+            {
+              "feature": "text__my face",
+              "weight": 2.736153332979166
+            },
+            {
+              "feature": "text__nose",
+              "weight": 2.5819024941119313
+            },
+            {
+              "feature": "text__my nose",
+              "weight": 2.516594486982251
+            },
+            {
+              "feature": "text__rash",
+              "weight": 2.272482501582107
+            },
+            {
+              "feature": "text__fluid",
+              "weight": 1.9566725815554655
+            },
+            {
+              "feature": "text__the sores",
+              "weight": 1.8448691742877026
+            },
+            {
+              "feature": "text__rash on",
+              "weight": 1.793265209192871
+            },
+            {
+              "feature": "text__have rash",
+              "weight": 1.6146049422276534
+            },
+            {
+              "feature": "text__on my",
+              "weight": 1.5884992846365926
+            },
+            {
+              "feature": "text__near my",
+              "weight": 1.521752923856366
+            },
+            {
+              "feature": "text__near",
+              "weight": 1.4979726477079056
+            },
+            {
+              "feature": "text__on",
+              "weight": 1.4447015681333384
+            },
+            {
+              "feature": "text__the rash",
+              "weight": 1.4054169268841736
+            },
+            {
+              "feature": "text__painful",
+              "weight": 1.4048549338769947
+            },
+            {
+              "feature": "text__around my",
+              "weight": 1.3361080306319693
+            },
+            {
+              "feature": "text__sores on",
+              "weight": 1.2875090083161282
+            },
+            {
+              "feature": "text__the",
+              "weight": 1.2854951421754592
+            },
+            {
+              "feature": "text__sores are",
+              "weight": 1.263239433445927
+            },
+            {
+              "feature": "text__red sores",
+              "weight": 1.2604017447082034
+            },
+            {
+              "feature": "text__yellow",
+              "weight": 1.2282372821726426
+            },
+            {
+              "feature": "text__it is",
+              "weight": 1.2243456558583965
+            },
+            {
+              "feature": "text__blisters",
+              "weight": 1.2168487938632166
+            },
+            {
+              "feature": "text__touch",
+              "weight": 1.1656319438829563
+            },
+            {
+              "feature": "text__around",
+              "weight": 1.0485979295984307
+            },
+            {
+              "feature": "text__blistering",
+              "weight": 1.045124063702252
+            },
+            {
+              "feature": "text__are",
+              "weight": 1.0356796912116777
+            },
+            {
+              "feature": "text__nose and",
+              "weight": 1.0105280584480894
+            },
+            {
+              "feature": "text__painful and",
+              "weight": 1.0087630119691473
+            }
+          ]
+        },
+        {
+          "class_index": 14,
+          "top_features": [
+            {
+              "feature": "text__yellow",
+              "weight": 3.2676462148599397
+            },
+            {
+              "feature": "text__weight",
+              "weight": 2.8308450100529767
+            },
+            {
+              "feature": "text__urine",
+              "weight": 2.068982808465626
+            },
+            {
+              "feature": "text__stomach",
+              "weight": 2.0124343644138944
+            },
+            {
+              "feature": "text__lost weight",
+              "weight": 1.9993937996903364
+            },
+            {
+              "feature": "text__yellow and",
+              "weight": 1.9912682018490637
+            },
+            {
+              "feature": "text__lost",
+              "weight": 1.8084798383873526
+            },
+            {
+              "feature": "text__my urine",
+              "weight": 1.6888940584224255
+            },
+            {
+              "feature": "text__dark",
+              "weight": 1.6845219013681747
+            },
+            {
+              "feature": "text__turned yellow",
+              "weight": 1.6609795169744348
+            },
+            {
+              "feature": "text__turned",
+              "weight": 1.6453355798170959
+            },
+            {
+              "feature": "text__my skin",
+              "weight": 1.5985073467566129
+            },
+            {
+              "feature": "text__skin has",
+              "weight": 1.501669932018285
+            },
+            {
+              "feature": "text__urine is",
+              "weight": 1.4851561092321917
+            },
+            {
+              "feature": "text__is dark",
+              "weight": 1.4808643691768257
+            },
+            {
+              "feature": "text__skin",
+              "weight": 1.4520555987734995
+            },
+            {
+              "feature": "text__weight and",
+              "weight": 1.350913301990298
+            },
+            {
+              "feature": "text__become yellow",
+              "weight": 1.3463567533461624
+            },
+            {
+              "feature": "text__has turned",
+              "weight": 1.2353786084148077
+            },
+            {
+              "feature": "text__fever",
+              "weight": 1.223645339391607
+            },
+            {
+              "feature": "text__stomach pain",
+              "weight": 1.2201471454641846
+            },
+            {
+              "feature": "text__weight my",
+              "weight": 1.196831600576872
+            },
+            {
+              "feature": "text__and my",
+              "weight": 1.142013954770824
+            },
+            {
+              "feature": "text__and lost",
+              "weight": 1.139382825670729
+            },
+            {
+              "feature": "text__abdominal pain",
+              "weight": 1.1071720085114793
+            },
+            {
+              "feature": "text__having stomach",
+              "weight": 1.0696681088972784
+            },
+            {
+              "feature": "text__is black",
+              "weight": 1.0504088898784318
+            },
+            {
+              "feature": "text__abdominal",
+              "weight": 0.9880335041084877
+            },
+            {
+              "feature": "text__become",
+              "weight": 0.9878822838405562
+            },
+            {
+              "feature": "text__throwing",
+              "weight": 0.980968130969166
+            }
+          ]
+        },
+        {
+          "class_index": 15,
+          "top_features": [
+            {
+              "feature": "text__chills",
+              "weight": 2.9322593742978715
+            },
+            {
+              "feature": "text__have headache",
+              "weight": 2.571567326383541
+            },
+            {
+              "feature": "text__headache",
+              "weight": 2.56860914483901
+            },
+            {
+              "feature": "text__nausea",
+              "weight": 2.4923794584345806
+            },
+            {
+              "feature": "text__nausea and",
+              "weight": 2.1353792103495324
+            },
+            {
+              "feature": "text__chills and",
+              "weight": 2.0495058145151184
+            },
+            {
+              "feature": "text__sweating",
+              "weight": 2.041319610074373
+            },
+            {
+              "feature": "text__headache and",
+              "weight": 1.9229916843601924
+            },
+            {
+              "feature": "text__muscle",
+              "weight": 1.7838918882072126
+            },
+            {
+              "feature": "text__perspiring",
+              "weight": 1.773109200299693
+            },
+            {
+              "feature": "text__sweating lot",
+              "weight": 1.711377327222417
+            },
+            {
+              "feature": "text__high",
+              "weight": 1.6800101936616165
+            },
+            {
+              "feature": "text__itching",
+              "weight": 1.6726414400147216
+            },
+            {
+              "feature": "text__perspiring lot",
+              "weight": 1.6654597071325707
+            },
+            {
+              "feature": "text__high fever",
+              "weight": 1.596949700787528
+            },
+            {
+              "feature": "text__muscles",
+              "weight": 1.5631990006005418
+            },
+            {
+              "feature": "text__my muscles",
+              "weight": 1.548289859833121
+            },
+            {
+              "feature": "text__muscles are",
+              "weight": 1.4788530605486763
+            },
+            {
+              "feature": "text__and muscle",
+              "weight": 1.466491732352075
+            },
+            {
+              "feature": "text__fever chills",
+              "weight": 1.4631288580021846
+            },
+            {
+              "feature": "text__ve",
+              "weight": 1.4290022314298005
+            },
+            {
+              "feature": "text__vomiting",
+              "weight": 1.4228060984898143
+            },
+            {
+              "feature": "text__fever",
+              "weight": 1.4165626586955513
+            },
+            {
+              "feature": "text__and high",
+              "weight": 1.29776841214585
+            },
+            {
+              "feature": "text__severe itching",
+              "weight": 1.2631041973913895
+            },
+            {
+              "feature": "text__lot",
+              "weight": 1.2272503082635962
+            },
+            {
+              "feature": "text__chills nausea",
+              "weight": 1.2031585140563608
+            },
+            {
+              "feature": "text__ve been",
+              "weight": 1.1348381574349409
+            },
+            {
+              "feature": "text__vomiting and",
+              "weight": 1.1341576854271016
+            },
+            {
+              "feature": "text__also",
+              "weight": 1.0726192613777756
+            }
+          ]
+        },
+        {
+          "class_index": 16,
+          "top_features": [
+            {
+              "feature": "text__vision",
+              "weight": 3.456774332544512
+            },
+            {
+              "feature": "text__headaches",
+              "weight": 3.117831936152058
+            },
+            {
+              "feature": "text__stiff neck",
+              "weight": 1.8476359918790728
+            },
+            {
+              "feature": "text__acid",
+              "weight": 1.842029538410087
+            },
+            {
+              "feature": "text__reflux",
+              "weight": 1.8354242758141406
+            },
+            {
+              "feature": "text__acid reflux",
+              "weight": 1.8354242758141406
+            },
+            {
+              "feature": "text__distorted",
+              "weight": 1.82053340934913
+            },
+            {
+              "feature": "text__blurred",
+              "weight": 1.7605683514247805
+            },
+            {
+              "feature": "text__neck",
+              "weight": 1.6028017326036268
+            },
+            {
+              "feature": "text__visual",
+              "weight": 1.569408595705789
+            },
+            {
+              "feature": "text__my vision",
+              "weight": 1.558504730905557
+            },
+            {
+              "feature": "text__indigestion",
+              "weight": 1.5515033632298003
+            },
+            {
+              "feature": "text__hungry",
+              "weight": 1.5205794163849384
+            },
+            {
+              "feature": "text__blurred vision",
+              "weight": 1.44395738458604
+            },
+            {
+              "feature": "text__have been",
+              "weight": 1.4424155766964588
+            },
+            {
+              "feature": "text__seeing",
+              "weight": 1.4205432062296799
+            },
+            {
+              "feature": "text__sore neck",
+              "weight": 1.4045365741498803
+            },
+            {
+              "feature": "text__eyesight",
+              "weight": 1.3278355728471904
+            },
+            {
+              "feature": "text__stiff",
+              "weight": 1.3162029113947042
+            },
+            {
+              "feature": "text__seeing things",
+              "weight": 1.288031447409557
+            },
+            {
+              "feature": "text__headaches and",
+              "weight": 1.1779331336076762
+            },
+            {
+              "feature": "text__they",
+              "weight": 1.156886758964074
+            },
+            {
+              "feature": "text__having headaches",
+              "weight": 1.1358461383065883
+            },
+            {
+              "feature": "text__as",
+              "weight": 1.1310752153950268
+            },
+            {
+              "feature": "text__excessive",
+              "weight": 1.1218097379630936
+            },
+            {
+              "feature": "text__and visual",
+              "weight": 1.0785818322331477
+            },
+            {
+              "feature": "text__of headaches",
+              "weight": 1.0654272529496098
+            },
+            {
+              "feature": "text__noticed change",
+              "weight": 1.055077806072814
+            },
+            {
+              "feature": "text__irritability",
+              "weight": 1.03089682740186
+            },
+            {
+              "feature": "text__things",
+              "weight": 1.028342169272728
+            }
+          ]
+        },
+        {
+          "class_index": 17,
+          "top_features": [
+            {
+              "feature": "text__stools",
+              "weight": 2.4296585637761194
+            },
+            {
+              "feature": "text__or",
+              "weight": 1.8101415367439286
+            },
+            {
+              "feature": "text__bloating",
+              "weight": 1.765613027986762
+            },
+            {
+              "feature": "text__my upper",
+              "weight": 1.7377034714223605
+            },
+            {
+              "feature": "text__upper",
+              "weight": 1.7377034714223605
+            },
+            {
+              "feature": "text__food",
+              "weight": 1.5490390759528865
+            },
+            {
+              "feature": "text__energy",
+              "weight": 1.5477104133612365
+            },
+            {
+              "feature": "text__stomach",
+              "weight": 1.5140688926488979
+            },
+            {
+              "feature": "text__bloody stools",
+              "weight": 1.5093699734020563
+            },
+            {
+              "feature": "text__my mouth",
+              "weight": 1.4395646374781734
+            },
+            {
+              "feature": "text__after",
+              "weight": 1.4241577919045765
+            },
+            {
+              "feature": "text__appetite",
+              "weight": 1.3971848272831506
+            },
+            {
+              "feature": "text__upper abdomen",
+              "weight": 1.351795529901524
+            },
+            {
+              "feature": "text__gas",
+              "weight": 1.3469315932310473
+            },
+            {
+              "feature": "text__lose",
+              "weight": 1.3199760034152437
+            },
+            {
+              "feature": "text__antacids",
+              "weight": 1.312238290598843
+            },
+            {
+              "feature": "text__belch",
+              "weight": 1.308266582277289
+            },
+            {
+              "feature": "text__mouth",
+              "weight": 1.2816610626458436
+            },
+            {
+              "feature": "text__bloated",
+              "weight": 1.216854406882594
+            },
+            {
+              "feature": "text__bloody",
+              "weight": 1.211337417809141
+            },
+            {
+              "feature": "text__constipated and",
+              "weight": 1.2052573491934373
+            },
+            {
+              "feature": "text__after using",
+              "weight": 1.1943191950123926
+            },
+            {
+              "feature": "text__lack",
+              "weight": 1.1914277981589532
+            },
+            {
+              "feature": "text__weight",
+              "weight": 1.1831121173847836
+            },
+            {
+              "feature": "text__bowel",
+              "weight": 1.1662805787061883
+            },
+            {
+              "feature": "text__abdomen",
+              "weight": 1.117636896208596
+            },
+            {
+              "feature": "text__have burning",
+              "weight": 1.1172599309465594
+            },
+            {
+              "feature": "text__my stomach",
+              "weight": 1.116082661556512
+            },
+            {
+              "feature": "text__feel bloated",
+              "weight": 1.0873106735156395
+            },
+            {
+              "feature": "text__acidic",
+              "weight": 1.0867978098144961
+            }
+          ]
+        },
+        {
+          "class_index": 18,
+          "top_features": [
+            {
+              "feature": "text__my heart",
+              "weight": 3.208561888919399
+            },
+            {
+              "feature": "text__heart",
+              "weight": 3.1566525329678603
+            },
+            {
+              "feature": "text__phlegm",
+              "weight": 2.921002417782461
+            },
+            {
+              "feature": "text__heart is",
+              "weight": 2.458609353078034
+            },
+            {
+              "feature": "text__sweating",
+              "weight": 2.3746945096483345
+            },
+            {
+              "feature": "text__coughing",
+              "weight": 2.2535136376906006
+            },
+            {
+              "feature": "text__racing",
+              "weight": 2.112597913886195
+            },
+            {
+              "feature": "text__coughing up",
+              "weight": 1.9302121715116465
+            },
+            {
+              "feature": "text__up",
+              "weight": 1.8551035212003255
+            },
+            {
+              "feature": "text__my chest",
+              "weight": 1.749062447099219
+            },
+            {
+              "feature": "text__is racing",
+              "weight": 1.6624544102514642
+            },
+            {
+              "feature": "text__brownish",
+              "weight": 1.5670703221834792
+            },
+            {
+              "feature": "text__sweating lot",
+              "weight": 1.4266048483462783
+            },
+            {
+              "feature": "text__chest hurts",
+              "weight": 1.317138030971933
+            },
+            {
+              "feature": "text__chest",
+              "weight": 1.2847833075077397
+            },
+            {
+              "feature": "text__breathing",
+              "weight": 1.2663369606144885
+            },
+            {
+              "feature": "text__some",
+              "weight": 1.26589106348093
+            },
+            {
+              "feature": "text__chills",
+              "weight": 1.2481907988182936
+            },
+            {
+              "feature": "text__mucus",
+              "weight": 1.2346004772894135
+            },
+            {
+              "feature": "text__cough",
+              "weight": 1.2116813106571294
+            },
+            {
+              "feature": "text__feeling",
+              "weight": 1.2100524461663849
+            },
+            {
+              "feature": "text__had some",
+              "weight": 1.1667427255426155
+            },
+            {
+              "feature": "text__when cough",
+              "weight": 1.1278932697740232
+            },
+            {
+              "feature": "text__really",
+              "weight": 1.0388013339448858
+            },
+            {
+              "feature": "text__black phlegm",
+              "weight": 1.0282893571261338
+            },
+            {
+              "feature": "text__been sweating",
+              "weight": 1.0136333807197095
+            },
+            {
+              "feature": "text__feeling really",
+              "weight": 1.0094063421363073
+            },
+            {
+              "feature": "text__trouble breathing",
+              "weight": 0.9638721036758034
+            },
+            {
+              "feature": "text__brown",
+              "weight": 0.9440858841995552
+            },
+            {
+              "feature": "text__breathe",
+              "weight": 0.9228701504234098
+            }
+          ]
+        },
+        {
+          "class_index": 19,
+          "top_features": [
+            {
+              "feature": "text__skin",
+              "weight": 2.6239917967940127
+            },
+            {
+              "feature": "text__nails",
+              "weight": 2.5974741523529743
+            },
+            {
+              "feature": "text__my nails",
+              "weight": 2.5974741523529743
+            },
+            {
+              "feature": "text__peeling",
+              "weight": 2.205359933632034
+            },
+            {
+              "feature": "text__on",
+              "weight": 1.9800522849133173
+            },
+            {
+              "feature": "text__on my",
+              "weight": 1.7777496876344216
+            },
+            {
+              "feature": "text__knees",
+              "weight": 1.7318302735658484
+            },
+            {
+              "feature": "text__dents",
+              "weight": 1.6898282806779754
+            },
+            {
+              "feature": "text__elbows",
+              "weight": 1.6716060085114235
+            },
+            {
+              "feature": "text__scaly",
+              "weight": 1.410233707632021
+            },
+            {
+              "feature": "text__joint",
+              "weight": 1.3908156524958806
+            },
+            {
+              "feature": "text__is",
+              "weight": 1.341081772591954
+            },
+            {
+              "feature": "text__skin on",
+              "weight": 1.3380295868252787
+            },
+            {
+              "feature": "text__joint pain",
+              "weight": 1.2999918648641011
+            },
+            {
+              "feature": "text__my joints",
+              "weight": 1.2948365889047542
+            },
+            {
+              "feature": "text__often",
+              "weight": 1.214431328766654
+            },
+            {
+              "feature": "text__my skin",
+              "weight": 1.2070816066742271
+            },
+            {
+              "feature": "text__joints",
+              "weight": 1.1829956755175481
+            },
+            {
+              "feature": "text__itchy",
+              "weight": 1.1469724710015654
+            },
+            {
+              "feature": "text__the skin",
+              "weight": 1.142514758449428
+            },
+            {
+              "feature": "text__is often",
+              "weight": 1.1356538332016834
+            },
+            {
+              "feature": "text__arms legs",
+              "weight": 1.0727113413266758
+            },
+            {
+              "feature": "text__small dents",
+              "weight": 1.053059034189121
+            },
+            {
+              "feature": "text__dents in",
+              "weight": 1.0444221697359561
+            },
+            {
+              "feature": "text__and elbows",
+              "weight": 1.0306801670913581
+            },
+            {
+              "feature": "text__itchy and",
+              "weight": 1.021553810731628
+            },
+            {
+              "feature": "text__arms",
+              "weight": 0.9988957414678881
+            },
+            {
+              "feature": "text__dusting",
+              "weight": 0.9916760208934663
+            },
+            {
+              "feature": "text__my knees",
+              "weight": 0.9913942184034126
+            },
+            {
+              "feature": "text__parts of",
+              "weight": 0.986002068704413
+            }
+          ]
+        },
+        {
+          "class_index": 20,
+          "top_features": [
+            {
+              "feature": "text__back",
+              "weight": 3.4939115801475578
+            },
+            {
+              "feature": "text__neck",
+              "weight": 3.21346274172717
+            },
+            {
+              "feature": "text__back pain",
+              "weight": 2.897232106191895
+            },
+            {
+              "feature": "text__my neck",
+              "weight": 2.6782053207164136
+            },
+            {
+              "feature": "text__neck hurts",
+              "weight": 2.3496518667596016
+            },
+            {
+              "feature": "text__weakness",
+              "weight": 2.147086898041686
+            },
+            {
+              "feature": "text__pain",
+              "weight": 2.0799529056861963
+            },
+            {
+              "feature": "text__cough",
+              "weight": 1.9137013952291455
+            },
+            {
+              "feature": "text__cough and",
+              "weight": 1.8622116221279907
+            },
+            {
+              "feature": "text__balance",
+              "weight": 1.6132459840534912
+            },
+            {
+              "feature": "text__neck pain",
+              "weight": 1.491295706112855
+            },
+            {
+              "feature": "text__dizzy",
+              "weight": 1.4489067552104622
+            },
+            {
+              "feature": "text__hurts",
+              "weight": 1.385480441681565
+            },
+            {
+              "feature": "text__have been",
+              "weight": 1.3651385063201977
+            },
+            {
+              "feature": "text__and legs",
+              "weight": 1.2993524264111613
+            },
+            {
+              "feature": "text__feeling lightheaded",
+              "weight": 1.2631103039826275
+            },
+            {
+              "feature": "text__weakness in",
+              "weight": 1.2334111520139335
+            },
+            {
+              "feature": "text__lightheaded",
+              "weight": 1.1752131057043356
+            },
+            {
+              "feature": "text__been",
+              "weight": 1.173006288788054
+            },
+            {
+              "feature": "text__and weakness",
+              "weight": 1.1462272570228227
+            },
+            {
+              "feature": "text__of pain",
+              "weight": 1.1272932804408504
+            },
+            {
+              "feature": "text__limb",
+              "weight": 1.0890863744188828
+            },
+            {
+              "feature": "text__limb weakness",
+              "weight": 1.0890863744188828
+            },
+            {
+              "feature": "text__and limb",
+              "weight": 1.0890863744188828
+            },
+            {
+              "feature": "text__in my",
+              "weight": 1.0573419580277592
+            },
+            {
+              "feature": "text__arms and",
+              "weight": 1.0569347893684256
+            },
+            {
+              "feature": "text__dizzy and",
+              "weight": 1.0534464430771715
+            },
+            {
+              "feature": "text__weak",
+              "weight": 0.9940317235113972
+            },
+            {
+              "feature": "text__been having",
+              "weight": 0.974488869715395
+            },
+            {
+              "feature": "text__in",
+              "weight": 0.9558885257306216
+            }
+          ]
+        },
+        {
+          "class_index": 21,
+          "top_features": [
+            {
+              "feature": "text__constipation",
+              "weight": 2.832661712477025
+            },
+            {
+              "feature": "text__stomach",
+              "weight": 2.7999924124952753
+            },
+            {
+              "feature": "text__diarrhea",
+              "weight": 2.7848672984420006
+            },
+            {
+              "feature": "text__belly",
+              "weight": 2.4311131940534927
+            },
+            {
+              "feature": "text__vomiting",
+              "weight": 2.0951130677843604
+            },
+            {
+              "feature": "text__and constipation",
+              "weight": 1.9584878980967941
+            },
+            {
+              "feature": "text__abdominal",
+              "weight": 1.8042857095002898
+            },
+            {
+              "feature": "text__mild",
+              "weight": 1.760040006600332
+            },
+            {
+              "feature": "text__constipation and",
+              "weight": 1.593835440702294
+            },
+            {
+              "feature": "text__belly pain",
+              "weight": 1.5588745425338006
+            },
+            {
+              "feature": "text__vomiting and",
+              "weight": 1.5025200756688588
+            },
+            {
+              "feature": "text__pain in",
+              "weight": 1.4108776187232412
+            },
+            {
+              "feature": "text__pain",
+              "weight": 1.3670142576137794
+            },
+            {
+              "feature": "text__days now",
+              "weight": 1.2938922469856922
+            },
+            {
+              "feature": "text__my belly",
+              "weight": 1.250950555372674
+            },
+            {
+              "feature": "text__am",
+              "weight": 1.2320106205503036
+            },
+            {
+              "feature": "text__having diarrhea",
+              "weight": 1.1656897614107686
+            },
+            {
+              "feature": "text__been really",
+              "weight": 1.1554144385406868
+            },
+            {
+              "feature": "text__mild fever",
+              "weight": 1.1526895959756742
+            },
+            {
+              "feature": "text__which has",
+              "weight": 1.112809193002834
+            },
+            {
+              "feature": "text__and vomiting",
+              "weight": 1.1110280367648013
+            },
+            {
+              "feature": "text__for few",
+              "weight": 1.0910299072028582
+            },
+            {
+              "feature": "text__which",
+              "weight": 1.0687769569705035
+            },
+            {
+              "feature": "text__area",
+              "weight": 1.0592887108783628
+            },
+            {
+              "feature": "text__abdominal part",
+              "weight": 1.0571664509760026
+            },
+            {
+              "feature": "text__days",
+              "weight": 1.0507602640307356
+            },
+            {
+              "feature": "text__my stomach",
+              "weight": 1.05021456457503
+            },
+            {
+              "feature": "text__my abdominal",
+              "weight": 1.043395371189636
+            },
+            {
+              "feature": "text__because",
+              "weight": 1.0410150022440878
+            },
+            {
+              "feature": "text__stomach discomfort",
+              "weight": 1.0407745912823883
+            }
+          ]
+        },
+        {
+          "class_index": 22,
+          "top_features": [
+            {
+              "feature": "text__pee",
+              "weight": 4.04142001407744
+            },
+            {
+              "feature": "text__urinate",
+              "weight": 3.1733388864511185
+            },
+            {
+              "feature": "text__urine",
+              "weight": 2.8771676152809484
+            },
+            {
+              "feature": "text__blood",
+              "weight": 2.2893226829875144
+            },
+            {
+              "feature": "text__my pee",
+              "weight": 2.2550521430537676
+            },
+            {
+              "feature": "text__blood in",
+              "weight": 2.164177826483187
+            },
+            {
+              "feature": "text__low",
+              "weight": 2.0282174515289837
+            },
+            {
+              "feature": "text__my urine",
+              "weight": 1.9977281636187445
+            },
+            {
+              "feature": "text__to urinate",
+              "weight": 1.8841419221993039
+            },
+            {
+              "feature": "text__smells",
+              "weight": 1.73021202748442
+            },
+            {
+              "feature": "text__when urinate",
+              "weight": 1.5741315998168943
+            },
+            {
+              "feature": "text__at",
+              "weight": 1.4967112954777915
+            },
+            {
+              "feature": "text__have to",
+              "weight": 1.454556759577737
+            },
+            {
+              "feature": "text__lower",
+              "weight": 1.411095332300729
+            },
+            {
+              "feature": "text__at night",
+              "weight": 1.4075684864762996
+            },
+            {
+              "feature": "text__to pee",
+              "weight": 1.3541329768475727
+            },
+            {
+              "feature": "text__temperature",
+              "weight": 1.332044007787782
+            },
+            {
+              "feature": "text__urges",
+              "weight": 1.2891103330354212
+            },
+            {
+              "feature": "text__urinating",
+              "weight": 1.2788035331872736
+            },
+            {
+              "feature": "text__odour",
+              "weight": 1.2017572437246915
+            },
+            {
+              "feature": "text__urges to",
+              "weight": 1.189707851004349
+            },
+            {
+              "feature": "text__almost",
+              "weight": 1.1793043031088497
+            },
+            {
+              "feature": "text__temperatures",
+              "weight": 1.1777939370052977
+            },
+            {
+              "feature": "text__body temperature",
+              "weight": 1.1761133953526477
+            },
+            {
+              "feature": "text__to",
+              "weight": 1.116794852168551
+            },
+            {
+              "feature": "text__night",
+              "weight": 1.1035851812737232
+            },
+            {
+              "feature": "text__occasionally",
+              "weight": 1.0877414280489817
+            },
+            {
+              "feature": "text__pee and",
+              "weight": 1.0595551223395174
+            },
+            {
+              "feature": "text__in it",
+              "weight": 1.0407703658038452
+            },
+            {
+              "feature": "text__when",
+              "weight": 1.034266020259327
+            }
+          ]
+        },
+        {
+          "class_index": 23,
+          "top_features": [
+            {
+              "feature": "text__my legs",
+              "weight": 4.633738862472883
+            },
+            {
+              "feature": "text__legs",
+              "weight": 3.9301574137482254
+            },
+            {
+              "feature": "text__veins",
+              "weight": 2.6236955614693303
+            },
+            {
+              "feature": "text__calves",
+              "weight": 2.41634459716917
+            },
+            {
+              "feature": "text__my calves",
+              "weight": 2.41634459716917
+            },
+            {
+              "feature": "text__cramps",
+              "weight": 2.0012746850570386
+            },
+            {
+              "feature": "text__legs that",
+              "weight": 1.6185403860504568
+            },
+            {
+              "feature": "text__vessels",
+              "weight": 1.5138358557467835
+            },
+            {
+              "feature": "text__blood vessels",
+              "weight": 1.5138358557467835
+            },
+            {
+              "feature": "text__cramps in",
+              "weight": 1.4435671028987935
+            },
+            {
+              "feature": "text__the veins",
+              "weight": 1.3924695197205894
+            },
+            {
+              "feature": "text__causing",
+              "weight": 1.3363655887351225
+            },
+            {
+              "feature": "text__veins on",
+              "weight": 1.2960622436211238
+            },
+            {
+              "feature": "text__they",
+              "weight": 1.2915544413632034
+            },
+            {
+              "feature": "text__long",
+              "weight": 1.2472057581244496
+            },
+            {
+              "feature": "text__the",
+              "weight": 1.2385599091922557
+            },
+            {
+              "feature": "text__on",
+              "weight": 1.2222579522342956
+            },
+            {
+              "feature": "text__on my",
+              "weight": 1.2197352161001491
+            },
+            {
+              "feature": "text__for long",
+              "weight": 1.0670343444589314
+            },
+            {
+              "feature": "text__visible",
+              "weight": 1.061040110795896
+            },
+            {
+              "feature": "text__ve",
+              "weight": -1.043001426206687
+            },
+            {
+              "feature": "text__legs are",
+              "weight": 1.040565040543365
+            },
+            {
+              "feature": "text__blood",
+              "weight": 1.0376341887437794
+            },
+            {
+              "feature": "text__walk",
+              "weight": 1.0032640705882945
+            },
+            {
+              "feature": "text__are",
+              "weight": 0.9959007994383278
+            },
+            {
+              "feature": "text__the blood",
+              "weight": 0.987387183335453
+            },
+            {
+              "feature": "text__causing lot",
+              "weight": 0.97300745259924
+            },
+            {
+              "feature": "text__and",
+              "weight": -0.9675167821129879
+            },
+            {
+              "feature": "text__periods",
+              "weight": 0.9674303717591153
+            },
+            {
+              "feature": "text__periods of",
+              "weight": 0.9674303717591153
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "best_model": "logistic_regression",
+  "features": {
+    "text_columns": [
+      "symptoms_text",
+      "transcript_text"
+    ],
+    "categorical_columns": [
+      "language",
+      "source"
+    ],
+    "numeric_columns": [],
+    "vectorizer": {
+      "type": "TfidfVectorizer",
+      "analyzer": "word",
+      "ngram_range_search": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "max_features_search": [
+        10000
+      ],
+      "why": "Robust for Gurindji, English, Gurindji-Kriol spelling variation and code-switching."
+    },
+    "language_note": "language feature normalized into english/gurindji/gurindji-kriol/unknown."
+  },
+  "deployment": {
+    "primary_runtime": "joblib/python",
+    "preferred_mobile_export": "ONNX for logistic regression only after parity test",
+    "warning": "XGBoost + TF-IDF ONNX conversion may fail or differ. Test on device before shipping.",
+    "xgboost_device": "cpu"
+  }
+}

@@ -1,4 +1,4 @@
-import csv
+﻿import csv
 import importlib.util
 import json
 import math
@@ -20,7 +20,7 @@ assert TRAIN_SPEC.loader is not None
 sys.modules[TRAIN_SPEC.name] = trainer
 TRAIN_SPEC.loader.exec_module(trainer)
 
-BUNDLE_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "export" / "xgb_flutter_bundle.py"
+BUNDLE_SCRIPT_PATH = Path(__file__).resolve().parents[1] / "xgb_flutter_bundle.py"
 BUNDLE_SPEC = importlib.util.spec_from_file_location(
     "xgb_flutter_bundle", BUNDLE_SCRIPT_PATH
 )

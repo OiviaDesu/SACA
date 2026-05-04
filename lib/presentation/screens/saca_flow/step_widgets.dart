@@ -500,6 +500,15 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
   ) {
     final answered =
         (state.questionAnswers['related_symptoms'] ?? '').isNotEmpty;
+    final suggestedIds = state.suggestedRelatedSymptomIds.toSet();
+    final orderedSymptoms = <Symptom>[
+      for (final id in state.suggestedRelatedSymptomIds)
+        if (SacaFlowState.relatedSymptoms.any((symptom) => symptom.id == id))
+          SacaFlowState.relatedSymptoms
+              .firstWhere((symptom) => symptom.id == id),
+      for (final symptom in SacaFlowState.relatedSymptoms)
+        if (!suggestedIds.contains(symptom.id)) symptom,
+    ];
 
     return _wrapStep(
       style: style,
@@ -510,13 +519,24 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           _localizer.t(state.language, 'relatedTitle'),
           _localizer.t(state.language, 'relatedSubtitle'),
         ),
+        if (suggestedIds.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Text(
+            'Suggested from your first symptom',
+            style: TextStyle(
+              color: SacaTheme.mutedText,
+              fontSize: style == SacaPlatformStyle.windowsDesktop ? 15 : 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
         _voiceQuestionControls(state),
         const SizedBox(height: 18),
         Wrap(
           spacing: 10,
           runSpacing: 10,
           children: [
-            for (final symptom in SacaFlowState.relatedSymptoms)
+            for (final symptom in orderedSymptoms)
               SacaChipButton(
                 label: _localizer.symptomLabel(state.language, symptom),
                 selected: _controller.hasQuestionAnswer(

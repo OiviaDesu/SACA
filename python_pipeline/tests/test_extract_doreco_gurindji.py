@@ -1,11 +1,11 @@
-import csv
+﻿import csv
 import importlib.util
 import json
 import sys
 from pathlib import Path
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "data_ingestion" / "extract_doreco_gurindji.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[1] / "01_extract_doreco_gurindji.py"
 SPEC = importlib.util.spec_from_file_location("extract_doreco_gurindji", SCRIPT_PATH)
 extractor = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None

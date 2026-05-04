@@ -2,9 +2,10 @@
 # =============================================================================
 # submit_classifier_profile_campaign.sh
 #
-# Submit the full diagnosis classifier tuning ladder on OzSTAR in one shot:
-#   - LR quick / balanced / full
-#   - XGB quick / balanced / full
+# Submit diagnosis classifier ablation jobs on OzSTAR.
+# Default after jobs 11822367/11822444/11822445/11822446: LR balanced only.
+# Full LR matched balanced; quick XGB underfit. Set CAMPAIGN_PROFILES and
+# CAMPAIGN_MODELS explicitly when you need a wider ablation.
 #
 # Each submitted job gets isolated output and intermediate-dataset paths so the
 # concurrent runs do not overwrite one another.
@@ -20,8 +21,8 @@ CAMPAIGN_NAME="${CAMPAIGN_NAME:-diagnosis_profile_ladder_${TIMESTAMP}}"
 CAMPAIGN_DIR="${OUTPUT_ROOT}/${CAMPAIGN_NAME}"
 SUBMISSION_LOG="${CAMPAIGN_DIR}/submission_manifest.json"
 
-PROFILES=(quick balanced full)
-MODELS=(lr xgb)
+IFS=' ' read -r -a PROFILES <<< "${CAMPAIGN_PROFILES:-balanced}"
+IFS=' ' read -r -a MODELS <<< "${CAMPAIGN_MODELS:-lr}"
 
 MULTI_BUILD_INCLUDE_HEALTHCARE="${MULTI_BUILD_INCLUDE_HEALTHCARE:-1}"
 MULTI_BUILD_INCLUDE_MEDICAL_CONVERSATIONS="${MULTI_BUILD_INCLUDE_MEDICAL_CONVERSATIONS:-1}"
@@ -158,8 +159,18 @@ done
   echo "  \"submitted_at\": \"$(date --iso-8601=seconds)\"," 
   echo "  \"work_dir\": \"${WORK_DIR}\"," 
   echo "  \"output_root\": \"${CAMPAIGN_DIR}\"," 
-  echo '  "profiles": ["quick", "balanced", "full"],'
-  echo '  "models": ["lr", "xgb"],'
+  printf '  "profiles": ['
+  for idx in "${!PROFILES[@]}"; do
+    if [[ "${idx}" -gt 0 ]]; then printf ', '; fi
+    printf '"%s"' "${PROFILES[$idx]}"
+  done
+  echo '],'
+  printf '  "models": ['
+  for idx in "${!MODELS[@]}"; do
+    if [[ "${idx}" -gt 0 ]]; then printf ', '; fi
+    printf '"%s"' "${MODELS[$idx]}"
+  done
+  echo '],'
   echo '  "jobs": ['
   for idx in "${!manifest_entries[@]}"; do
     if [[ "${idx}" -gt 0 ]]; then
