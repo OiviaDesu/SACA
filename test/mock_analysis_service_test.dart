@@ -68,6 +68,47 @@ void main() {
       expect(result.value?.guidance.first, contains('Call 000'));
     });
 
+    test('does not force disease prediction for healthy/no-symptom input',
+        () async {
+      final service = MockAnalysisService();
+
+      final result = await service.analyse(
+        const AnalysisRequest(
+          language: SacaLanguage.english,
+          inputMethod: InputMethod.text,
+          transcript: '',
+          textInput: 'I feel fine and have no symptoms',
+          selectedSymptomIds: <String>{},
+          selectedBodyAreaIds: <String>{},
+          answers: <String, String>{},
+        ),
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value?.disease, 'No clear illness detected');
+      expect(result.value?.isEmergency, isFalse);
+    });
+
+    test('maps rash symptoms to skin guidance', () async {
+      final service = MockAnalysisService();
+
+      final result = await service.analyse(
+        const AnalysisRequest(
+          language: SacaLanguage.english,
+          inputMethod: InputMethod.text,
+          transcript: '',
+          textInput: 'itchy rash on my arm',
+          selectedSymptomIds: <String>{},
+          selectedBodyAreaIds: <String>{},
+          answers: <String, String>{'severity': '3'},
+        ),
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value?.disease, 'Skin irritation');
+      expect(result.value?.severity, SeverityLevel.mild);
+    });
+
     test('returns typed failure for empty input', () async {
       final service = MockAnalysisService();
 
