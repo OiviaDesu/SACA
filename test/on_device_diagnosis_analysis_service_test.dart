@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:saca_demo/domain/models/saca_models.dart';
 import 'package:saca_demo/infrastructure/analysis/mock_analysis_service.dart';
@@ -99,6 +101,28 @@ void main() {
       expect(result.isSuccess, isTrue);
       expect(result.value?.disease, 'Influenza');
     });
+
+    test('falls back when classifier inference times out', () async {
+      final service = OnDeviceDiagnosisAnalysisService(
+        classifier: const _TimeoutDiagnosisClassifier(),
+        fallback: MockAnalysisService(),
+      );
+
+      final result = await service.analyse(
+        const AnalysisRequest(
+          language: SacaLanguage.english,
+          inputMethod: InputMethod.text,
+          transcript: '',
+          textInput: 'fever cough',
+          selectedSymptomIds: <String>{},
+          selectedBodyAreaIds: <String>{},
+          answers: <String, String>{'severity': '4'},
+        ),
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value?.disease, 'Influenza');
+    });
   });
 }
 
@@ -132,5 +156,14 @@ class _ThrowingDiagnosisClassifier implements DiagnosisClassifier {
   @override
   Future<DiagnosisPrediction> predict(AnalysisRequest request) {
     throw StateError('classifier unavailable');
+  }
+}
+
+class _TimeoutDiagnosisClassifier implements DiagnosisClassifier {
+  const _TimeoutDiagnosisClassifier();
+
+  @override
+  Future<DiagnosisPrediction> predict(AnalysisRequest request) {
+    throw TimeoutException('timed out');
   }
 }

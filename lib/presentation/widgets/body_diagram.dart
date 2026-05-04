@@ -155,10 +155,20 @@ class _PositionedAreaChip extends StatelessWidget {
         child: SizedBox(
           width: chipWidth,
           height: chipHeight,
-          child: SacaChipButton(
-            label: label,
-            selected: selected,
-            onPressed: onPressed,
+          child: AnimatedScale(
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOutCubic,
+            scale: selected ? 1.03 : 1,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOutCubic,
+              opacity: selected ? 1 : 0.94,
+              child: SacaChipButton(
+                label: label,
+                selected: selected,
+                onPressed: onPressed,
+              ),
+            ),
           ),
         ),
       ),
@@ -252,9 +262,7 @@ class _BodyConnectorPainter extends CustomPainter {
 
     // Left column lines start from right edge of chip.
     // Right column lines start from left edge of chip.
-    final x = isRight
-        ? chipLeft
-        : chipLeft + _PositionedAreaChip.chipWidth;
+    final x = isRight ? chipLeft : chipLeft + _PositionedAreaChip.chipWidth;
 
     final centerY = chipTop + _PositionedAreaChip.chipHeight / 2;
 
@@ -289,11 +297,10 @@ class _BodyTargetPoints {
       'shoulder' => const Offset(0.61, 0.20),
       'elbow' => const Offset(0.37, 0.35),
       'lower_back' => const Offset(0.50, 0.42),
-      'arm' => const Offset(0.63,0.31),
+      'arm' => const Offset(0.63, 0.31),
       'finger' => const Offset(0.65, 0.53),
       'lower_leg' => const Offset(0.47, 0.78),
       'ankle' => const Offset(0.53, 0.91),
-
       _ => null,
     };
 
@@ -313,7 +320,6 @@ class _BodyDiagramLayout {
 
       // Back view - right column
       'ears' || 'shoulder' || 'arm' || 'finger' || 'ankle' => true,
-
       _ => false,
     };
   }
@@ -341,14 +347,12 @@ class _BodyDiagramLayout {
       'lower_leg' => 0.73,
       'elbow' => 0.36,
 
-
       // Back view - right column
       'ears' => 0.06,
       'shoulder' => 0.21,
       'arm' => 0.36,
       'finger' => 0.51,
       'ankle' => 0.86,
-    
       _ => 0.06,
     };
   }

@@ -929,6 +929,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
                 Expanded(
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
                     height: 6,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(99),
@@ -1053,6 +1054,7 @@ class _VisualSymptomCard extends StatelessWidget {
           onPressed: onPressed,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOutCubic,
             width: double.infinity,
             height: 210,
             padding: const EdgeInsets.symmetric(
@@ -1082,19 +1084,24 @@ class _VisualSymptomCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Center(
-                    child: Image.asset(
-                      imagePath,
-                      width: 140,
-                      height: 140,
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.high,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          CupertinoIcons.photo,
-                          size: 48,
-                          color: SacaTheme.text,
-                        );
-                      },
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 160),
+                      curve: Curves.easeOutCubic,
+                      scale: selected ? 1.04 : 1,
+                      child: Image.asset(
+                        imagePath,
+                        width: 140,
+                        height: 140,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            CupertinoIcons.photo,
+                            size: 48,
+                            color: SacaTheme.text,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
