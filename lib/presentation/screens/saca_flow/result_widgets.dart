@@ -33,25 +33,6 @@ class _ResultPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (result.isEmergency) ...[
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: const Color(0x14D92D20),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0x33D92D20)),
-                ),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  child: Text(
-                    localizer.t(language, 'call000Now'),
-                    textAlign: TextAlign.center,
-                    style: SacaTheme.title.copyWith(color: SacaTheme.emergency),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-            ],
             Text(
               localizer.t(language, 'possiblePattern'),
               textAlign: TextAlign.center,
@@ -63,6 +44,12 @@ class _ResultPanel extends StatelessWidget {
               textAlign: TextAlign.center,
               style: SacaTheme.title,
             ),
+            const SizedBox(height: 8),
+            Text(
+              _conditionExplanation(result.disease),
+              textAlign: TextAlign.center,
+              style: SacaTheme.small,
+            ),
             const SizedBox(height: 18),
             _SeverityMeter(
               severity: result.severity,
@@ -70,6 +57,11 @@ class _ResultPanel extends StatelessWidget {
               localizer: localizer,
             ),
             const SizedBox(height: 18),
+            Text(
+              localizer.t(language, 'recommendations'),
+              style: SacaTheme.body.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
             for (final item in localizer.guidance(language, result))
               _GuidanceLine(text: item),
             const SizedBox(height: 10),
@@ -77,6 +69,62 @@ class _ResultPanel extends StatelessWidget {
               localizer.disclaimer(language, result.disclaimer),
               textAlign: TextAlign.center,
               style: SacaTheme.small,
+            ),
+            if (result.isEmergency) ...[
+              const SizedBox(height: 18),
+              _EmergencyAction(label: localizer.t(language, 'call000Now')),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _conditionExplanation(String disease) {
+    return switch (disease) {
+      'Urgent symptoms' =>
+        'These symptoms may need emergency care and should not wait.',
+      'Influenza' =>
+        'This pattern can match fever, headache, throat symptoms, or flu-like illness.',
+      'Stomach upset' =>
+        'This pattern can match stomach pain, vomiting, nausea, or bloating.',
+      _ =>
+        'SACA found a general symptom pattern from the information provided.',
+    };
+  }
+}
+
+class _EmergencyAction extends StatelessWidget {
+  const _EmergencyAction({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0x14D92D20),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0x33D92D20)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              CupertinoIcons.phone_fill,
+              color: SacaTheme.emergency,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: SacaTheme.title.copyWith(
+                color: SacaTheme.emergency,
+                fontSize: 23,
+              ),
             ),
           ],
         ),
@@ -127,6 +175,12 @@ class _SeverityMeter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = localizer.severityLabel(language, severity);
+    final color = switch (severity) {
+      SeverityLevel.mild => SacaTheme.safe,
+      SeverityLevel.moderate => SacaTheme.warning,
+      SeverityLevel.severe => const Color(0xFFFF8A3D),
+      SeverityLevel.emergency => SacaTheme.emergency,
+    };
     final position = switch (severity) {
       SeverityLevel.mild => 0.18,
       SeverityLevel.moderate => 0.44,
@@ -137,10 +191,24 @@ class _SeverityMeter extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          '${localizer.t(language, 'severity')}: $label',
-          textAlign: TextAlign.center,
-          style: SacaTheme.body,
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Text(
+              '${localizer.t(language, 'severity')}: $label',
+              textAlign: TextAlign.center,
+              style: SacaTheme.body.copyWith(
+                color:
+                    severity == SeverityLevel.moderate ? SacaTheme.text : color,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 10),
         SizedBox(

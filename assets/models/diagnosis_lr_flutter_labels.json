@@ -1,0 +1,35 @@
+﻿{
+    "task":  "diagnosis",
+    "classes":  [
+                    "acne",
+                    "allergy",
+                    "arthritis",
+                    "asthma",
+                    "chicken pox",
+                    "common cold",
+                    "dengue",
+                    "diabetes",
+                    "drug reaction",
+                    "fungal infection",
+                    "gastroesophageal reflux disease",
+                    "hemorrhoids",
+                    "hypertension",
+                    "impetigo",
+                    "jaundice",
+                    "malaria",
+                    "migraine",
+                    "peptic ulcer disease",
+                    "pneumonia",
+                    "psoriasis",
+                    "spondylosis",
+                    "typhoid",
+                    "uti",
+                    "varicose veins"
+                ],
+    "severity_order":  [
+                           "emergency",
+                           "urgent",
+                           "routine",
+                           "self-care"
+                       ]
+}

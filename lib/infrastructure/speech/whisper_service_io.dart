@@ -1,4 +1,4 @@
-// WhisperService – platform service for on-device STT.
+// WhisperService â€“ platform service for on-device STT.
 //
 // - Windows: sherpa_onnx + bundled Whisper ONNX model
 // - Android/iOS: whisper_kit with optional bundled English-only base.en asset
@@ -10,9 +10,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
 import 'package:whisper_kit/whisper_kit.dart';
 
-part 'whisper_service/mobile_runtime.dart';
-part 'whisper_service/windows_runtime.dart';
-part 'whisper_service/whisper_asset_bundle.dart';
+part 'whisper_service_parts/mobile_runtime.dart';
+part 'whisper_service_parts/windows_runtime.dart';
+part 'whisper_service_parts/whisper_asset_bundle.dart';
 
 enum SacaLanguage { english, gurindji }
 

@@ -42,17 +42,31 @@ class _DesktopShell extends StatelessWidget {
                       onInfo: onInfo,
                     ),
                     Expanded(
-                      child: SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(36, 30, 36, 40),
-                          child: Center(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final maxContentWidth =
+                              (constraints.maxWidth - 72).clamp(760.0, 1200.0);
+                          return SingleChildScrollView(
                             child: ConstrainedBox(
-                              key: const ValueKey('windowsContentColumn'),
-                              constraints: const BoxConstraints(maxWidth: 760),
-                              child: child,
+                              constraints: BoxConstraints(
+                                minHeight: constraints.maxHeight,
+                              ),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(36, 30, 36, 40),
+                                child: Center(
+                                  child: ConstrainedBox(
+                                    key: const ValueKey('windowsContentColumn'),
+                                    constraints: BoxConstraints(
+                                      maxWidth: maxContentWidth,
+                                    ),
+                                    child: child,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ),
                   ],

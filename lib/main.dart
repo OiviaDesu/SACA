@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 
 import 'core/theme/saca_theme.dart';
 import 'domain/services/clinical_vocabulary_service.dart';
+import 'infrastructure/analysis/hybrid_symptom_suggestion_service.dart';
 import 'infrastructure/analysis/mock_analysis_service.dart';
+import 'infrastructure/analysis/on_device_diagnosis_analysis_service.dart';
 import 'infrastructure/localization/asset_lexicon_repository.dart';
 import 'infrastructure/speech/voice_prewarm_service.dart';
 import 'infrastructure/speech/whisper_speech_input_service.dart';
@@ -52,7 +54,11 @@ class SacaApp extends StatelessWidget {
       home: SacaFlowScreen(
         controller: SacaFlowController(
           speechInput: speechInput,
-          analysisService: MockAnalysisService(vocabulary: vocabulary),
+          analysisService: OnDeviceDiagnosisAnalysisService(
+            fallback: MockAnalysisService(vocabulary: vocabulary),
+            vocabulary: vocabulary,
+          ),
+          symptomSuggestionService: HybridSymptomSuggestionService(),
         ),
         localizer: SacaLocalizer(vocabulary: vocabulary),
       ),

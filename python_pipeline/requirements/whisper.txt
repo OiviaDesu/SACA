@@ -1,0 +1,10 @@
+torch>=2.2
+transformers>=4.45
+datasets[audio]>=2.20
+accelerate>=0.33
+evaluate>=0.4
+jiwer>=3.0
+soundfile>=0.12
+librosa>=0.10
+pandas>=2.2
+numpy>=1.26

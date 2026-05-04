@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import '../../core/errors/app_error.dart';
 import '../../domain/models/saca_models.dart' as domain;
 import '../../domain/services/speech_input_service.dart';
-import '../../services/audio_recorder_service.dart';
-import '../../services/whisper_service.dart' as whisper;
+import 'audio_recorder_service.dart';
+import 'whisper_service.dart' as whisper;
 
 class WhisperSpeechInputService implements SpeechInputService {
   WhisperSpeechInputService({

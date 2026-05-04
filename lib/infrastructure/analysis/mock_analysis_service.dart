@@ -29,11 +29,51 @@ class MockAnalysisService implements AnalysisService {
 
     await Future<void>.delayed(const Duration(milliseconds: 450));
 
+    if (_isHealthyInput(input)) {
+      return const AppResult.success(
+        AnalysisResult(
+          disease: 'No clear illness detected',
+          severity: SeverityLevel.mild,
+          isEmergency: false,
+          disclaimer:
+              'SACA provides preliminary triage guidance only. It does not replace a clinician.',
+          guidance: [
+            'No clear symptom was reported, so no disease prediction is needed.',
+            'Monitor how you feel and return if symptoms appear.',
+            'Seek urgent help if chest pain, breathing trouble, severe bleeding, or confusion starts.',
+          ],
+        ),
+      );
+    }
+
     final result = _safetyRules.apply(
       normalizedRequest,
       _baseResultFor(normalizedRequest),
     );
     return AppResult.success(result);
+  }
+
+  bool _isHealthyInput(String text) {
+    final normalized = text.toLowerCase().trim();
+    const healthyPhrases = <String>[
+      'i am good',
+      'i feel good',
+      'i am okay',
+      'i feel okay',
+      'i am fine',
+      'i feel fine',
+      'i feel healthy',
+      'nothing wrong',
+      'no symptoms',
+      'no symptom',
+      'no problem',
+      'not sick',
+      'i am not sick',
+      'i am healthy',
+      'feeling good',
+      'feeling fine',
+    ];
+    return healthyPhrases.any(normalized.contains);
   }
 
   AnalysisResult _baseResultFor(AnalysisRequest request) {
@@ -45,6 +85,8 @@ class MockAnalysisService implements AnalysisService {
         symptoms.contains('fever') ||
         input.contains('headache') && input.contains('sore throat') ||
         input.contains('flu') ||
+        input.contains('cold') ||
+        input.contains('cough') ||
         input.contains('fever')) {
       return AnalysisResult(
         disease: 'Influenza',
@@ -65,6 +107,9 @@ class MockAnalysisService implements AnalysisService {
         symptoms.contains('vomiting') ||
         symptoms.contains('bloating') ||
         input.contains('stomach') ||
+        input.contains('belly') ||
+        input.contains('nausea') ||
+        input.contains('diarrhea') ||
         input.contains('vomit')) {
       return const AnalysisResult(
         disease: 'Stomach upset',
@@ -76,6 +121,38 @@ class MockAnalysisService implements AnalysisService {
           'Sip water often.',
           'Rest and avoid heavy meals for now.',
           'Visit the clinic if vomiting continues or pain increases.',
+        ],
+      );
+    }
+
+    if (input.contains('rash') ||
+        input.contains('itch') ||
+        input.contains('skin')) {
+      return const AnalysisResult(
+        disease: 'Skin irritation',
+        severity: SeverityLevel.mild,
+        isEmergency: false,
+        disclaimer:
+            'SACA provides preliminary triage guidance only. It does not replace a clinician.',
+        guidance: [
+          'Keep the area clean and avoid scratching.',
+          'Visit the clinic if the rash spreads, becomes painful, or has pus.',
+          'Seek urgent help if rash appears with breathing trouble or face swelling.',
+        ],
+      );
+    }
+
+    if (input.contains('pain')) {
+      return AnalysisResult(
+        disease: 'Pain symptoms',
+        severity: severity >= 7 ? SeverityLevel.severe : SeverityLevel.moderate,
+        isEmergency: false,
+        disclaimer:
+            'SACA provides preliminary triage guidance only. It does not replace a clinician.',
+        guidance: const [
+          'Note where the pain is and how long it has been present.',
+          'Rest and avoid activities that worsen the pain.',
+          'Visit the clinic if pain is severe, spreading, or not improving.',
         ],
       );
     }
