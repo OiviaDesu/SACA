@@ -68,6 +68,47 @@ void main() {
       expect(result.value?.guidance.first, contains('Call 000'));
     });
 
+    test('does not treat minor bleeding mentions as emergency red flags',
+        () async {
+      final service = MockAnalysisService();
+
+      final result = await service.analyse(
+        const AnalysisRequest(
+          language: SacaLanguage.english,
+          inputMethod: InputMethod.text,
+          transcript: '',
+          textInput: 'small cut on hand no bleeding now',
+          selectedSymptomIds: <String>{},
+          selectedBodyAreaIds: <String>{},
+          answers: <String, String>{'severity': '2'},
+        ),
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value?.isEmergency, isFalse);
+      expect(result.value?.disease, isNot('Urgent symptoms'));
+    });
+
+    test('still escalates phrase-level blood red flags', () async {
+      final service = MockAnalysisService();
+
+      final result = await service.analyse(
+        const AnalysisRequest(
+          language: SacaLanguage.english,
+          inputMethod: InputMethod.text,
+          transcript: '',
+          textInput: 'I am coughing blood',
+          selectedSymptomIds: <String>{},
+          selectedBodyAreaIds: <String>{},
+          answers: <String, String>{'severity': '7'},
+        ),
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value?.disease, 'Urgent symptoms');
+      expect(result.value?.isEmergency, isTrue);
+    });
+
     test('does not force disease prediction for healthy/no-symptom input',
         () async {
       final service = MockAnalysisService();
@@ -107,6 +148,26 @@ void main() {
       expect(result.isSuccess, isTrue);
       expect(result.value?.disease, 'Skin irritation');
       expect(result.value?.severity, SeverityLevel.mild);
+    });
+
+    test('does not classify isolated headache as influenza', () async {
+      final service = MockAnalysisService();
+
+      final result = await service.analyse(
+        const AnalysisRequest(
+          language: SacaLanguage.english,
+          inputMethod: InputMethod.text,
+          transcript: '',
+          textInput: 'headache only',
+          selectedSymptomIds: <String>{'headache'},
+          selectedBodyAreaIds: <String>{},
+          answers: <String, String>{'severity': '3'},
+        ),
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value?.disease, isNot('Influenza'));
+      expect(result.value?.isEmergency, isFalse);
     });
 
     test('returns typed failure for empty input', () async {

@@ -13,7 +13,7 @@ dependencies:
   whisper_kit: ^0.3.0
 
   # Sherpa-ONNX: used when deploying fine-tuned ONNX model later
-  sherpa_onnx: ^1.12.40
+  sherpa_onnx: ^1.13.0
 
   # Audio recording (16 kHz mono PCM)
   record: ^6.2.0
