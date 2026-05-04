@@ -222,6 +222,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
   ) {
     final hasSelection = state.selectedSymptomIds.isNotEmpty ||
         state.selectedBodyAreaIds.isNotEmpty;
+
     final selectedLabels = [
       ...SacaFlowState.symptoms
           .where((item) => state.selectedSymptomIds.contains(item.id))
@@ -274,7 +275,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
                               state.language == SacaLanguage.gurindji
                                   ? symptom.label
                                   : null,
-                          icon: _symptomIconFor(symptom.id),
+                          imagePath: _symptomImageFor(symptom.id),
                           selected:
                               state.selectedSymptomIds.contains(symptom.id),
                           onPressed: () =>
@@ -287,7 +288,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
                         label: _localizer.t(state.language, 'visualOtherTitle'),
                         secondaryLabel:
                             _localizer.t(state.language, 'visualOtherSubtitle'),
-                        icon: CupertinoIcons.ellipsis_circle,
+                        imagePath: 'assets/Images/Cough.png',
                         selected: false,
                         onPressed: () =>
                             _controller.chooseInputMethod(InputMethod.text),
@@ -501,6 +502,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     final answered =
         (state.questionAnswers['related_symptoms'] ?? '').isNotEmpty;
     final suggestedIds = state.suggestedRelatedSymptomIds.toSet();
+
     final orderedSymptoms = <Symptom>[
       for (final id in state.suggestedRelatedSymptomIds)
         if (SacaFlowState.relatedSymptoms.any((symptom) => symptom.id == id))
@@ -639,9 +641,15 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       choices: [
         _choice(state.language, 'no recent health change', 'No change'),
         _choice(
-            state.language, 'sick contact or travel', 'Sick contact or travel'),
+          state.language,
+          'sick contact or travel',
+          'Sick contact or travel',
+        ),
         _choice(
-            state.language, 'sleep or stress change', 'Sleep or stress change'),
+          state.language,
+          'sleep or stress change',
+          'Sleep or stress change',
+        ),
         _choice(state.language, 'not sure health change', 'Not sure'),
       ],
       nextLabel: _localizer.t(state.language, 'analyse'),
@@ -730,7 +738,9 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
 
   _Choice _choice(SacaLanguage? language, String value, String englishLabel) {
     return _Choice(
-        value, _localizer.choiceLabel(language, value, englishLabel));
+      value,
+      _localizer.choiceLabel(language, value, englishLabel),
+    );
   }
 
   Widget _analysingStep(
@@ -841,6 +851,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     }
 
     final heard = state.voiceAnswerTranscript.trim();
+
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Column(
@@ -974,6 +985,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
 
   void _showPrototypeInfo(BuildContext context) {
     final language = _controller.state.language;
+
     showCupertinoDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -991,17 +1003,20 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     );
   }
 
-  IconData _symptomIconFor(String symptomId) {
+  String _symptomImageFor(String symptomId) {
     return switch (symptomId) {
-      'headache' => CupertinoIcons.bandage,
-      'fever' => CupertinoIcons.thermometer,
-      'stomachache' => CupertinoIcons.circle_grid_hex,
-      'sore_throat' => CupertinoIcons.waveform_path_ecg,
-      'chest_pain' => CupertinoIcons.heart,
-      'breathing_trouble' => CupertinoIcons.wind,
-      'vomiting' => CupertinoIcons.drop,
-      'bloating' => CupertinoIcons.circle,
-      _ => CupertinoIcons.staroflife,
+      'headache' => 'assets/Images/Headache.png',
+      'fever' => 'assets/Images/Fever.png',
+      'stomachache' => 'assets/Images/Stomachache.png',
+      'sore_throat' => 'assets/Images/Sore Throat.png',
+      'chest_pain' => 'assets/Images/Chest Pain.png',
+      'breathing_trouble' => 'assets/Images/Breathing Trouble.png',
+      'vomiting' => 'assets/Images/Vomiting.png',
+      'bloating' => 'assets/Images/Bloating.png',
+      'cough' => 'assets/Images/Cough.png',
+      'skin_itch' => 'assets/Images/Skin Itch.png',
+      'sneezing' => 'assets/Images/Sneeze.png',
+      _ => 'assets/Images/Cough.png',
     };
   }
 }
@@ -1009,7 +1024,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
 class _VisualSymptomCard extends StatelessWidget {
   const _VisualSymptomCard({
     required this.label,
-    required this.icon,
+    required this.imagePath,
     required this.selected,
     required this.onPressed,
     this.secondaryLabel,
@@ -1017,7 +1032,7 @@ class _VisualSymptomCard extends StatelessWidget {
 
   final String label;
   final String? secondaryLabel;
-  final IconData icon;
+  final String imagePath;
   final bool selected;
   final VoidCallback onPressed;
 
@@ -1027,66 +1042,84 @@ class _VisualSymptomCard extends StatelessWidget {
       button: true,
       selected: selected,
       label: secondaryLabel == null ? label : '$label, $secondaryLabel',
-      child: CupertinoButton(
-        padding: EdgeInsets.zero,
-        minimumSize: const Size(
-          SacaTheme.minTapTarget,
-          SacaTheme.minTapTarget,
-        ),
-        onPressed: onPressed,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          constraints: const BoxConstraints(minHeight: 142),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            gradient: selected
-                ? SacaTheme.selectedGradient
-                : SacaTheme.surfaceGradient,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: selected ? SacaTheme.selectedBorder : SacaTheme.border,
-              width: selected ? 2 : 1,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 16,
-                offset: Offset(0, 8),
-              ),
-            ],
+      child: SizedBox(
+        width: double.infinity,
+        child: CupertinoButton(
+          padding: EdgeInsets.zero,
+          minimumSize: const Size(
+            SacaTheme.minTapTarget,
+            SacaTheme.minTapTarget,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: selected
-                      ? const Color(0x268FC8DE)
-                      : const Color(0x14D9D4D1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(icon, size: 28, color: SacaTheme.text),
-                ),
+          onPressed: onPressed,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            width: double.infinity,
+            height: 210,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            decoration: BoxDecoration(
+              gradient: selected
+                  ? SacaTheme.selectedGradient
+                  : SacaTheme.surfaceGradient,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: selected ? SacaTheme.selectedBorder : SacaTheme.border,
+                width: selected ? 2 : 1,
               ),
-              const SizedBox(height: 18),
-              Text(
-                label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: SacaTheme.body.copyWith(fontWeight: FontWeight.w800),
-              ),
-              if (secondaryLabel != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  secondaryLabel!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: SacaTheme.small,
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x12000000),
+                  blurRadius: 16,
+                  offset: Offset(0, 8),
                 ),
               ],
-            ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Image.asset(
+                      imagePath,
+                      width: 140,
+                      height: 140,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          CupertinoIcons.photo,
+                          size: 48,
+                          color: SacaTheme.text,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: SacaTheme.body.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (secondaryLabel != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    secondaryLabel!,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: SacaTheme.small,
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),

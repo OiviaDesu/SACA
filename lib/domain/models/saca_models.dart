@@ -252,11 +252,16 @@ class SacaFlowState {
     BodyArea(id: 'leg', label: 'Leg', view: BodyView.front),
     BodyArea(id: 'knees', label: 'Knees', view: BodyView.front),
     BodyArea(id: 'toes', label: 'Toes', view: BodyView.front),
+
     BodyArea(id: 'ears', label: 'Ears', view: BodyView.back),
     BodyArea(id: 'neck', label: 'Neck', view: BodyView.back),
     BodyArea(id: 'shoulder', label: 'Shoulder', view: BodyView.back),
     BodyArea(id: 'back', label: 'Back', view: BodyView.back),
     BodyArea(id: 'arm', label: 'Arm', view: BodyView.back),
+
+    // New back-view body area.
+    BodyArea(id: 'elbow', label: 'Elbow', view: BodyView.back),
+
     BodyArea(id: 'lower_back', label: 'Lower Back', view: BodyView.back),
     BodyArea(id: 'finger', label: 'Finger', view: BodyView.back),
     BodyArea(id: 'lower_leg', label: 'Lower Leg', view: BodyView.back),
