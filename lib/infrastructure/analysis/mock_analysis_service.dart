@@ -81,9 +81,9 @@ class MockAnalysisService implements AnalysisService {
     final symptoms = request.selectedSymptomIds;
     final severity = int.tryParse(request.answers['severity'] ?? '') ?? 0;
 
-    if (symptoms.contains('headache') && symptoms.contains('sore_throat') ||
+    if ((symptoms.contains('headache') && symptoms.contains('sore_throat')) ||
         symptoms.contains('fever') ||
-        input.contains('headache') && input.contains('sore throat') ||
+        (input.contains('headache') && input.contains('sore throat')) ||
         input.contains('flu') ||
         input.contains('cold') ||
         input.contains('cough') ||
