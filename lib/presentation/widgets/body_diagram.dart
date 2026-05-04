@@ -117,7 +117,7 @@ class _PositionedAreaChip extends StatelessWidget {
         selected: selected,
         label: '$semanticsPrefix ${label.replaceAll('\n', ' ')}',
         child: SizedBox(
-          width: label.length > 12 ? 126 : 96,
+          width: 126,
           child: SacaChipButton(
             label: label,
             selected: selected,
@@ -129,29 +129,36 @@ class _PositionedAreaChip extends StatelessWidget {
   }
 
   Offset _positionFor(String id) {
-    return switch (id) {
-      'head' => const Offset(0.02, 0.06),
-      'eyes' => const Offset(0.69, 0.09),
-      'throat' => const Offset(0.03, 0.21),
-      'heart' => const Offset(0.67, 0.24),
-      'chest' => const Offset(0.02, 0.35),
-      'stomach' => const Offset(0.02, 0.52),
-      'hand' => const Offset(0.70, 0.58),
-      'leg' => const Offset(0.03, 0.76),
-      'knees' => const Offset(0.68, 0.80),
-      'toes' => const Offset(0.64, 0.92),
+  const leftX = 0.05;
+  const rightX = 0.75;
 
-      'ears' => const Offset(0.68, 0.09),
-      'neck' => const Offset(0.03, 0.19),
-      'shoulder' => const Offset(0.66, 0.19),
-      'back' => const Offset(0.03, 0.34),
-      'arm' => const Offset(0.69, 0.39),
-      'lower_back' => const Offset(0.03, 0.51),
-      'finger' => const Offset(0.68, 0.66),
-      'lower_leg' => const Offset(0.03, 0.79),
-      'ankle' => const Offset(0.02, 0.93),
+  return switch (id) {
+    // Front view
+    'head' => Offset(leftX, 0.06),
+    'throat' => Offset(leftX, 0.20),
+    'chest' => Offset(leftX, 0.34),
+    'stomach' => Offset(leftX, 0.50),
+    'leg' => Offset(leftX, 0.74),
 
-      _ => const Offset(0.05, 0.05),
-    };
-  }
+    'eyes' => Offset(rightX, 0.09),
+    'heart' => Offset(rightX, 0.23),
+    'hand' => Offset(rightX, 0.55),
+    'knees' => Offset(rightX, 0.76),
+    'toes' => Offset(rightX, 0.88),
+
+    // Back view
+    'neck' => Offset(leftX, 0.18),
+    'back' => Offset(leftX, 0.34),
+    'lower_back' => Offset(leftX, 0.50),
+    'lower_leg' => Offset(leftX, 0.74),
+    'ankle' => Offset(leftX, 0.87),
+
+    'ears' => Offset(rightX, 0.09),
+    'shoulder' => Offset(rightX, 0.20),
+    'arm' => Offset(rightX, 0.34),
+    'finger' => Offset(rightX, 0.58),
+
+    _ => Offset(leftX, 0.05),
+  };
+}
 }
