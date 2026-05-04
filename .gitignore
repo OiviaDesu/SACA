@@ -20,6 +20,21 @@ migrate_working_dir/
 
 # Editor-local configuration
 .vscode/
+.venv/
+.pytest_cache/
+Microsoft/
+note.txt
+session_logs/
+
+# Local environment / HPC overrides
+.env
+.env.*
+!.env.example
+.hpc_config
+.slurm_vars.sh
+python_pipeline/*.local.sh
+python_pipeline/slurm_*.sh.local
+python_pipeline/.config/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -35,8 +50,28 @@ migrate_working_dir/
 /ios/
 
 # Local dataset/cache outputs. Keep raw corpora and generated artifacts out of Git.
-python_pipeline/data/
+python_pipeline/data/**
+!python_pipeline/data/
+!python_pipeline/data/.gitkeep
+!python_pipeline/data/README.md
+!python_pipeline/data/raw/
+!python_pipeline/data/raw/.gitkeep
+!python_pipeline/data/raw/*.csv
+!python_pipeline/data/raw/*.xlsx
+python_pipeline/data/raw/Final_Augmented_dataset_Diseases_and_Symptoms.csv
+!python_pipeline/data/processed/
+!python_pipeline/data/processed/.gitkeep
+!python_pipeline/data/processed/*.csv
+!python_pipeline/data/processed/*.xlsx
+!python_pipeline/data/samples/
+!python_pipeline/data/samples/.gitkeep
+!python_pipeline/data/samples/*.csv
+!python_pipeline/data/samples/*.xlsx
 python_pipeline/outputs/
+python_pipeline/artifacts/
+*.joblib
+*.onnx
+!assets/models/diagnosis_lr_flutter.onnx
 
 # Local platform/dev machine files
 android/local.properties
@@ -49,6 +84,14 @@ windows/flutter/ephemeral/
 # Local model assets. See docs/MODEL_ASSETS.md.
 assets/models/sherpa-onnx-whisper-base/*.onnx
 assets/models/sherpa-onnx-whisper-base/tokens.txt
+assets/models/classifier-xgb-quick/**
+!assets/models/classifier-xgb-quick/
+!assets/models/classifier-xgb-quick/README.md
+
+# Local generated classifier source. Regenerate with python_pipeline/export_xgb_to_dart.py.
+lib/infrastructure/analysis/generated_local/**
+!lib/infrastructure/analysis/generated_local/
+!lib/infrastructure/analysis/generated_local/README.md
 
 # Internal assistant/automation artifacts (kept locally, not tracked)
 .agents/
@@ -83,6 +126,38 @@ assets/models/sherpa-onnx-whisper-base/tokens.txt
 .vibe/
 .windsurf/
 .zencoder/
+**/.agents/
+**/.adal/
+**/.augment/
+**/.bob/
+**/.codex/
+**/.claude/
+**/.codebuddy/
+**/.commandcode/
+**/.continue/
+**/.cortex/
+**/.crush/
+**/.cursor/
+**/.factory/
+**/.goose/
+**/.iflow/
+**/.junie/
+**/.kilocode/
+**/.kiro/
+**/.kode/
+**/.mcpjam/
+**/.mux/
+**/.neovate/
+**/.openhands/
+**/.pi/
+**/.pochi/
+**/.qoder/
+**/.qwen/
+**/.roo/
+**/.trae/
+**/.vibe/
+**/.windsurf/
+**/.zencoder/
 .github/skills/
 .github/java-upgrade/
 /memories/
@@ -92,6 +167,10 @@ CLAUDE.md
 AGENTS.md
 GEMINI.md
 .github/copilot-instructions.md
+**/CLAUDE.md
+**/AGENTS.md
+**/GEMINI.md
+**/.github/copilot-instructions.md
 
 # Symbolication related
 app.*.symbols

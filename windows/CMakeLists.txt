@@ -93,6 +93,17 @@ install(DIRECTORY "${NATIVE_ASSETS_DIR}"
    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
    COMPONENT Runtime)
 
+# Both sherpa_onnx_windows and flutter_onnxruntime bundle onnxruntime.dll.
+# Keep the sherpa-provided DLL last so the executable loads one ORT runtime
+# that is compatible with both native plugins.
+set(SHERPA_ONNXRUNTIME_DLL
+  "${FLUTTER_MANAGED_DIR}/ephemeral/.plugin_symlinks/sherpa_onnx_windows/windows/onnxruntime.dll")
+if(EXISTS "${SHERPA_ONNXRUNTIME_DLL}")
+  install(FILES "${SHERPA_ONNXRUNTIME_DLL}"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+endif()
+
 # Fully re-copy the assets directory on each build to avoid having stale files
 # from a previous install.
 set(FLUTTER_ASSET_DIR_NAME "flutter_assets")
