@@ -37,6 +37,15 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    packaging {
+        jniLibs {
+            pickFirsts += listOf(
+                "lib/**/libonnxruntime.so",
+                "lib/**/libonnxruntime_providers_shared.so",
+            )
+        }
+    }
 }
 
 flutter {

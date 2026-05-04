@@ -52,6 +52,11 @@ jobs:
       - name: Build Windows
         run: flutter build windows
 
+      - name: Runtime asset note
+        run: |
+          echo "Windows build succeeded. Offline speech runtime still requires local model assets."
+          echo "See docs/MODEL_ASSETS.md for the expected asset layout."
+
   build-android:
     runs-on: ubuntu-latest
 
@@ -69,3 +74,8 @@ jobs:
 
       - name: Build Android APK
         run: flutter build apk
+
+      - name: Runtime asset note
+        run: |
+          echo "Android build succeeded. Voice runtime still depends on local or bundled model assets at runtime."
+          echo "See docs/MODEL_ASSETS.md for model asset expectations."

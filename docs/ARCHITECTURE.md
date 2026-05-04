@@ -1,4 +1,4 @@
-# SACA – Architecture
+# SACA â€“ Architecture
 
 ## System intent
 
@@ -15,21 +15,16 @@ lib/
 │   ├── models/        # SacaFlowState, AnalysisRequest/Result, enums
 │   └── services/      # Contracts + domain services (vocabulary/safety)
 ├── infrastructure/
-│   ├── analysis/      # MockAnalysisService implementation
+│   ├── analysis/      # MockAnalysisService and local classifier runtime
 │   ├── localization/  # Asset lexicon repository
-│   └── speech/        # WhisperSpeechInputService adapter + voice prewarm
-├── presentation/
-│   ├── adaptive/      # Platform-adaptive layout/style handling
-│   ├── controllers/   # SacaFlowController state machine
-│   ├── localization/  # UI localizer using clinical vocabulary
-│   ├── screens/       # SacaFlowScreen orchestration + step part files
-│   └── widgets/       # Reusable UI controls/body diagrams
-└── services/
-    ├── audio_recorder_service.dart
-    ├── whisper_service.dart
-    ├── whisper_service_io.dart       # facade for platform runtime helpers
-    ├── whisper_service/              # mobile/windows runtime modules
-    └── whisper_service_stub.dart
+│   ├── speech/        # Recorder, Whisper runtime, speech adapter, prewarm
+│   └── window/        # Desktop window configuration
+└── presentation/
+    ├── adaptive/      # Platform-adaptive layout/style handling
+    ├── controllers/   # SacaFlowController state machine
+    ├── localization/  # UI localizer using clinical vocabulary
+    ├── screens/       # SacaFlowScreen orchestration and step widgets
+    └── widgets/       # Reusable UI controls/body diagrams
 ```
 
 ## Runtime architecture
