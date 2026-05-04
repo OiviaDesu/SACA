@@ -105,19 +105,31 @@ class _PositionedAreaChip extends StatelessWidget {
   final Size size;
   final VoidCallback onPressed;
 
+  static const double chipWidth = 150;
+  static const double chipHeight = 60;
+
   @override
   Widget build(BuildContext context) {
-    final point = _positionFor(area.id);
+    final y = _verticalPositionFor(area.id);
+
+    // Controls the distance between the labels and the card edges.
+    // The same sidePadding is used on both sides to keep the layout symmetrical.
+    final sidePadding = size.width * 0.08;
+
+    final left = _isRightColumn(area.id)
+        ? size.width - sidePadding - chipWidth
+        : sidePadding;
 
     return Positioned(
-      left: point.dx * size.width,
-      top: point.dy * size.height,
+      left: left,
+      top: y * size.height,
       child: Semantics(
         button: true,
         selected: selected,
         label: '$semanticsPrefix ${label.replaceAll('\n', ' ')}',
         child: SizedBox(
-          width: 126,
+          width: chipWidth,
+          height: chipHeight,
           child: SacaChipButton(
             label: label,
             selected: selected,
@@ -128,37 +140,48 @@ class _PositionedAreaChip extends StatelessWidget {
     );
   }
 
-  Offset _positionFor(String id) {
-  const leftX = 0.05;
-  const rightX = 0.75;
+  bool _isRightColumn(String id) {
+    return switch (id) {
+      // Front view - right column
+      'eyes' || 'heart' || 'hand' || 'knees' || 'toes' => true,
 
-  return switch (id) {
-    // Front view
-    'head' => Offset(leftX, 0.06),
-    'throat' => Offset(leftX, 0.20),
-    'chest' => Offset(leftX, 0.34),
-    'stomach' => Offset(leftX, 0.50),
-    'leg' => Offset(leftX, 0.74),
+      // Back view - right column
+      'ears' || 'shoulder' || 'arm' || 'finger' || 'ankle' => true,
 
-    'eyes' => Offset(rightX, 0.09),
-    'heart' => Offset(rightX, 0.23),
-    'hand' => Offset(rightX, 0.55),
-    'knees' => Offset(rightX, 0.76),
-    'toes' => Offset(rightX, 0.88),
+      _ => false,
+    };
+  }
 
-    // Back view
-    'neck' => Offset(leftX, 0.18),
-    'back' => Offset(leftX, 0.34),
-    'lower_back' => Offset(leftX, 0.50),
-    'lower_leg' => Offset(leftX, 0.74),
-    'ankle' => Offset(leftX, 0.87),
+  double _verticalPositionFor(String id) {
+    return switch (id) {
+      // Front view - left column
+      'head' => 0.06,
+      'throat' => 0.21,
+      'chest' => 0.36,
+      'stomach' => 0.51,
+      'leg' => 0.73,
 
-    'ears' => Offset(rightX, 0.09),
-    'shoulder' => Offset(rightX, 0.20),
-    'arm' => Offset(rightX, 0.34),
-    'finger' => Offset(rightX, 0.58),
+      // Front view - right column
+      'eyes' => 0.06,
+      'heart' => 0.21,
+      'hand' => 0.51,
+      'knees' => 0.73,
+      'toes' => 0.86,
 
-    _ => Offset(leftX, 0.05),
-  };
-}
+      // Back view - left column
+      'neck' => 0.06,
+      'back' => 0.21,
+      'lower_back' => 0.36,
+      'lower_leg' => 0.73,
+
+      // Back view - right column
+      'ears' => 0.06,
+      'shoulder' => 0.21,
+      'arm' => 0.36,
+      'finger' => 0.51,
+      'ankle' => 0.86,
+
+      _ => 0.06,
+    };
+  }
 }
