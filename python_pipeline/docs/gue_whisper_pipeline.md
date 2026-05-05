@@ -52,6 +52,22 @@ baseline has a clean WER/CER reference.
 - Do not set `language="gue"`; Whisper has no Gurindji language token.
 - Do not add custom `<|gue|>` token in the first run.
 - Clear forced decoder ids and suppress tokens before training.
+- Training transcripts stay as canonical dictionary/source text. Do not rewrite
+  semantic or orthographic variants such as loanword spellings unless the source
+  transcript has an obvious technical corruption.
+
+## Metrics
+
+Training and decode audit report both exact and normalized metrics:
+
+- `raw_wer` / `raw_cer`: exact transcript fidelity.
+- `norm_wer` / `norm_cer`: punctuation/case/spelling-tolerant evaluation only.
+
+Best checkpoint selection uses `norm_cer`, while raw metrics remain logged for
+honest reporting. Optional spelling variants live in
+`python_pipeline/orthography_mapping.tsv` with `variant`, `canonical`, and
+`reason` columns. Keep this file empty or minimal until variants are verified
+from `gue_dict.md`, validation/test decode errors, or parser evidence.
 
 ## OzSTAR Slurm
 
