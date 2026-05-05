@@ -69,6 +69,16 @@ python_pipeline/data/raw/Final_Augmented_dataset_Diseases_and_Symptoms.csv
 !python_pipeline/data/samples/*.xlsx
 python_pipeline/outputs/
 python_pipeline/artifacts/
+python_pipeline/audiodict/
+python_pipeline/az_page.html
+python_pipeline/gue_dict*.md
+python_pipeline/gue_whisper_dataset.*
+python_pipeline/whisper_gue_ready/
+python_pipeline/clean_gue_dataset.py
+python_pipeline/make_whisper_dataset.py
+python_pipeline/small_test*.py
+python_pipeline/test_audio.mp3
+python_pipeline/write_test.txt
 *.joblib
 *.onnx
 !assets/models/diagnosis_lr_flutter.onnx

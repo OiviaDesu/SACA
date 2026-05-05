@@ -24,7 +24,6 @@ dependencies:
   gap: ^3.0.1
   cupertino_icons: ^1.0.8
   window_manager: 0.5.1
-  flutter_onnxruntime: ^1.7.0
 
 dev_dependencies:
   flutter_test:
@@ -39,6 +38,7 @@ flutter:
     - assets/models/
     - assets/models/classifier-xgb-best/
     - assets/models/classifier-xgb-quick/
-    - assets/models/sherpa-onnx-whisper-base/
+    - assets/models/whisper-gue-base-run4-rc1/
+    - assets/models/sherpa-onnx-whisper-gue-base-run4-rc1/
     - assets/Images/
     
