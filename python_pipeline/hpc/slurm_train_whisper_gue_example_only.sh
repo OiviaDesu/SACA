@@ -17,7 +17,8 @@ set -euo pipefail
 
 WORK_DIR="/fred/oz396/dunguyen/saca_whisper"
 CODE_DIR="${WORK_DIR}/code"
-DATA_DIR="${WORK_DIR}/whisper_gue_ready/example_only"
+REPO_DIR="${REPO_DIR:-/home/dunguyen/git/SACA}"
+DATA_DIR="${DATA_DIR:-${REPO_DIR}/python_pipeline/whisper_gue_ready/example_only}"
 OUTPUT_DIR="${WORK_DIR}/outputs/whisper-small-gue-example-only"
 VENV_DIR="${WORK_DIR}/venv"
 MODEL_NAME="${MODEL_NAME:-${WORK_DIR}/models/openai-whisper-small}"

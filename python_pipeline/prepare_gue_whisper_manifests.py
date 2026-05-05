@@ -93,7 +93,10 @@ def _mixed_train_rows(
 
 def _manifest_row(row: dict[str, object], base_dir: Path) -> dict[str, str]:
     audio_value = str(row.get("audio") or "")
-    audio_abs = Path(str(row.get("audio_abs") or base_dir / audio_value)).resolve()
+    local_audio = (base_dir / audio_value).resolve()
+    audio_abs = local_audio if local_audio.exists() else Path(
+        str(row.get("audio_abs") or local_audio)
+    ).resolve()
     return {
         "id": str(row.get("id") or ""),
         "audio": str(audio_abs),
