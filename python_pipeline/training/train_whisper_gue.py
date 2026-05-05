@@ -6,8 +6,10 @@ from pathlib import Path
 from typing import Any
 
 import evaluate
+import librosa
+import soundfile as sf
 import torch
-from datasets import Audio, load_dataset
+from datasets import load_dataset
 from transformers import (
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
@@ -51,18 +53,17 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any]:
         "test": str(args.data_dir / "test.jsonl"),
     }
     raw = load_dataset("json", data_files=data_files)
-    raw = raw.cast_column("audio", Audio(sampling_rate=16000))
     model_input_name = processor.feature_extractor.model_input_names[0]
 
     def prepare_dataset(batch: dict[str, Any]) -> dict[str, Any]:
-        audio = batch["audio"]
+        audio_array, sampling_rate = _load_audio(Path(batch["audio"]))
         inputs = processor.feature_extractor(
-            audio["array"],
-            sampling_rate=audio["sampling_rate"],
+            audio_array,
+            sampling_rate=sampling_rate,
             return_attention_mask=False,
         )
         batch[model_input_name] = inputs[model_input_name][0]
-        batch["input_length"] = len(audio["array"])
+        batch["input_length"] = len(audio_array)
         batch["labels"] = processor.tokenizer(batch["text"]).input_ids
         return batch
 
@@ -141,6 +142,21 @@ def _disable_unsupported_gue_language_tokens(
     model.config.forced_decoder_ids = None
     model.config.suppress_tokens = []
     model.generation_config.suppress_tokens = []
+
+
+def _load_audio(path: Path) -> tuple[Any, int]:
+    audio_array, sampling_rate = sf.read(path, dtype="float32", always_2d=False)
+    if getattr(audio_array, "ndim", 1) > 1:
+        audio_array = audio_array.mean(axis=1)
+    target_rate = 16000
+    if sampling_rate != target_rate:
+        audio_array = librosa.resample(
+            audio_array,
+            orig_sr=sampling_rate,
+            target_sr=target_rate,
+        )
+        sampling_rate = target_rate
+    return audio_array, sampling_rate
 
 
 def parse_args() -> argparse.Namespace:
