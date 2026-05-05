@@ -116,6 +116,7 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any, Whispe
         per_device_eval_batch_size=args.per_device_eval_batch_size,
         learning_rate=args.learning_rate,
         warmup_steps=args.warmup_steps,
+        warmup_ratio=args.warmup_ratio,
         num_train_epochs=args.num_train_epochs,
         gradient_checkpointing=args.gradient_checkpointing,
         fp16=args.fp16,
@@ -131,6 +132,7 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any, Whispe
         load_best_model_at_end=True,
         metric_for_best_model="norm_cer",
         greater_is_better=False,
+        save_total_limit=args.save_total_limit,
         report_to="none",
         push_to_hub=False,
     )
@@ -199,12 +201,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--per-device-eval-batch-size", type=int, default=4)
     parser.add_argument("--learning-rate", type=float, default=1e-5)
     parser.add_argument("--warmup-steps", type=int, default=100)
+    parser.add_argument("--warmup-ratio", type=float, default=0.0)
     parser.add_argument("--num-train-epochs", type=float, default=10)
     parser.add_argument("--eval-steps", type=int, default=100)
     parser.add_argument("--save-steps", type=int, default=100)
     parser.add_argument("--logging-steps", type=int, default=10)
     parser.add_argument("--generation-max-length", type=int, default=225)
     parser.add_argument("--early-stopping-patience", type=int, default=0)
+    parser.add_argument("--save-total-limit", type=int, default=3)
     parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--gradient-checkpointing", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

@@ -19,7 +19,8 @@ WORK_DIR="/fred/oz396/dunguyen/saca_whisper"
 CODE_DIR="${WORK_DIR}/code"
 REPO_DIR="${REPO_DIR:-/home/dunguyen/git/SACA}"
 DATA_DIR="${DATA_DIR:-${REPO_DIR}/python_pipeline/whisper_gue_ready/example_only}"
-OUTPUT_DIR="${WORK_DIR}/outputs/whisper-small-gue-example-only"
+RUN_NAME="${RUN_NAME:-whisper-small-gue-example-only-run2}"
+OUTPUT_DIR="${OUTPUT_DIR:-${WORK_DIR}/outputs/${RUN_NAME}}"
 VENV_DIR="${WORK_DIR}/venv"
 MODEL_NAME="${MODEL_NAME:-${WORK_DIR}/models/openai-whisper-small}"
 
@@ -32,6 +33,7 @@ echo "Work dir: ${WORK_DIR}"
 echo "Data dir: ${DATA_DIR}"
 echo "Output dir: ${OUTPUT_DIR}"
 echo "Model: ${MODEL_NAME}"
+echo "Run name: ${RUN_NAME}"
 
 module purge
 module load "${GCC_MODULE:-gcc/13.2.0}"
@@ -55,17 +57,19 @@ python "${CODE_DIR}/python_pipeline/training/train_whisper_gue.py" \
   --output-dir "${OUTPUT_DIR}" \
   --model-name "${MODEL_NAME}" \
   --num-proc 1 \
-  --per-device-train-batch-size 8 \
-  --gradient-accumulation-steps 2 \
+  --per-device-train-batch-size 4 \
+  --gradient-accumulation-steps 4 \
   --per-device-eval-batch-size 4 \
   --learning-rate 5e-6 \
-  --warmup-steps 100 \
+  --warmup-steps 0 \
+  --warmup-ratio 0.1 \
   --num-train-epochs 3 \
   --eval-steps 100 \
   --save-steps 100 \
   --logging-steps 10 \
   --generation-max-length 225 \
   --early-stopping-patience 2 \
+  --save-total-limit 3 \
   --fp16 \
   --gradient-checkpointing
 
