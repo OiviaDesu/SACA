@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import evaluate
+import jiwer
 import librosa
 import soundfile as sf
 import torch
@@ -79,9 +79,6 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any]:
         input_columns=["input_length"],
     )
 
-    wer_metric = evaluate.load("wer")
-    cer_metric = evaluate.load("cer")
-
     def compute_metrics(pred: Any) -> dict[str, float]:
         pred_ids = pred.predictions
         label_ids = pred.label_ids
@@ -89,8 +86,8 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any]:
         pred_str = processor.tokenizer.batch_decode(pred_ids, skip_special_tokens=True)
         label_str = processor.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
         return {
-            "wer": wer_metric.compute(predictions=pred_str, references=label_str),
-            "cer": cer_metric.compute(predictions=pred_str, references=label_str),
+            "wer": jiwer.wer(label_str, pred_str),
+            "cer": jiwer.cer(label_str, pred_str),
         }
 
     training_args = Seq2SeqTrainingArguments(
