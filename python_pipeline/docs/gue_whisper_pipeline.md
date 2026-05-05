@@ -84,3 +84,22 @@ sbatch python_pipeline/hpc/slurm_train_whisper_gue_example_only.sh
 squeue -u dunguyen
 tail -f /fred/oz396/dunguyen/saca_whisper/outputs/logs/gue_small_<job_id>.out
 ```
+
+## Decode Audit
+
+After a checkpoint exists, write human-readable samples plus review TSVs:
+
+```bash
+python python_pipeline/evaluate_whisper_gue_decode.py \
+  --model /fred/oz396/dunguyen/saca_whisper/outputs/whisper-small-gue-example-only/checkpoint-200 \
+  --manifest python_pipeline/whisper_gue_ready/example_only/validation.jsonl \
+  --limit 73 \
+  --batch-size 8 \
+  --output /fred/oz396/dunguyen/saca_whisper/outputs/audits/checkpoint-200_decode_audit.txt \
+  --audit-tsv /fred/oz396/dunguyen/saca_whisper/outputs/audits/checkpoint-200_decode_audit.tsv \
+  --mapping-candidates /fred/oz396/dunguyen/saca_whisper/outputs/audits/mapping_candidates.tsv
+```
+
+The audit TSV includes per-row `raw_*` and `norm_*` metrics plus `id`,
+`label_type`, `ref`, `pred`, normalized text, and audio path. Mapping candidates
+are suggestions only; never auto-apply them to training transcripts or metrics.
