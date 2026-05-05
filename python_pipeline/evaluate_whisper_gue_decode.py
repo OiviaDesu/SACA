@@ -32,12 +32,19 @@ def load_rows(path: Path, limit: int) -> list[dict[str, str]]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Audit Gurindji Whisper decode samples.")
     parser.add_argument("--model", type=Path, required=True)
+    parser.add_argument(
+        "--processor",
+        type=Path,
+        help="Whisper processor/tokenizer path. Defaults to --model when tokenizer files exist.",
+    )
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--limit", type=int, default=20)
+    parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
-    processor = WhisperProcessor.from_pretrained(args.model)
+    processor_path = args.processor or args.model
+    processor = WhisperProcessor.from_pretrained(processor_path)
     model = WhisperForConditionalGeneration.from_pretrained(args.model)
     _disable_unsupported_gue_language_tokens(model)
     model.eval()
@@ -49,10 +56,15 @@ def main() -> None:
     references: list[str] = []
     lines: list[str] = []
 
-    for index, row in enumerate(rows, 1):
-        audio, sampling_rate = _load_audio(Path(row["audio"]))
+    for batch_start in range(0, len(rows), args.batch_size):
+        batch_rows = rows[batch_start : batch_start + args.batch_size]
+        audio_arrays = []
+        sampling_rate = 16000
+        for row in batch_rows:
+            audio, sampling_rate = _load_audio(Path(row["audio"]))
+            audio_arrays.append(audio)
         inputs = processor.feature_extractor(
-            audio,
+            audio_arrays,
             sampling_rate=sampling_rate,
             return_tensors="pt",
             return_attention_mask=False,
@@ -60,21 +72,27 @@ def main() -> None:
         input_features = inputs.input_features.to(model.device)
         with torch.no_grad():
             predicted_ids = model.generate(input_features, max_length=225)
-        prediction = processor.tokenizer.batch_decode(
+        batch_predictions = processor.tokenizer.batch_decode(
             predicted_ids,
             skip_special_tokens=True,
-        )[0].strip()
-        reference = row["text"].strip()
-        predictions.append(prediction)
-        references.append(reference)
-        lines.extend(
-            [
-                f"[{index}]",
-                f"PRED: {prediction}",
-                f"REF : {reference}",
-                "",
-            ]
         )
+        for offset, (row, prediction) in enumerate(
+            zip(batch_rows, batch_predictions, strict=True),
+            1,
+        ):
+            index = batch_start + offset
+            prediction = prediction.strip()
+            reference = row["text"].strip()
+            predictions.append(prediction)
+            references.append(reference)
+            lines.extend(
+                [
+                    f"[{index}]",
+                    f"PRED: {prediction}",
+                    f"REF : {reference}",
+                    "",
+                ]
+            )
 
     normalized_predictions = [normalize_for_metric(text) for text in predictions]
     normalized_references = [normalize_for_metric(text) for text in references]

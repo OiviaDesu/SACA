@@ -126,7 +126,7 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any]:
             decoder_start_token_id=model.config.decoder_start_token_id,
         ),
         compute_metrics=compute_metrics,
-        processing_class=processor.feature_extractor,
+        processing_class=processor,
         callbacks=[
             EarlyStoppingCallback(
                 early_stopping_patience=args.early_stopping_patience,
@@ -195,6 +195,7 @@ def main() -> None:
         print("dry_run=true; training skipped")
         return
     trainer.train()
+    processor.save_pretrained(args.output_dir)
     print(trainer.evaluate(vectorized["test"]))
 
 
