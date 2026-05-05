@@ -241,9 +241,18 @@ class XgbM2cgenPreprocessor {
 
 Future<XgbM2cgenBundle> loadXgbM2cgenBundleAsset(String assetPath) async {
   final source = await rootBundle.loadString(assetPath);
+  if (isGitLfsPointer(source)) {
+    throw StateError(
+      'XGBoost bundle asset is a Git LFS pointer, not a hydrated JSON bundle.',
+    );
+  }
   return XgbM2cgenBundle.fromJson(
     Map<String, dynamic>.from(jsonDecode(source) as Map),
   );
+}
+
+bool isGitLfsPointer(String source) {
+  return source.startsWith('version https://git-lfs.github.com/spec/');
 }
 
 List<String> charWbNgrams(

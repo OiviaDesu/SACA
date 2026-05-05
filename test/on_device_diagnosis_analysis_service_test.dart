@@ -7,6 +7,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:saca_demo/domain/models/saca_models.dart';
 import 'package:saca_demo/infrastructure/analysis/mock_analysis_service.dart';
 import 'package:saca_demo/infrastructure/analysis/on_device_diagnosis_analysis_service.dart';
+import 'package:saca_demo/infrastructure/analysis/xgb_m2cgen_runtime.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -283,6 +284,18 @@ void main() {
         ),
         throwsA(isA<StateError>()),
       );
+    });
+
+    test('XGBoost bundle detects Git LFS pointer assets', () {
+      expect(
+        isGitLfsPointer(
+          'version https://git-lfs.github.com/spec/v1\n'
+          'oid sha256:abc\n'
+          'size 123\n',
+        ),
+        isTrue,
+      );
+      expect(isGitLfsPointer('{"bundle_version":1}'), isFalse);
     });
 
     test('confidence level maps 70 and 40 percent thresholds', () {
