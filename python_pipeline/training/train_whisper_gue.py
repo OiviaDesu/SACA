@@ -11,6 +11,7 @@ import soundfile as sf
 import torch
 from datasets import load_dataset
 from transformers import (
+    EarlyStoppingCallback,
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
     WhisperForConditionalGeneration,
@@ -126,6 +127,13 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any]:
         ),
         compute_metrics=compute_metrics,
         processing_class=processor.feature_extractor,
+        callbacks=[
+            EarlyStoppingCallback(
+                early_stopping_patience=args.early_stopping_patience,
+            )
+        ]
+        if args.early_stopping_patience > 0
+        else None,
     )
     return trainer, vectorized
 
@@ -172,6 +180,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-steps", type=int, default=100)
     parser.add_argument("--logging-steps", type=int, default=10)
     parser.add_argument("--generation-max-length", type=int, default=225)
+    parser.add_argument("--early-stopping-patience", type=int, default=0)
     parser.add_argument("--fp16", action="store_true")
     parser.add_argument("--gradient-checkpointing", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

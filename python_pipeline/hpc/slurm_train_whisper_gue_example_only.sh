@@ -5,11 +5,11 @@
 #SBATCH --job-name=saca_gue_small
 #SBATCH --output=/fred/oz396/dunguyen/saca_whisper/outputs/logs/gue_small_%j.out
 #SBATCH --error=/fred/oz396/dunguyen/saca_whisper/outputs/logs/gue_small_%j.err
-#SBATCH --time=12:00:00
+#SBATCH --time=04:00:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
-#SBATCH --mem=64G
+#SBATCH --mem=24G
 #SBATCH --tmp=40G
 #SBATCH --mail-type=END,FAIL
 
@@ -55,16 +55,17 @@ python "${CODE_DIR}/python_pipeline/training/train_whisper_gue.py" \
   --output-dir "${OUTPUT_DIR}" \
   --model-name "${MODEL_NAME}" \
   --num-proc 1 \
-  --per-device-train-batch-size 4 \
-  --gradient-accumulation-steps 4 \
+  --per-device-train-batch-size 8 \
+  --gradient-accumulation-steps 2 \
   --per-device-eval-batch-size 4 \
-  --learning-rate 1e-5 \
+  --learning-rate 5e-6 \
   --warmup-steps 100 \
-  --num-train-epochs 10 \
+  --num-train-epochs 3 \
   --eval-steps 100 \
   --save-steps 100 \
   --logging-steps 10 \
   --generation-max-length 225 \
+  --early-stopping-patience 2 \
   --fp16 \
   --gradient-checkpointing
 
