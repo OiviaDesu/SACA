@@ -1,7 +1,7 @@
 // WhisperService â€“ platform service for on-device STT.
 //
 // - Windows: sherpa_onnx + bundled Whisper ONNX model
-// - Android/iOS: whisper_kit with optional bundled English-only base.en asset
+// - Android/iOS: whisper_kit + bundled GGML model
 
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -15,6 +15,36 @@ part 'whisper_service_parts/windows_runtime.dart';
 part 'whisper_service_parts/whisper_asset_bundle.dart';
 
 enum SacaLanguage { english, gurindji }
+
+class SacaSttModelAssets {
+  const SacaSttModelAssets._();
+
+  static const rc1Label = 'gue-whisper-base-run4-ckpt200-rc1';
+  static const rc1MobileAssetBase = 'assets/models/whisper-gue-base-run4-rc1';
+  static const rc1MobileFileName =
+      'ggml-gue-whisper-base-run4-ckpt200-rc1-q5_0.bin';
+  static const rc1MobileAssetPath = '$rc1MobileAssetBase/$rc1MobileFileName';
+  static const rc1WindowsAssetBase =
+      'assets/models/sherpa-onnx-whisper-gue-base-run4-rc1';
+  static const rc1WindowsSupportDirName =
+      'sherpa-onnx-whisper-gue-base-run4-rc1';
+  static const windowsRequiredFiles = <String>[
+    'encoder.onnx',
+    'decoder.onnx',
+    'tokens.txt',
+  ];
+
+  static String windowsLanguageCode(SacaLanguage language) {
+    return switch (language) {
+      SacaLanguage.english => 'en',
+      SacaLanguage.gurindji => '',
+    };
+  }
+
+  static String windowsRuntimeKey(SacaLanguage language) {
+    return '$rc1WindowsSupportDirName:${language.name}';
+  }
+}
 
 class TranscriptSegment {
   final String text;
@@ -48,14 +78,9 @@ class WhisperService {
       _isWhisperKitPlatform || _isSherpaWindowsPlatform;
 
   static const _defaultWindowsBundle = _WhisperAssetBundle(
-    assetBase: 'assets/models/sherpa-onnx-whisper-base',
-    supportDirName: 'sherpa-onnx-whisper-base',
-    label: 'whisper-base',
-  );
-  static const _englishWindowsBundle = _WhisperAssetBundle(
-    assetBase: 'assets/models/sherpa-onnx-whisper-base-en',
-    supportDirName: 'sherpa-onnx-whisper-base-en',
-    label: 'whisper-base.en',
+    assetBase: SacaSttModelAssets.rc1WindowsAssetBase,
+    supportDirName: SacaSttModelAssets.rc1WindowsSupportDirName,
+    label: SacaSttModelAssets.rc1Label,
   );
 
   /// Call once at app start to initialize the platform STT runtime.
@@ -131,22 +156,16 @@ class WhisperService {
 
   Future<String> _resolveRuntimeKey(SacaLanguage language) async {
     if (_isSherpaWindowsPlatform) {
-      final bundle = await _resolveWindowsBundle(language: language);
-      return 'windows:${bundle.supportDirName}';
+      return 'windows:${SacaSttModelAssets.windowsRuntimeKey(language)}';
     }
 
     if (_isWhisperKitPlatform) {
-      if (language == SacaLanguage.gurindji) {
-        final dir = await getApplicationDocumentsDirectory();
-        final modelPath = '${dir.path}/ggml-gurindji-small-q5_0.bin';
-        return File(modelPath).existsSync()
-            ? 'mobile:gurindji-custom'
-            : 'mobile:gurindji-small-fallback';
-      }
-
-      const assetPath = 'assets/models/whisper-base.en/ggml-base.en.bin';
-      final hasBundledEnglishModel = await _assetExists(assetPath);
-      return hasBundledEnglishModel ? 'mobile:base-en' : 'mobile:small';
+      final hasRc1Model = await _assetExists(
+        SacaSttModelAssets.rc1MobileAssetPath,
+      );
+      return hasRc1Model
+          ? 'mobile:${SacaSttModelAssets.rc1Label}'
+          : 'mobile:base-fallback';
     }
 
     return 'unsupported';

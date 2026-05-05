@@ -29,7 +29,7 @@ class HybridSymptomSuggestionService extends RuleBasedSymptomSuggestionService {
     final suggestions = suggestRelatedSymptoms(request).toSet();
     try {
       final prediction =
-          await (_classifier ??= OnnxDiagnosisClassifier()).predict(
+          await (_classifier ??= DiagnosisClassifierFactory.create()).predict(
         request,
       );
       suggestions.addAll(_diseaseSuggestions[prediction.label.toLowerCase()] ??

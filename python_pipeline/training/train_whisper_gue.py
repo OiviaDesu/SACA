@@ -117,6 +117,7 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any, Whispe
         learning_rate=args.learning_rate,
         warmup_steps=args.warmup_steps,
         warmup_ratio=args.warmup_ratio,
+        lr_scheduler_type=args.lr_scheduler_type,
         num_train_epochs=args.num_train_epochs,
         gradient_checkpointing=args.gradient_checkpointing,
         fp16=args.fp16,
@@ -202,6 +203,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--learning-rate", type=float, default=1e-5)
     parser.add_argument("--warmup-steps", type=int, default=100)
     parser.add_argument("--warmup-ratio", type=float, default=0.0)
+    parser.add_argument("--lr-scheduler-type", default="linear")
     parser.add_argument("--num-train-epochs", type=float, default=10)
     parser.add_argument("--eval-steps", type=int, default=100)
     parser.add_argument("--save-steps", type=int, default=100)
@@ -223,6 +225,7 @@ def main() -> None:
         print("dry_run=true; training skipped")
         return
     trainer.train()
+    trainer.save_model(args.output_dir)
     processor.save_pretrained(args.output_dir)
     print(trainer.evaluate(vectorized["test"]))
 

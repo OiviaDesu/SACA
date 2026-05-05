@@ -6,12 +6,13 @@ extension _WhisperWindowsRuntime on WhisperService {
     final bundle = await _resolveWindowsBundle(language: _language);
     final modelDir = await _ensureWindowsModelFiles(bundle);
     final sep = Platform.pathSeparator;
+    final languageCode = SacaSttModelAssets.windowsLanguageCode(_language);
 
     final modelConfig = sherpa.OfflineModelConfig(
       whisper: sherpa.OfflineWhisperModelConfig(
         encoder: '${modelDir.path}${sep}encoder.onnx',
         decoder: '${modelDir.path}${sep}decoder.onnx',
-        language: 'en',
+        language: languageCode,
         task: 'transcribe',
       ),
       tokens: '${modelDir.path}${sep}tokens.txt',
@@ -26,7 +27,12 @@ extension _WhisperWindowsRuntime on WhisperService {
     _disposeWindowsRecognizer();
     _windowsRecognizer = sherpa.OfflineRecognizer(config);
 
-    debugPrint('[SACA] Windows ${bundle.label} loaded from ${modelDir.path}');
+    debugPrint(
+      '[SACA] Windows ${bundle.label} loaded '
+      'appLanguage=${_language.name} '
+      'languageCode="$languageCode" '
+      'modelDir=${modelDir.path}',
+    );
   }
 
   void _ensureSherpaBindingsInitialized() {
@@ -38,33 +44,20 @@ extension _WhisperWindowsRuntime on WhisperService {
   Future<_WhisperAssetBundle> _resolveWindowsBundle({
     required SacaLanguage language,
   }) async {
-    if (language != SacaLanguage.english) {
-      return WhisperService._defaultWindowsBundle;
-    }
-
-    final hasEnglishBundle = await _assetExists(
-      '${WhisperService._englishWindowsBundle.assetBase}/encoder.onnx',
-    );
-    if (hasEnglishBundle) {
-      debugPrint(
-        '[SACA] Windows English STT: using bundled ${WhisperService._englishWindowsBundle.label}.',
-      );
-      return WhisperService._englishWindowsBundle;
-    }
-
     debugPrint(
-      '[SACA] Windows English STT: no English-only ONNX bundle found; using ${WhisperService._defaultWindowsBundle.label}.',
+      '[SACA] Windows English/Gurindji STT: using bundled ${WhisperService._defaultWindowsBundle.label}.',
     );
     return WhisperService._defaultWindowsBundle;
   }
 
   Future<Directory> _ensureWindowsModelFiles(_WhisperAssetBundle bundle) async {
-    const requiredFiles = ['encoder.onnx', 'decoder.onnx', 'tokens.txt'];
+    const requiredFiles = SacaSttModelAssets.windowsRequiredFiles;
 
     final supportDir = await getApplicationSupportDirectory();
     final sep = Platform.pathSeparator;
-    final targetDir =
-        Directory('${supportDir.path}$sep${bundle.supportDirName}');
+    final targetDir = Directory(
+      '${supportDir.path}$sep${bundle.supportDirName}',
+    );
 
     if (!await targetDir.exists()) {
       await targetDir.create(recursive: true);
@@ -120,17 +113,14 @@ extension _WhisperWindowsRuntime on WhisperService {
         return const [];
       }
 
-      final durationMs =
-          ((wave.samples.length / wave.sampleRate) * 1000).round();
-      final safeDuration =
-          Duration(milliseconds: durationMs < 0 ? 0 : durationMs);
+      final durationMs = ((wave.samples.length / wave.sampleRate) * 1000)
+          .round();
+      final safeDuration = Duration(
+        milliseconds: durationMs < 0 ? 0 : durationMs,
+      );
 
       return [
-        TranscriptSegment(
-          text: text,
-          from: Duration.zero,
-          to: safeDuration,
-        ),
+        TranscriptSegment(text: text, from: Duration.zero, to: safeDuration),
       ];
     } finally {
       stream.free();
