@@ -74,6 +74,75 @@ class _SelectedSummary extends StatelessWidget {
   }
 }
 
+class _ReviewSummaryCard extends StatelessWidget {
+  const _ReviewSummaryCard({
+    required this.title,
+    required this.value,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final String title;
+  final String value;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: SacaTheme.surfaceGradient,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: SacaTheme.border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: SacaTheme.body.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                CupertinoButton(
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  onPressed: onAction,
+                  child: Text(
+                    actionLabel,
+                    style: SacaTheme.small.copyWith(
+                      color: SacaTheme.accent,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(value, style: SacaTheme.small.copyWith(color: SacaTheme.text)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SacaTextField extends StatefulWidget {
   const _SacaTextField({
     super.key,

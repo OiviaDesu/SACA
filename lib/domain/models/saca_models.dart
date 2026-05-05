@@ -4,6 +4,8 @@ enum InputMethod { text, voice, visual }
 
 enum SeverityLevel { mild, moderate, severe, emergency }
 
+enum ConfidenceLevel { low, medium, high }
+
 enum VoiceBusyPhase { none, preparing, transcribing }
 
 enum SacaStep {
@@ -20,8 +22,36 @@ enum SacaStep {
   questionFood,
   questionAllergies,
   questionHealthChanges,
+  reviewInformation,
+  settings,
   analysing,
   result,
+}
+
+class ConditionPrediction {
+  const ConditionPrediction({
+    required this.label,
+    required this.rank,
+    this.confidence,
+  });
+
+  final String label;
+  final int rank;
+  final double? confidence;
+
+  ConfidenceLevel get confidenceLevel {
+    final value = confidence;
+    if (value == null) return ConfidenceLevel.low;
+    if (value >= 0.70) return ConfidenceLevel.high;
+    if (value >= 0.40) return ConfidenceLevel.medium;
+    return ConfidenceLevel.low;
+  }
+
+  int? get confidencePercent {
+    final value = confidence;
+    if (value == null) return null;
+    return (value * 100).round().clamp(0, 100);
+  }
 }
 
 enum BodyView { front, back }
@@ -48,6 +78,7 @@ class AnalysisResult {
     required this.guidance,
     required this.isEmergency,
     required this.disclaimer,
+    this.predictions = const <ConditionPrediction>[],
   });
 
   final String disease;
@@ -55,6 +86,7 @@ class AnalysisResult {
   final List<String> guidance;
   final bool isEmergency;
   final String disclaimer;
+  final List<ConditionPrediction> predictions;
 
   AnalysisResult copyWith({
     String? disease,
@@ -62,6 +94,7 @@ class AnalysisResult {
     List<String>? guidance,
     bool? isEmergency,
     String? disclaimer,
+    List<ConditionPrediction>? predictions,
   }) {
     return AnalysisResult(
       disease: disease ?? this.disease,
@@ -69,6 +102,7 @@ class AnalysisResult {
       guidance: guidance ?? this.guidance,
       isEmergency: isEmergency ?? this.isEmergency,
       disclaimer: disclaimer ?? this.disclaimer,
+      predictions: predictions ?? this.predictions,
     );
   }
 }
@@ -136,6 +170,7 @@ class SacaFlowState {
     this.questionAnswers = const <String, String>{},
     this.voiceAnswerTranscript = '',
     this.voiceAnswerMatched = true,
+    this.addMoreCount = 0,
     this.analysisResult,
     this.isRecording = false,
     this.isBusy = false,
@@ -154,6 +189,7 @@ class SacaFlowState {
   final Map<String, String> questionAnswers;
   final String voiceAnswerTranscript;
   final bool voiceAnswerMatched;
+  final int addMoreCount;
   final AnalysisResult? analysisResult;
   final bool isRecording;
   final bool isBusy;
@@ -188,6 +224,7 @@ class SacaFlowState {
     Map<String, String>? questionAnswers,
     String? voiceAnswerTranscript,
     bool? voiceAnswerMatched,
+    int? addMoreCount,
     AnalysisResult? analysisResult,
     bool clearAnalysisResult = false,
     bool? isRecording,
@@ -210,6 +247,7 @@ class SacaFlowState {
       voiceAnswerTranscript:
           voiceAnswerTranscript ?? this.voiceAnswerTranscript,
       voiceAnswerMatched: voiceAnswerMatched ?? this.voiceAnswerMatched,
+      addMoreCount: addMoreCount ?? this.addMoreCount,
       analysisResult:
           clearAnalysisResult ? null : analysisResult ?? this.analysisResult,
       isRecording: isRecording ?? this.isRecording,

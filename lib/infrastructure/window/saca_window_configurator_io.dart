@@ -13,7 +13,7 @@ Future<void> configureSacaDesktopWindow() async {
 
   const options = WindowOptions(
     size: Size(1240, 780),
-    minimumSize: Size(760, 560),
+    minimumSize: Size(430, 560),
     center: true,
     backgroundColor: SacaTheme.background,
     skipTaskbar: false,

@@ -5,8 +5,9 @@ class _ShellBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return DecoratedBox(
-      decoration: const BoxDecoration(gradient: SacaTheme.shellGradient),
+      decoration: BoxDecoration(gradient: colors.shellGradient),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -56,6 +57,7 @@ class _StepLayout extends StatelessWidget {
     required this.children,
     this.onBack,
     this.onInfo,
+    this.onSettings,
     this.showBack = true,
   });
 
@@ -65,6 +67,7 @@ class _StepLayout extends StatelessWidget {
   final List<Widget> children;
   final VoidCallback? onBack;
   final VoidCallback? onInfo;
+  final VoidCallback? onSettings;
   final bool showBack;
 
   @override
@@ -77,6 +80,7 @@ class _StepLayout extends StatelessWidget {
             canBack: showBack && onBack != null,
             onBack: onBack,
             onInfo: onInfo,
+            onSettings: onSettings,
           ),
         if (state.errorMessage != null) ...[
           const SizedBox(height: 8),
@@ -97,11 +101,13 @@ class _MobileTopBar extends StatelessWidget {
     required this.canBack,
     this.onBack,
     this.onInfo,
+    this.onSettings,
   });
 
   final bool canBack;
   final VoidCallback? onBack;
   final VoidCallback? onInfo;
+  final VoidCallback? onSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -112,27 +118,23 @@ class _MobileTopBar extends StatelessWidget {
           SizedBox(
             width: 48,
             child: canBack
-                ? CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size.square(44),
+                ? SacaIconButton(
+                    semanticLabel: 'Back',
+                    icon: CupertinoIcons.chevron_left,
                     onPressed: onBack,
-                    child: const Icon(
-                      CupertinoIcons.chevron_left,
-                      color: SacaTheme.text,
-                    ),
                   )
                 : const SizedBox.shrink(),
           ),
           const Spacer(),
-          CupertinoButton(
-            padding: EdgeInsets.zero,
-            minimumSize: const Size.square(44),
+          SacaIconButton(
+            semanticLabel: 'Prototype information',
+            icon: CupertinoIcons.info,
             onPressed: onInfo,
-            child: const Icon(
-              CupertinoIcons.info,
-              color: SacaTheme.text,
-              size: 24,
-            ),
+          ),
+          SacaIconButton(
+            semanticLabel: 'Settings',
+            icon: CupertinoIcons.gear_alt,
+            onPressed: onSettings,
           ),
         ],
       ),
@@ -177,17 +179,20 @@ class _StepTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return Column(
       crossAxisAlignment: align == TextAlign.left
           ? CrossAxisAlignment.start
           : CrossAxisAlignment.stretch,
       children: [
-        Text(title, textAlign: align, style: SacaTheme.title),
+        Text(title,
+            textAlign: align,
+            style: SacaTheme.title.copyWith(color: colors.text)),
         const SizedBox(height: 8),
         Text(
           subtitle,
           textAlign: align,
-          style: SacaTheme.body.copyWith(color: SacaTheme.mutedText),
+          style: SacaTheme.body.copyWith(color: colors.mutedText),
         ),
       ],
     );
@@ -201,27 +206,104 @@ class _Footnote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, textAlign: TextAlign.center, style: SacaTheme.small);
+    final colors = SacaThemeColors.of(context);
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: SacaTheme.small.copyWith(color: colors.mutedText),
+    );
+  }
+}
+
+class _LanguageCarouselText extends StatefulWidget {
+  const _LanguageCarouselText();
+
+  @override
+  State<_LanguageCarouselText> createState() => _LanguageCarouselTextState();
+}
+
+class _LanguageCarouselTextState extends State<_LanguageCarouselText>
+    with SingleTickerProviderStateMixin {
+  static const _messages = <String>[
+    'Choose language',
+    'Yawu nyawa',
+  ];
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final index = _controller.value < 0.5 ? 0 : 1;
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: Text(
+            _messages[index],
+            key: ValueKey<int>(index),
+            textAlign: TextAlign.center,
+            style: SacaTheme.body.copyWith(color: colors.mutedText),
+          ),
+        );
+      },
+    );
   }
 }
 
 class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.label});
+  const _StatusPill({
+    required this.label,
+    required this.isReady,
+    required this.onPressed,
+  });
 
   final String label;
+  final bool isReady;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: SacaTheme.selected,
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: SacaTheme.selectedBorder),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        child:
-            Text(label, style: SacaTheme.small.copyWith(color: SacaTheme.text)),
+    final colors = SacaThemeColors.of(context);
+    final borderColor = isReady
+        ? colors.border.withValues(alpha: 0.72)
+        : SacaTheme.emergency.withValues(alpha: 0.44);
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      minimumSize: Size.zero,
+      onPressed: onPressed,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: isReady
+              ? colors.selected.withValues(alpha: 0.72)
+              : SacaTheme.emergency.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: borderColor),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          child: Text(
+            label,
+            style: SacaTheme.small.copyWith(
+              color: isReady ? colors.text : SacaTheme.emergency,
+            ),
+          ),
+        ),
       ),
     );
   }

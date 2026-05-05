@@ -180,6 +180,7 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
                 child: AnimatedContainer(
                   duration: effectiveDuration,
                   curve: Curves.easeOutCubic,
+                  transformAlignment: Alignment.center,
                   transform: Matrix4.translationValues(
                     0,
                     pressed
@@ -188,12 +189,93 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
                             ? -2
                             : 0,
                     0,
-                  ),
+                  )..scaleByDouble(
+                      pressed ? 0.97 : 1.0,
+                      pressed ? 0.97 : 1.0,
+                      1,
+                      1,
+                    ),
                   child: widget.child,
                 ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SacaInteractionMotion extends StatefulWidget {
+  const _SacaInteractionMotion({
+    required this.child,
+    required this.enabled,
+    required this.borderRadius,
+    required this.hoverColor,
+    required this.pressedColor,
+  });
+
+  final Widget child;
+  final bool enabled;
+  final BorderRadius borderRadius;
+  final Color hoverColor;
+  final Color pressedColor;
+
+  @override
+  State<_SacaInteractionMotion> createState() => _SacaInteractionMotionState();
+}
+
+class _SacaInteractionMotionState extends State<_SacaInteractionMotion> {
+  bool _hovered = false;
+  bool _pressed = false;
+
+  void _setHovered(bool value) {
+    if (!widget.enabled || _hovered == value) return;
+    setState(() => _hovered = value);
+  }
+
+  void _setPressed(bool value) {
+    if (!widget.enabled || _pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hovered = widget.enabled && _hovered;
+    final pressed = widget.enabled && _pressed;
+    final duration = Duration(milliseconds: pressed ? 90 : 150);
+    return MouseRegion(
+      cursor: widget.enabled ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: (_) => _setHovered(true),
+      onExit: (_) {
+        _setHovered(false);
+        _setPressed(false);
+      },
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) => _setPressed(true),
+        onPointerUp: (_) => _setPressed(false),
+        onPointerCancel: (_) => _setPressed(false),
+        child: AnimatedContainer(
+          duration: duration,
+          curve: Curves.easeOutCubic,
+          transformAlignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..scaleByDouble(
+              pressed ? 0.97 : 1.0,
+              pressed ? 0.97 : 1.0,
+              1,
+              1,
+            ),
+          decoration: BoxDecoration(
+            color: pressed
+                ? widget.pressedColor
+                : hovered
+                    ? widget.hoverColor
+                    : CupertinoColors.transparent,
+            borderRadius: widget.borderRadius,
+          ),
+          child: widget.child,
         ),
       ),
     );

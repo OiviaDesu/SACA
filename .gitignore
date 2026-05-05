@@ -72,6 +72,7 @@ python_pipeline/artifacts/
 *.joblib
 *.onnx
 !assets/models/diagnosis_lr_flutter.onnx
+!assets/models/**/*.onnx
 
 # Local platform/dev machine files
 android/local.properties
@@ -87,6 +88,13 @@ assets/models/sherpa-onnx-whisper-base/tokens.txt
 assets/models/classifier-xgb-quick/**
 !assets/models/classifier-xgb-quick/
 !assets/models/classifier-xgb-quick/README.md
+!assets/models/classifier-xgb-quick/*.json
+assets/models/classifier-xgb-best/**
+!assets/models/classifier-xgb-best/
+!assets/models/classifier-xgb-best/README.md
+!assets/models/classifier-xgb-best/*.json
+!assets/models/sherpa-onnx-whisper-base/*.onnx
+!assets/models/sherpa-onnx-whisper-base/tokens.txt
 
 # Local generated classifier source. Regenerate with python_pipeline/export_xgb_to_dart.py.
 lib/infrastructure/analysis/generated_local/**

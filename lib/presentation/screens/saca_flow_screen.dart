@@ -7,6 +7,8 @@ import '../../domain/models/saca_models.dart';
 import '../adaptive/saca_platform_style.dart';
 import '../controllers/saca_flow_controller.dart';
 import '../localization/saca_localizer.dart';
+import '../readiness/saca_readiness_controller.dart';
+import '../settings/saca_settings_controller.dart';
 import '../widgets/body_diagram.dart';
 import '../widgets/desktop_window_chrome.dart';
 import '../widgets/saca_controls.dart';
@@ -19,6 +21,7 @@ part 'saca_flow/voice_loading_overlay.dart';
 part 'saca_flow/input_widgets.dart';
 part 'saca_flow/result_widgets.dart';
 part 'saca_flow/step_widgets.dart';
+part 'saca_flow/settings_widgets.dart';
 
 enum _VisualInputStage { symptoms, front, back }
 
@@ -26,11 +29,15 @@ class SacaFlowScreen extends StatefulWidget {
   const SacaFlowScreen({
     super.key,
     required this.controller,
+    required this.settings,
+    required this.readiness,
     this.styleOverride,
     this.localizer,
   });
 
   final SacaFlowController controller;
+  final SacaSettingsController settings;
+  final SacaReadinessState readiness;
   final SacaPlatformStyle? styleOverride;
   final SacaLocalizer? localizer;
 
@@ -41,12 +48,14 @@ class SacaFlowScreen extends StatefulWidget {
 class _SacaFlowScreenState extends State<SacaFlowScreen> {
   late final SacaFlowController _controller;
   late final SacaLocalizer _localizer;
+  late final SacaSettingsController _settings;
   _VisualInputStage _visualStage = _VisualInputStage.symptoms;
 
   @override
   void initState() {
     super.initState();
     _controller = widget.controller;
+    _settings = widget.settings;
     _localizer = widget.localizer ?? SacaLocalizer();
     Future<void>.delayed(const Duration(milliseconds: 650), () {
       if (mounted && _controller.state.step == SacaStep.splash) {
@@ -69,8 +78,9 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return CupertinoPageScaffold(
-      backgroundColor: SacaTheme.background,
+      backgroundColor: colors.background,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -82,11 +92,15 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                 final state = _controller.state;
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    final style = widget.styleOverride ??
+                    final contentStyle = widget.styleOverride ??
                         SacaPlatformStyleResolver.resolve(
                           platform: defaultTargetPlatform,
                           width: constraints.maxWidth,
                         );
+                    final usesWindowsShell = widget.styleOverride ==
+                            SacaPlatformStyle.windowsDesktop ||
+                        (widget.styleOverride == null &&
+                            defaultTargetPlatform == TargetPlatform.windows);
                     final content = AnimatedSwitcher(
                       duration: const Duration(milliseconds: 240),
                       switchInCurve: Curves.easeOutCubic,
@@ -105,17 +119,21 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                         key: ValueKey<String>(
                           '${state.step.name}-${_visualStage.name}',
                         ),
-                        child: _contentFor(context, state, style),
+                        child: _contentFor(context, state, contentStyle),
                       ),
                     );
-                    final shellChild = style == SacaPlatformStyle.windowsDesktop
+                    final shellChild = usesWindowsShell
                         ? _DesktopShell(
                             state: state,
                             localizer: _localizer,
-                            onBack: _canGoBack(state.step)
+                            readiness: widget.readiness,
+                            onBack: state.step == SacaStep.settings
                                 ? _controller.goBack
-                                : null,
+                                : _canGoBack(state.step)
+                                    ? _controller.goBack
+                                    : null,
                             onInfo: () => _showPrototypeInfo(context),
+                            onSettings: _showSettings,
                             child: content,
                           )
                         : _MobileShell(child: content);

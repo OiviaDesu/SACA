@@ -20,8 +20,9 @@ class SacaPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     final enabled = onPressed != null;
-    final foreground = filled ? SacaTheme.surface : SacaTheme.text;
+    final foreground = filled ? SacaTheme.surface : colors.text;
 
     return CupertinoButton(
       minimumSize: const Size(0, SacaTheme.minTapTarget),
@@ -32,17 +33,17 @@ class SacaPrimaryButton extends StatelessWidget {
         surfaceKey: _controlSurfaceKey(key),
         enabled: enabled,
         selected: filled,
-        baseGradient: SacaTheme.surfaceGradient,
-        selectedGradient: const LinearGradient(
+        baseGradient: colors.surfaceGradient,
+        selectedGradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            SacaTheme.accent,
-            SacaTheme.selectedBorder,
+            colors.accent,
+            Color(0xFFE85D75),
           ],
         ),
-        baseBorderColor: SacaTheme.border,
-        selectedBorderColor: SacaTheme.accent,
+        baseBorderColor: colors.border,
+        selectedBorderColor: colors.accent,
         autofocus: autofocus,
         focusNode: focusNode,
         child: ConstrainedBox(

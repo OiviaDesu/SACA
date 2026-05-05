@@ -7,5 +7,6 @@ part 'saca_controls/primary_button.dart';
 part 'saca_controls/option_button.dart';
 part 'saca_controls/chip_button.dart';
 part 'saca_controls/interactive_surface.dart';
+part 'saca_controls/icon_button.dart';
 part 'saca_controls/severity_slider.dart';
 part 'saca_controls/error_banner.dart';
