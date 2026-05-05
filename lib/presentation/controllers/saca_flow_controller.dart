@@ -20,6 +20,7 @@ class SacaFlowController extends ChangeNotifier {
   final SymptomSuggestionService _symptomSuggestionService;
 
   SacaFlowState _state = const SacaFlowState();
+  SacaStep? _settingsReturnStep;
   SacaFlowState get state => _state;
 
   bool get supportsVoiceInput => _speechInput.supportsOnDeviceStt;
@@ -293,6 +294,7 @@ class SacaFlowController extends ChangeNotifier {
       SacaStep.questionMedication => SacaStep.questionFood,
       SacaStep.questionFood => SacaStep.questionAllergies,
       SacaStep.questionAllergies => SacaStep.questionHealthChanges,
+      SacaStep.questionHealthChanges => SacaStep.reviewInformation,
       _ => _state.step,
     };
 
@@ -307,6 +309,37 @@ class SacaFlowController extends ChangeNotifier {
     if (nextStep == SacaStep.questionRelatedSymptoms) {
       _refineRelatedSymptomSuggestions();
     }
+  }
+
+  void showReview() {
+    _setState(
+        _state.copyWith(step: SacaStep.reviewInformation, clearError: true));
+  }
+
+  void addMoreInformation() {
+    if (_state.addMoreCount >= 2) return;
+    _setState(
+      _state.copyWith(
+        step: SacaStep.inputMethod,
+        addMoreCount: _state.addMoreCount + 1,
+        clearInputMethod: true,
+        clearError: true,
+      ),
+    );
+  }
+
+  void startOverKeepLanguage() {
+    final language = _state.language;
+    _setState(
+      SacaFlowState(
+        step: SacaStep.inputMethod,
+        language: language,
+      ),
+    );
+  }
+
+  void finish() {
+    _setState(const SacaFlowState(step: SacaStep.language));
   }
 
   Future<void> _refineRelatedSymptomSuggestions() async {
@@ -366,20 +399,30 @@ class SacaFlowController extends ChangeNotifier {
       SacaStep.questionFood => SacaStep.questionMedication,
       SacaStep.questionAllergies => SacaStep.questionFood,
       SacaStep.questionHealthChanges => SacaStep.questionAllergies,
+      SacaStep.reviewInformation => SacaStep.questionHealthChanges,
+      SacaStep.settings => _settingsReturnStep ?? SacaStep.language,
       SacaStep.analysing => SacaStep.questionHealthChanges,
-      SacaStep.result => SacaStep.questionHealthChanges,
+      SacaStep.result => SacaStep.reviewInformation,
     };
+
+    if (_state.step == SacaStep.settings) {
+      _settingsReturnStep = null;
+    }
 
     _setState(_state.copyWith(step: previous, clearError: true));
   }
 
+  void showSettings() {
+    if (_state.step == SacaStep.settings) {
+      goBack();
+      return;
+    }
+    _settingsReturnStep = _state.step;
+    _setState(_state.copyWith(step: SacaStep.settings, clearError: true));
+  }
+
   void reset() {
-    _setState(
-      SacaFlowState(
-        step: SacaStep.language,
-        language: _state.language,
-      ),
-    );
+    finish();
   }
 
   @override

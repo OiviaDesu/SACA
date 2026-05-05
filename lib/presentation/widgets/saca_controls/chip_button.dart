@@ -18,6 +18,7 @@ class SacaChipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return CupertinoButton(
       minimumSize: const Size(0, 42),
       padding: EdgeInsets.zero,
@@ -27,10 +28,10 @@ class SacaChipButton extends StatelessWidget {
         surfaceKey: _controlSurfaceKey(key),
         enabled: true,
         selected: selected,
-        baseGradient: SacaTheme.surfaceGradient,
-        selectedGradient: SacaTheme.selectedGradient,
-        baseBorderColor: SacaTheme.border,
-        selectedBorderColor: SacaTheme.selectedBorder,
+        baseGradient: colors.surfaceGradient,
+        selectedGradient: colors.selectedGradient,
+        baseBorderColor: colors.border,
+        selectedBorderColor: colors.selectedBorder,
         autofocus: autofocus,
         focusNode: focusNode,
         baseShadow: const [],
@@ -51,11 +52,11 @@ class SacaChipButton extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.visible,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0,
-                color: SacaTheme.text,
+                color: colors.text,
               ),
             ),
           ),

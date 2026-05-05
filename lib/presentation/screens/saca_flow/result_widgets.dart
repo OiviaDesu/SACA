@@ -38,18 +38,18 @@ class _ResultPanel extends StatelessWidget {
               textAlign: TextAlign.center,
               style: SacaTheme.small,
             ),
-            const SizedBox(height: 4),
-            Text(
-              localizer.resultDiseaseLabel(language, result.disease),
-              textAlign: TextAlign.center,
-              style: SacaTheme.title,
+            const SizedBox(height: 12),
+            _PredictionList(
+              predictions: _predictions(result),
+              language: language,
+              localizer: localizer,
             ),
-            const SizedBox(height: 8),
-            Text(
-              _conditionExplanation(result.disease),
-              textAlign: TextAlign.center,
-              style: SacaTheme.small,
-            ),
+            if (_showLowConfidenceWarning(result)) ...[
+              const SizedBox(height: 12),
+              _ConfidenceWarning(
+                text: localizer.t(language, 'confidenceWarning'),
+              ),
+            ],
             const SizedBox(height: 18),
             _SeverityMeter(
               severity: result.severity,
@@ -80,17 +80,212 @@ class _ResultPanel extends StatelessWidget {
     );
   }
 
+  List<ConditionPrediction> _predictions(AnalysisResult result) {
+    if (result.predictions.isNotEmpty) {
+      return result.predictions.take(3).toList();
+    }
+    return <ConditionPrediction>[
+      ConditionPrediction(label: result.disease, rank: 1),
+    ];
+  }
+
+  bool _showLowConfidenceWarning(AnalysisResult result) {
+    if (result.isEmergency || result.predictions.isEmpty) return false;
+    return result.predictions.first.confidenceLevel == ConfidenceLevel.low;
+  }
+}
+
+class _PredictionList extends StatelessWidget {
+  const _PredictionList({
+    required this.predictions,
+    required this.language,
+    required this.localizer,
+  });
+
+  final List<ConditionPrediction> predictions;
+  final SacaLanguage? language;
+  final SacaLocalizer localizer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (final prediction in predictions) ...[
+          _PredictionCard(
+            prediction: prediction,
+            primary: prediction.rank == 1,
+            language: language,
+            localizer: localizer,
+          ),
+          if (prediction != predictions.last) const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+}
+
+class _PredictionCard extends StatelessWidget {
+  const _PredictionCard({
+    required this.prediction,
+    required this.primary,
+    required this.language,
+    required this.localizer,
+  });
+
+  final ConditionPrediction prediction;
+  final bool primary;
+  final SacaLanguage? language;
+  final SacaLocalizer localizer;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient:
+            primary ? SacaTheme.selectedGradient : SacaTheme.surfaceGradient,
+        borderRadius: BorderRadius.circular(primary ? 20 : 16),
+        border: Border.all(
+          color: primary ? SacaTheme.selectedBorder : SacaTheme.border,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(primary ? 16 : 13),
+        child: Row(
+          children: [
+            DecoratedBox(
+              decoration: const BoxDecoration(
+                color: SacaTheme.surface,
+                shape: BoxShape.circle,
+              ),
+              child: SizedBox(
+                width: primary ? 38 : 32,
+                height: primary ? 38 : 32,
+                child: Center(
+                  child: Text(
+                    '${prediction.rank}',
+                    style: SacaTheme.body.copyWith(
+                      color: SacaTheme.accent,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    localizer.resultDiseaseLabel(language, prediction.label),
+                    style:
+                        (primary ? SacaTheme.title : SacaTheme.body).copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _conditionExplanation(prediction.label),
+                    style: SacaTheme.small,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            _ConfidenceChip(
+              prediction: prediction,
+              language: language,
+              localizer: localizer,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _conditionExplanation(String disease) {
     return switch (disease) {
       'Urgent symptoms' =>
         'These symptoms may need emergency care and should not wait.',
       'Influenza' =>
-        'This pattern can match fever, headache, throat symptoms, or flu-like illness.',
+        'Can match fever, headache, throat symptoms, or flu-like illness.',
       'Stomach upset' =>
-        'This pattern can match stomach pain, vomiting, nausea, or bloating.',
-      _ =>
-        'SACA found a general symptom pattern from the information provided.',
+        'Can match stomach pain, vomiting, nausea, or bloating.',
+      _ => 'General pattern from the information provided.',
     };
+  }
+}
+
+class _ConfidenceChip extends StatelessWidget {
+  const _ConfidenceChip({
+    required this.prediction,
+    required this.language,
+    required this.localizer,
+  });
+
+  final ConditionPrediction prediction;
+  final SacaLanguage? language;
+  final SacaLocalizer localizer;
+
+  @override
+  Widget build(BuildContext context) {
+    final level = prediction.confidenceLevel;
+    final percent = prediction.confidencePercent;
+    final label = switch (level) {
+      ConfidenceLevel.high => localizer.t(language, 'confidenceHigh'),
+      ConfidenceLevel.medium => localizer.t(language, 'confidenceMedium'),
+      ConfidenceLevel.low => localizer.t(language, 'confidenceLow'),
+    };
+    final color = switch (level) {
+      ConfidenceLevel.high => SacaTheme.safe,
+      ConfidenceLevel.medium => const Color(0xFFB87000),
+      ConfidenceLevel.low => SacaTheme.accent,
+    };
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        child: Text(
+          percent == null ? label : '$percent%\n$label',
+          textAlign: TextAlign.center,
+          style: SacaTheme.small.copyWith(
+            color: color == SacaTheme.safe ? const Color(0xFF2F6D1E) : color,
+            fontWeight: FontWeight.w900,
+            height: 1.05,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConfidenceWarning extends StatelessWidget {
+  const _ConfidenceWarning({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: SacaTheme.selected.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: SacaTheme.selectedBorder.withValues(alpha: 0.45)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: SacaTheme.small.copyWith(color: SacaTheme.text),
+        ),
+      ),
+    );
   }
 }
 

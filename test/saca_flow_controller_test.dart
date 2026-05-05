@@ -74,10 +74,73 @@ void main() {
       controller.answerQuestion('allergies', 'no known allergies');
       controller.nextQuestion();
       controller.answerQuestion('health_changes', 'no recent health change');
+      controller.nextQuestion();
+
+      expect(controller.state.step, SacaStep.reviewInformation);
       await controller.analyse();
 
       expect(controller.state.step, SacaStep.result);
       expect(controller.state.analysisResult?.disease, 'Influenza');
+    });
+
+    test('add more loops keep data and stop after two rounds', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.updateTextInput('fever');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'one to three days');
+      controller.nextQuestion();
+      controller.toggleQuestionOption('related_symptoms', 'sore_throat');
+      controller.nextQuestion();
+      controller.answerQuestion('medication', 'no medication');
+      controller.nextQuestion();
+      controller.answerQuestion('food', 'no food change');
+      controller.nextQuestion();
+      controller.answerQuestion('allergies', 'no known allergies');
+      controller.nextQuestion();
+      controller.answerQuestion('health_changes', 'no recent health change');
+      controller.nextQuestion();
+
+      controller.addMoreInformation();
+      expect(controller.state.step, SacaStep.inputMethod);
+      expect(controller.state.textInput, 'fever');
+      expect(controller.state.addMoreCount, 1);
+      controller.showReview();
+      controller.addMoreInformation();
+      expect(controller.state.addMoreCount, 2);
+      controller.showReview();
+      controller.addMoreInformation();
+      expect(controller.state.step, SacaStep.reviewInformation);
+      expect(controller.state.addMoreCount, 2);
+    });
+
+    test('finish clears language while start over keeps it', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.gurindji);
+      controller.updateTextInput('fever');
+      controller.startOverKeepLanguage();
+      expect(controller.state.step, SacaStep.inputMethod);
+      expect(controller.state.language, SacaLanguage.gurindji);
+      expect(controller.state.textInput, isEmpty);
+
+      controller.finish();
+      expect(controller.state.step, SacaStep.language);
+      expect(controller.state.language, isNull);
     });
 
     test('initial input prepares related symptom suggestions', () async {

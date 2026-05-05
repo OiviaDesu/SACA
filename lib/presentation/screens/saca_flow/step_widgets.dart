@@ -29,6 +29,8 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       SacaStep.questionAllergies => _allergiesStep(context, state, style),
       SacaStep.questionHealthChanges =>
         _healthChangesStep(context, state, style),
+      SacaStep.reviewInformation => _reviewStep(context, state, style),
+      SacaStep.settings => _settingsStep(context, state, style),
       SacaStep.analysing => _analysingStep(context, state, style),
       SacaStep.result => _resultStep(context, state, style),
     };
@@ -44,33 +46,22 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       state: state,
       showBack: false,
       children: [
-        if (style == SacaPlatformStyle.androidMobile)
-          const SacaLogoHeader()
-        else
-          const SizedBox(height: 12),
-        _title(
-          style,
-          _localizer.t(null, 'languageTitle'),
-          _localizer.t(null, 'languageSubtitle'),
-        ),
-        const SizedBox(height: 18),
+        const SacaLogoHeader(),
+        const _LanguageCarouselText(),
+        const SizedBox(height: 20),
         SacaOptionButton(
-          label: _localizer.t(null, 'languageGurindjiLabel'),
-          description: _localizer.t(null, 'languageGurindjiDescription'),
+          label: 'English',
           icon: CupertinoIcons.chat_bubble_text,
-          selected: state.language == SacaLanguage.gurindji,
-          onPressed: () => _controller.selectLanguage(SacaLanguage.gurindji),
-        ),
-        const SizedBox(height: 12),
-        SacaOptionButton(
-          label: _localizer.t(null, 'languageEnglishLabel'),
-          description: _localizer.t(null, 'languageEnglishDescription'),
-          icon: CupertinoIcons.chat_bubble_text_fill,
           selected: state.language == SacaLanguage.english,
           onPressed: () => _controller.selectLanguage(SacaLanguage.english),
         ),
-        const SizedBox(height: 18),
-        _Footnote(text: _localizer.t(null, 'languageFootnote')),
+        const SizedBox(height: 12),
+        SacaOptionButton(
+          label: 'Gurindji',
+          icon: CupertinoIcons.chat_bubble_text_fill,
+          selected: state.language == SacaLanguage.gurindji,
+          onPressed: () => _controller.selectLanguage(SacaLanguage.gurindji),
+        ),
       ],
     );
   }
@@ -362,7 +353,9 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
                 Expanded(
                   child: SacaPrimaryButton(
                     key: const ValueKey('visualFrontContinueButton'),
-                    label: _localizer.t(state.language, 'continue'),
+                    label: _visualStageHasSelection(state, BodyView.front)
+                        ? _localizer.t(state.language, 'continue')
+                        : _localizer.t(state.language, 'skip'),
                     icon: CupertinoIcons.arrow_right_circle,
                     filled: true,
                     onPressed: () => _setVisualStage(_VisualInputStage.back),
@@ -417,7 +410,9 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
                 Expanded(
                   child: SacaPrimaryButton(
                     key: const ValueKey('visualBackContinueButton'),
-                    label: _localizer.t(state.language, 'continue'),
+                    label: _visualStageHasSelection(state, BodyView.back)
+                        ? _localizer.t(state.language, 'continue')
+                        : _localizer.t(state.language, 'skip'),
                     icon: CupertinoIcons.arrow_right_circle,
                     filled: true,
                     onPressed:
@@ -652,8 +647,60 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         ),
         _choice(state.language, 'not sure health change', 'Not sure'),
       ],
-      nextLabel: _localizer.t(state.language, 'analyse'),
-      onNext: _controller.analyse,
+      nextLabel: _localizer.t(state.language, 'continue'),
+      onNext: _controller.nextQuestion,
+    );
+  }
+
+  Widget _reviewStep(
+    BuildContext context,
+    SacaFlowState state,
+    SacaPlatformStyle style,
+  ) {
+    final canAddMore = state.addMoreCount < 2;
+    return _wrapStep(
+      style: style,
+      state: state,
+      children: [
+        _title(
+          style,
+          _localizer.t(state.language, 'reviewTitle'),
+          _localizer.t(state.language, 'reviewSubtitle'),
+        ),
+        const SizedBox(height: 18),
+        _ReviewSummaryCard(
+          title: _localizer.t(state.language, 'reviewInput'),
+          value: _reviewInputSummary(state),
+          actionLabel: _localizer.t(state.language, 'edit'),
+          onAction: () => _controller.chooseInputMethod(
+            state.inputMethod ?? InputMethod.text,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _ReviewSummaryCard(
+          title: _localizer.t(state.language, 'reviewQuestions'),
+          value: _reviewQuestionSummary(state),
+          actionLabel: _localizer.t(state.language, 'edit'),
+          onAction: () => _controller.goBack(),
+        ),
+        const SizedBox(height: 22),
+        SacaPrimaryButton(
+          key: const ValueKey('reviewAnalyseButton'),
+          label: _localizer.t(state.language, 'analyse'),
+          icon: CupertinoIcons.waveform_path_ecg,
+          filled: true,
+          onPressed: _controller.analyse,
+        ),
+        const SizedBox(height: 10),
+        SacaPrimaryButton(
+          key: const ValueKey('reviewAddMoreButton'),
+          label: canAddMore
+              ? _localizer.t(state.language, 'addMoreInfo')
+              : _localizer.t(state.language, 'addMoreLimit'),
+          icon: CupertinoIcons.plus_circle,
+          onPressed: canAddMore ? _controller.addMoreInformation : null,
+        ),
+      ],
     );
   }
 
@@ -813,16 +860,16 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         ),
         const SizedBox(height: 28),
         SacaPrimaryButton(
-          label: _localizer.t(state.language, 'finish'),
-          icon: CupertinoIcons.check_mark_circled,
+          label: _localizer.t(state.language, 'startAgain'),
+          icon: CupertinoIcons.refresh,
           filled: true,
-          onPressed: _controller.reset,
+          onPressed: _controller.startOverKeepLanguage,
         ),
         const SizedBox(height: 10),
         SacaPrimaryButton(
-          label: _localizer.t(state.language, 'startAgain'),
-          icon: CupertinoIcons.refresh,
-          onPressed: _controller.reset,
+          label: _localizer.t(state.language, 'finish'),
+          icon: CupertinoIcons.check_mark_circled,
+          onPressed: _controller.finish,
         ),
       ],
     );
@@ -838,8 +885,13 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       style: style,
       state: state,
       showBack: showBack,
-      onBack: _canGoBack(state.step) ? _controller.goBack : null,
+      onBack: state.step == SacaStep.settings
+          ? _controller.goBack
+          : _canGoBack(state.step)
+              ? _controller.goBack
+              : null,
       onInfo: () => _showPrototypeInfo(context),
+      onSettings: _showSettings,
       localizer: _localizer,
       children: children,
     );
@@ -980,8 +1032,17 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
   bool _canGoBack(SacaStep step) {
     return step != SacaStep.splash &&
         step != SacaStep.language &&
+        step != SacaStep.settings &&
         step != SacaStep.analysing &&
         step != SacaStep.result;
+  }
+
+  void _showSettings() {
+    _controller.showSettings();
+  }
+
+  void _closeSettings() {
+    _controller.goBack();
   }
 
   void _showPrototypeInfo(BuildContext context) {
@@ -1019,6 +1080,42 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       'sneezing' => 'assets/Images/Sneeze.png',
       _ => 'assets/Images/Cough.png',
     };
+  }
+
+  bool _visualStageHasSelection(SacaFlowState state, BodyView view) {
+    return SacaFlowState.bodyAreas
+        .where((area) => area.view == view)
+        .any((area) => state.selectedBodyAreaIds.contains(area.id));
+  }
+
+  String _reviewInputSummary(SacaFlowState state) {
+    final parts = <String>[
+      if (state.textInput.trim().isNotEmpty) state.textInput.trim(),
+      if (state.transcript.trim().isNotEmpty) state.transcript.trim(),
+      ...SacaFlowState.symptoms
+          .where((symptom) => state.selectedSymptomIds.contains(symptom.id))
+          .map((symptom) =>
+              _localizer.compactSymptomLabel(state.language, symptom)),
+      ...SacaFlowState.bodyAreas
+          .where((area) => state.selectedBodyAreaIds.contains(area.id))
+          .map((area) => _localizer.compactBodyAreaLabel(state.language, area)),
+    ];
+    return parts.isEmpty
+        ? _localizer.t(state.language, 'selectedEmpty')
+        : parts.join(', ');
+  }
+
+  String _reviewQuestionSummary(SacaFlowState state) {
+    if (state.questionAnswers.isEmpty) {
+      return _localizer.t(state.language, 'notSelected');
+    }
+    return state.questionAnswers.entries
+        .map((entry) => entry.value
+            .split('|')
+            .map(
+                (value) => _localizer.choiceLabel(state.language, value, value))
+            .join(', '))
+        .join(' • ');
   }
 }
 

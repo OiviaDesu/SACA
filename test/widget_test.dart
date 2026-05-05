@@ -1,20 +1,25 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:saca_demo/core/errors/app_error.dart';
 import 'package:saca_demo/core/theme/saca_theme.dart';
 import 'package:saca_demo/domain/models/lexicon_entry.dart';
 import 'package:saca_demo/domain/models/saca_models.dart';
+import 'package:saca_demo/domain/services/analysis_service.dart';
 import 'package:saca_demo/domain/services/clinical_vocabulary_service.dart';
 import 'package:saca_demo/domain/services/speech_input_service.dart';
 import 'package:saca_demo/infrastructure/analysis/mock_analysis_service.dart';
 import 'package:saca_demo/presentation/adaptive/saca_platform_style.dart';
 import 'package:saca_demo/presentation/controllers/saca_flow_controller.dart';
 import 'package:saca_demo/presentation/localization/saca_localizer.dart';
+import 'package:saca_demo/presentation/readiness/saca_readiness_controller.dart';
 import 'package:saca_demo/presentation/screens/saca_flow_screen.dart';
+import 'package:saca_demo/presentation/settings/saca_settings_controller.dart';
 import 'package:saca_demo/presentation/widgets/saca_controls.dart';
+import 'package:saca_demo/presentation/widgets/saca_logo_header.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -71,9 +76,10 @@ void main() {
     expect(find.byKey(const ValueKey('windowsResizeOverlay')), findsOneWidget);
     expect(find.byKey(const ValueKey('windowsCustomTitleBar')), findsOneWidget);
     expect(find.byKey(const ValueKey('windowsWindowControls')), findsOneWidget);
+    expect(find.bySemanticsLabel('Settings'), findsOneWidget);
     expect(find.byKey(const ValueKey('windowsContentColumn')), findsOneWidget);
     expect(find.byKey(const ValueKey('windowsProgressRail')), findsNothing);
-    expect(find.text('Offline ready'), findsOneWidget);
+    expect(find.text('Ready'), findsOneWidget);
 
     await tester.tap(find.text('English'));
     await tester.pump();
@@ -86,9 +92,141 @@ void main() {
 
     expect(find.byKey(const ValueKey('windowsFramelessShell')), findsNothing);
     expect(find.byKey(const ValueKey('windowsResizeOverlay')), findsNothing);
-    expect(find.textContaining('Choose your language'), findsOneWidget);
-    expect(find.textContaining('Yawu nyawa'), findsWidgets);
-    expect(find.textContaining('SACA health check'), findsOneWidget);
+    expect(find.bySemanticsLabel('Settings'), findsOneWidget);
+    expect(find.textContaining('English'), findsWidgets);
+    expect(find.byType(SacaLogoHeader), findsWidgets);
+  });
+
+  testWidgets('windows narrow preview keeps toolbar and resize overlay',
+      (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    await tester.binding.setSurfaceSize(const Size(520, 720));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(tester, style: null);
+
+    expect(find.byKey(const ValueKey('windowsCustomTitleBar')), findsOneWidget);
+    expect(find.byKey(const ValueKey('windowsResizeOverlay')), findsOneWidget);
+    expect(find.byKey(const ValueKey('windowsWindowControls')), findsOneWidget);
+    expect(find.byKey(const ValueKey('windowsContentColumn')), findsOneWidget);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('settings page changes theme and text size', (tester) async {
+    final controller = await _pumpFlow(
+      tester,
+      style: SacaPlatformStyle.androidMobile,
+    );
+
+    await tester.ensureVisible(find.bySemanticsLabel('Settings').first);
+    await tester.tap(find.bySemanticsLabel('Settings').first,
+        warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(controller.state.step, SacaStep.settings);
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Light'), findsOneWidget);
+    expect(find.text('Dark'), findsOneWidget);
+    expect(find.text('System'), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('settingsTextScaleSlider')), findsOneWidget);
+    expect(find.text('115%'), findsOneWidget);
+
+    await tester.tap(find.text('Dark'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.drag(
+      find.byKey(const ValueKey('settingsTextScaleSlider')),
+      const Offset(200, 0),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('115%'), findsNothing);
+
+    await tester.tap(find.bySemanticsLabel('Back'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(controller.state.step, SacaStep.language);
+  });
+
+  testWidgets('settings icon toggles settings page closed on second tap',
+      (tester) async {
+    final controller = await _pumpFlow(
+      tester,
+      style: SacaPlatformStyle.windowsDesktop,
+    );
+
+    await tester.tap(find.byIcon(CupertinoIcons.gear_alt));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(controller.state.step, SacaStep.settings);
+    expect(find.text('Settings'), findsOneWidget);
+
+    await tester.tap(find.byIcon(CupertinoIcons.gear_alt));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(controller.state.step, SacaStep.language);
+    expect(find.text('SACA'), findsWidgets);
+  });
+
+  testWidgets('theme colors interpolate during light dark transition',
+      (tester) async {
+    const light = SacaTheme.lightColors;
+    const dark = SacaTheme.darkColors;
+    var useDark = false;
+
+    await tester.pumpWidget(
+      StatefulBuilder(
+        builder: (context, setState) {
+          return CupertinoApp(
+            home: CupertinoButton(
+              child: TweenAnimationBuilder<SacaThemeColors>(
+                duration: const Duration(milliseconds: 260),
+                tween: _TestThemeTween(
+                  begin: light,
+                  end: useDark ? dark : light,
+                ),
+                builder: (context, colors, child) {
+                  return ColoredBox(
+                    key: const ValueKey('animatedThemeProbe'),
+                    color: colors.background,
+                    child: const SizedBox.square(dimension: 40),
+                  );
+                },
+              ),
+              onPressed: () => setState(() => useDark = true),
+            ),
+          );
+        },
+      ),
+    );
+
+    expect(_probeColor(tester), SacaTheme.background);
+
+    await tester.tap(find.byType(CupertinoButton));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 130));
+    final midColor = _probeColor(tester);
+
+    expect(midColor, isNot(SacaTheme.background));
+    expect(midColor, isNot(SacaTheme.darkBackground));
+
+    await tester.pumpAndSettle();
+
+    expect(_probeColor(tester), SacaTheme.darkBackground);
+  });
+
+  testWidgets('not ready badge appears when active assets missing',
+      (tester) async {
+    await _pumpFlow(
+      tester,
+      style: SacaPlatformStyle.windowsDesktop,
+      readiness: const SacaReadinessState(
+        isReady: false,
+        messages: <String>['Diagnosis model is missing.'],
+      ),
+    );
+
+    expect(find.text('Not ready'), findsOneWidget);
   });
 
   testWidgets('language flow reaches input method with exactly three options', (
@@ -159,6 +297,42 @@ void main() {
     expect(controller.state.step, SacaStep.questionSeverity);
   });
 
+  testWidgets('empty body stage shows Skip', (tester) async {
+    await _pumpFlow(tester);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Body map'));
+    await tester.pump();
+    await tester.tap(find.text('Fever'));
+    await tester.pump();
+    await _pressPrimaryButton(
+      tester,
+      const ValueKey('visualSymptomsContinueButton'),
+    );
+
+    expect(find.text('Skip'), findsOneWidget);
+  });
+
+  testWidgets('review gate supports adding more information', (tester) async {
+    final controller = await _pumpFlow(tester);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Text input'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'fever',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Continue'));
+    await _answerQuestionnaire(tester, stopAtReview: true);
+
+    expect(controller.state.step, SacaStep.reviewInformation);
+    await _tapVisible(tester, find.text('Add more information'));
+    expect(controller.state.step, SacaStep.inputMethod);
+    expect(controller.state.textInput, 'fever');
+  });
+
   testWidgets('severity question uses a large default slider value', (
     tester,
   ) async {
@@ -226,6 +400,29 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Severity: Emergency'), findsOneWidget);
+  });
+
+  testWidgets('result screen shows ranked top three confidence cards', (
+    tester,
+  ) async {
+    await _pumpFlow(tester, analysisService: const _RankedAnalysisService());
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Text input'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'fever',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Continue'));
+    await _answerQuestionnaire(tester);
+
+    expect(find.text('Fever and throat symptoms'), findsOneWidget);
+    expect(find.text('Common Cold'), findsOneWidget);
+    expect(find.text('Migraine'), findsOneWidget);
+    expect(find.textContaining('82%'), findsOneWidget);
+    expect(find.textContaining('High'), findsOneWidget);
   });
 
   testWidgets('gurindji visual selection shows Gurindji clinical labels', (
@@ -635,16 +832,19 @@ void main() {
 
 Future<SacaFlowController> _pumpFlow(
   WidgetTester tester, {
-  SacaPlatformStyle style = SacaPlatformStyle.androidMobile,
+  SacaPlatformStyle? style = SacaPlatformStyle.androidMobile,
   ClinicalVocabularyService? vocabulary,
   SacaLocalizer? localizer,
   SpeechInputService? speechInput,
+  AnalysisService? analysisService,
+  SacaReadinessState readiness = SacaReadinessState.ready,
 }) async {
   final activeVocabulary =
       vocabulary ?? const ClinicalVocabularyService.empty();
   final controller = SacaFlowController(
     speechInput: speechInput ?? _NoopSpeechInputService(),
-    analysisService: MockAnalysisService(vocabulary: activeVocabulary),
+    analysisService:
+        analysisService ?? MockAnalysisService(vocabulary: activeVocabulary),
   );
 
   await tester.pumpWidget(
@@ -652,6 +852,8 @@ Future<SacaFlowController> _pumpFlow(
       theme: SacaTheme.cupertinoTheme,
       home: SacaFlowScreen(
         controller: controller,
+        readiness: readiness,
+        settings: SacaSettingsController(store: _WidgetSettingsStore()),
         styleOverride: style,
         localizer: localizer ?? SacaLocalizer(vocabulary: activeVocabulary),
       ),
@@ -661,12 +863,54 @@ Future<SacaFlowController> _pumpFlow(
   return controller;
 }
 
+class _WidgetSettingsStore implements SacaSettingsStore {
+  final Map<String, Object?> _values = <String, Object?>{};
+
+  @override
+  Future<String?> getString(String key) async => _values[key] as String?;
+
+  @override
+  Future<double?> getDouble(String key) async => _values[key] as double?;
+
+  @override
+  Future<void> setString(String key, String value) async {
+    _values[key] = value;
+  }
+
+  @override
+  Future<void> setDouble(String key, double value) async {
+    _values[key] = value;
+  }
+}
+
 Future<void> _reachInputMethod(
   WidgetTester tester, {
   String language = 'English',
 }) async {
-  await tester.tap(find.text(language));
+  await tester.ensureVisible(find.text(language));
+  await tester.tap(find.text(language), warnIfMissed: false);
   await tester.pump();
+}
+
+Color _probeColor(WidgetTester tester) {
+  final coloredBox = tester.widget<ColoredBox>(
+    find.byKey(const ValueKey('animatedThemeProbe')),
+  );
+  return coloredBox.color;
+}
+
+class _TestThemeTween extends Tween<SacaThemeColors> {
+  _TestThemeTween({required SacaThemeColors begin, required SacaThemeColors end})
+      : super(begin: begin, end: end);
+
+  @override
+  SacaThemeColors lerp(double t) {
+    return SacaThemeColors.lerp(
+      begin ?? SacaTheme.lightColors,
+      end ?? SacaTheme.lightColors,
+      t,
+    );
+  }
 }
 
 Future<void> _answerQuestionnaire(
@@ -674,6 +918,7 @@ Future<void> _answerQuestionnaire(
   String severity = '4',
   String related = 'Sore throat',
   bool gurindji = false,
+  bool stopAtReview = false,
 }) async {
   final continueLabel = gurindji ? 'Kawayi' : 'Continue';
   final durationLabel = gurindji ? '1-3 tirrip' : '1-3 days';
@@ -695,6 +940,10 @@ Future<void> _answerQuestionnaire(
   await _tapVisible(tester, find.text(noAllergyLabel));
   await _tapVisible(tester, find.text(continueLabel));
   await _tapVisible(tester, find.text(noChangeLabel));
+  await _tapVisible(tester, find.text(continueLabel));
+  expect(find.text(gurindji ? 'Yawu nyawa' : 'Review your information'),
+      findsOneWidget);
+  if (stopAtReview) return;
   await _tapVisible(tester, find.text(analyseLabel));
   await tester.pump(const Duration(milliseconds: 500));
 }
@@ -769,6 +1018,28 @@ class _NoopSpeechInputService implements SpeechInputService {
 
   @override
   void dispose() {}
+}
+
+class _RankedAnalysisService implements AnalysisService {
+  const _RankedAnalysisService();
+
+  @override
+  Future<AppResult<AnalysisResult>> analyse(AnalysisRequest request) async {
+    return const AppResult.success(
+      AnalysisResult(
+        disease: 'Influenza',
+        severity: SeverityLevel.mild,
+        guidance: <String>['Rest and monitor symptoms.'],
+        isEmergency: false,
+        disclaimer: 'Prototype guidance only.',
+        predictions: <ConditionPrediction>[
+          ConditionPrediction(label: 'Influenza', rank: 1, confidence: 0.82),
+          ConditionPrediction(label: 'Common Cold', rank: 2, confidence: 0.54),
+          ConditionPrediction(label: 'Migraine', rank: 3, confidence: 0.21),
+        ],
+      ),
+    );
+  }
 }
 
 class _ControllableSpeechInputService implements SpeechInputService {

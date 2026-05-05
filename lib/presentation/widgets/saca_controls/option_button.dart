@@ -22,6 +22,7 @@ class SacaOptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return CupertinoButton(
       minimumSize: const Size(0, SacaTheme.minTapTarget),
       padding: EdgeInsets.zero,
@@ -31,10 +32,10 @@ class SacaOptionButton extends StatelessWidget {
         surfaceKey: _controlSurfaceKey(key),
         enabled: onPressed != null,
         selected: selected,
-        baseGradient: SacaTheme.surfaceGradient,
-        selectedGradient: SacaTheme.selectedGradient,
-        baseBorderColor: SacaTheme.border,
-        selectedBorderColor: SacaTheme.selectedBorder,
+        baseGradient: colors.surfaceGradient,
+        selectedGradient: colors.selectedGradient,
+        baseBorderColor: colors.border,
+        selectedBorderColor: colors.selectedBorder,
         autofocus: autofocus,
         focusNode: focusNode,
         child: SizedBox(
@@ -54,21 +55,22 @@ class SacaOptionButton extends StatelessWidget {
                       children: [
                         Text(
                           label,
-                          style: SacaTheme.body,
+                          style: SacaTheme.body.copyWith(color: colors.text),
                           overflow: TextOverflow.visible,
                         ),
                         if (description != null) ...[
                           const SizedBox(height: 5),
                           Text(
                             description!,
-                            style: SacaTheme.small,
+                            style: SacaTheme.small
+                                .copyWith(color: colors.mutedText),
                             overflow: TextOverflow.visible,
                           ),
                         ],
                       ],
                     ),
                   ),
-                  if (icon != null) Icon(icon, size: 24, color: SacaTheme.text),
+                  if (icon != null) Icon(icon, size: 24, color: colors.text),
                 ],
               ),
             ),

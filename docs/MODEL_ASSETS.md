@@ -1,11 +1,13 @@
 # Model Assets
 
-Large speech model files are not committed to this repository. They make the
-Git history heavy and slow to clone, and they are easier to manage as local
-runtime assets or release artifacts.
+Large speech model files are stored with Git LFS. This keeps normal Git history
+small while allowing demo/runtime model assets to be pulled into a checkout when
+needed.
 
-The same policy applies to generated classifier artifacts from
-`python_pipeline/`, including `*.joblib`, `*.onnx`, and campaign run outputs.
+Generated classifier artifacts from `python_pipeline/`, including `*.joblib`
+and campaign run outputs, remain local unless explicitly copied into
+`assets/models/` as a runtime asset. Full training datasets remain outside Git
+and Git LFS.
 
 ## Experimental Classifier Dart Export
 
@@ -18,6 +20,11 @@ assets/models/classifier-xgb-quick/
   README.md
   bundle.json                  # local-only, generated
   export_summary.json          # local-only, generated
+
+assets/models/classifier-xgb-best/
+  README.md
+  bundle.json                  # staged best 24-class XGBoost export
+  export_summary.json          # source + export metadata
 
 lib/infrastructure/analysis/generated_local/
   README.md
@@ -40,9 +47,12 @@ campaign dataset:
   top-1 agreement on the same split, with worst-case probability drift around
   `0.0568`)
 
-Because of that result, treat the local `m2cgen` scorer as a useful export
-experiment/debug artifact, **not** the default-safe deployment path yet. If you
-need parity-first local runtime behavior, prefer the JSON tree bundle runtime.
+Because of that result, treat any XGBoost Dart scorer as an export
+experiment/debug artifact, **not** the default-safe deployment path yet. The
+active Flutter diagnosis path remains the LR ONNX asset. The staged
+`classifier-xgb-best` bundle must pass parity against the Python
+`classifier_diagnosis_multi_xgb/best_model.joblib` before it becomes selectable
+outside debug/experimental code.
 
 ## Mobile English STT
 
@@ -95,28 +105,51 @@ directory on first runtime initialization.
 
 ## Git Policy
 
-The following files are ignored:
+Runtime model assets under `assets/models/` use Git LFS:
 
 ```text
-assets/models/sherpa-onnx-whisper-base/*.onnx
-assets/models/sherpa-onnx-whisper-base/tokens.txt
-assets/models/classifier-xgb-quick/**
-lib/infrastructure/analysis/generated_local/**
+assets/models/**/*.onnx
+assets/models/**/*.bin
+assets/models/**/tokens.txt
+assets/models/classifier-xgb-quick/*.json
+assets/models/classifier-xgb-best/*.json
 ```
 
-Keep only the placeholder README in Git.
+The following generated/local files remain ignored:
+
+```text
+lib/infrastructure/analysis/generated_local/**
+python_pipeline/data/**
+python_pipeline/outputs/**
+python_pipeline/artifacts/**
+*.joblib
+```
+
+Keep raw/full datasets outside Git and Git LFS. The repository should only track
+small samples, placeholders, and documentation needed to reproduce the pipeline.
 
 ## Release Distribution Guidance
 
-If you publish builds or demos outside the repository, distribute model bundles
-as separate release artifacts instead of committing them into Git history.
+If you publish builds or demos outside the repository, Git LFS can distribute the
+runtime model files that are tracked in `assets/models/`. Use release artifacts
+or object storage for full datasets and large training outputs.
 
 Recommended practice:
 
-1. store model bundles in GitHub Releases, internal object storage, or another
+1. keep runtime model bundles under `assets/models/` and track them with Git
+  LFS;
+2. store full datasets in GitHub Releases, internal object storage, or another
   artifact store;
-2. publish checksums alongside the download;
-3. document the expected asset path and fallback behavior in release notes.
+3. publish checksums alongside external datasets or manually distributed model
+  bundles;
+4. document the expected asset path and fallback behavior in release notes.
+
+Fresh clone setup:
+
+```powershell
+git lfs install
+git lfs pull
+```
 
 Without the required local model files, CI builds can still compile, but runtime
 speech recognition will not be available until the model assets are installed.

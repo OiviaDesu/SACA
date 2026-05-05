@@ -9,6 +9,7 @@ class SacaLogoHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     final height = compact ? 118.0 : 190.0;
     final logoSize = compact ? 46.0 : 56.0;
 
@@ -21,7 +22,10 @@ class SacaLogoHeader extends StatelessWidget {
             alignment: compact ? Alignment.topCenter : Alignment.center,
             child: Text(
               'SACA',
-              style: SacaTheme.logoText.copyWith(fontSize: logoSize),
+              style: SacaTheme.logoText.copyWith(
+                fontSize: logoSize,
+                color: colors.text,
+              ),
             ),
           ),
           Positioned(
