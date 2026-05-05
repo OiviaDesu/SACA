@@ -20,6 +20,7 @@ CODE_DIR="${WORK_DIR}/code"
 DATA_DIR="${WORK_DIR}/whisper_gue_ready/example_only"
 OUTPUT_DIR="${WORK_DIR}/outputs/whisper-small-gue-example-only"
 VENV_DIR="${WORK_DIR}/venv"
+MODEL_NAME="${MODEL_NAME:-${WORK_DIR}/models/openai-whisper-small}"
 
 mkdir -p "${WORK_DIR}/outputs/logs" "${OUTPUT_DIR}"
 
@@ -29,6 +30,7 @@ echo "Started: $(date)"
 echo "Work dir: ${WORK_DIR}"
 echo "Data dir: ${DATA_DIR}"
 echo "Output dir: ${OUTPUT_DIR}"
+echo "Model: ${MODEL_NAME}"
 
 module purge
 module load "${GCC_MODULE:-gcc/13.2.0}"
@@ -50,7 +52,7 @@ nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
 python "${CODE_DIR}/python_pipeline/training/train_whisper_gue.py" \
   --data-dir "${DATA_DIR}" \
   --output-dir "${OUTPUT_DIR}" \
-  --model-name "openai/whisper-small" \
+  --model-name "${MODEL_NAME}" \
   --num-proc 1 \
   --per-device-train-batch-size 4 \
   --gradient-accumulation-steps 4 \
