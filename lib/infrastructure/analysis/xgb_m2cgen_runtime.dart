@@ -80,6 +80,7 @@ class XgbM2cgenBundle {
     required this.textFeature,
     required this.categoricalFeatures,
     required this.numericFeatures,
+    required this.model,
   });
 
   factory XgbM2cgenBundle.fromJson(Map<String, dynamic> json) {
@@ -103,6 +104,7 @@ class XgbM2cgenBundle {
           ),
         ),
       ),
+      model: XgbModel.fromJson(Map<String, dynamic>.from(json['model'] as Map)),
     );
   }
 
@@ -111,6 +113,119 @@ class XgbM2cgenBundle {
   final XgbM2cgenTextFeature textFeature;
   final List<XgbM2cgenCategoricalFeature> categoricalFeatures;
   final List<XgbM2cgenNumericFeature> numericFeatures;
+  final XgbModel model;
+}
+
+class XgbModel {
+  const XgbModel({
+    required this.numClasses,
+    required this.baseScores,
+    required this.trees,
+  });
+
+  factory XgbModel.fromJson(Map<String, dynamic> json) {
+    return XgbModel(
+      numClasses: json['num_classes'] as int,
+      baseScores: List<double>.from(
+        (json['base_scores'] as List<dynamic>).map(
+          (value) => (value as num).toDouble(),
+        ),
+      ),
+      trees: List<XgbTree>.from(
+        (json['trees'] as List<dynamic>).map(
+          (tree) => XgbTree.fromJson(Map<String, dynamic>.from(tree as Map)),
+        ),
+      ),
+    );
+  }
+
+  final int numClasses;
+  final List<double> baseScores;
+  final List<XgbTree> trees;
+
+  List<double> predict(List<double> input) {
+    final margins = List<double>.from(baseScores, growable: false);
+    for (var treeIndex = 0; treeIndex < trees.length; treeIndex++) {
+      final classIndex = treeIndex % numClasses;
+      margins[classIndex] += trees[treeIndex].score(input);
+    }
+    return _softmax(margins);
+  }
+
+  List<double> _softmax(List<double> margins) {
+    final maxMargin = margins.reduce(math.max);
+    final exps = <double>[
+      for (final margin in margins) math.exp(margin - maxMargin),
+    ];
+    final sum = exps.fold<double>(0, (total, value) => total + value);
+    return <double>[
+      for (final value in exps) value / sum,
+    ];
+  }
+}
+
+class XgbTree {
+  const XgbTree({required this.nodes});
+
+  factory XgbTree.fromJson(Map<String, dynamic> json) {
+    return XgbTree(
+      nodes: List<XgbTreeNode>.from(
+        (json['nodes'] as List<dynamic>).map(
+          (node) =>
+              XgbTreeNode.fromJson(Map<String, dynamic>.from(node as Map)),
+        ),
+      ),
+    );
+  }
+
+  final List<XgbTreeNode> nodes;
+
+  double score(List<double> input) {
+    var nodeIndex = 0;
+    while (true) {
+      final node = nodes[nodeIndex];
+      if (node.leaf != null) {
+        return node.leaf!;
+      }
+      final value = input[node.splitIndex!];
+      if (value.isNaN) {
+        nodeIndex = node.missing!;
+      } else if (value < node.threshold!) {
+        nodeIndex = node.yes!;
+      } else {
+        nodeIndex = node.no!;
+      }
+    }
+  }
+}
+
+class XgbTreeNode {
+  const XgbTreeNode({
+    this.splitIndex,
+    this.threshold,
+    this.yes,
+    this.no,
+    this.missing,
+    this.leaf,
+  });
+
+  factory XgbTreeNode.fromJson(Map<String, dynamic> json) {
+    return XgbTreeNode(
+      splitIndex: json['split_index'] as int?,
+      threshold: (json['threshold'] as num?)?.toDouble(),
+      yes: json['yes'] as int?,
+      no: json['no'] as int?,
+      missing: json['missing'] as int?,
+      leaf: (json['leaf'] as num?)?.toDouble(),
+    );
+  }
+
+  final int? splitIndex;
+  final double? threshold;
+  final int? yes;
+  final int? no;
+  final int? missing;
+  final double? leaf;
 }
 
 class XgbInputRecord {
@@ -154,9 +269,8 @@ class XgbM2cgenPreprocessor {
 
   XgbPrediction predict(
     XgbInputRecord record,
-    List<double> Function(List<double> input) scorer,
   ) {
-    final probabilities = scorer(buildInputVector(record));
+    final probabilities = bundle.model.predict(buildInputVector(record));
     var bestIndex = 0;
     var bestProbability = double.negativeInfinity;
     for (var i = 0; i < probabilities.length; i++) {

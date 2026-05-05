@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:saca_demo/infrastructure/speech/whisper_service_io.dart';
 import 'package:saca_demo/presentation/readiness/saca_readiness_controller.dart';
 
 void main() {
@@ -8,13 +9,30 @@ void main() {
     final controller = SacaReadinessController(
       bundle: _FakeAssetBundle(
         bytes: <String, ByteData>{
-          'assets/models/diagnosis_lr_flutter.onnx':
-              ByteData.sublistView(Uint8List.fromList(<int>[1, 2, 3])),
+          SacaSttModelAssets.rc1MobileAssetPath:
+              ByteData.sublistView(Uint8List.fromList(<int>[1])),
+          '${SacaSttModelAssets.rc1WindowsAssetBase}/encoder.onnx':
+              ByteData.sublistView(Uint8List.fromList(<int>[1])),
+          '${SacaSttModelAssets.rc1WindowsAssetBase}/decoder.onnx':
+              ByteData.sublistView(Uint8List.fromList(<int>[1])),
+          '${SacaSttModelAssets.rc1WindowsAssetBase}/tokens.txt':
+              ByteData.sublistView(Uint8List.fromList(<int>[1])),
         },
         strings: <String, String>{
-          'assets/models/diagnosis_lr_flutter_labels.json':
+          'AssetManifest.json': jsonEncode(<String, List<String>>{
+            SacaSttModelAssets.rc1MobileAssetPath: <String>[],
+            '${SacaSttModelAssets.rc1WindowsAssetBase}/encoder.onnx':
+                <String>[],
+            '${SacaSttModelAssets.rc1WindowsAssetBase}/decoder.onnx':
+                <String>[],
+            '${SacaSttModelAssets.rc1WindowsAssetBase}/tokens.txt': <String>[],
+          }),
+          'assets/models/classifier-xgb-best/bundle.json':
               jsonEncode(<String, Object>{
-            'classes': <String>['a', 'b']
+            'classes': <String>['a', 'b'],
+            'model': <String, Object>{
+              'trees': <Object>[<String, Object>{}],
+            },
           }),
         },
       ),
@@ -23,6 +41,36 @@ void main() {
     final state = await controller.check();
 
     expect(state.isReady, isTrue);
+  });
+
+  test('not ready when RC1 STT assets are missing', () async {
+    final controller = SacaReadinessController(
+      bundle: _FakeAssetBundle(
+        bytes: <String, ByteData>{},
+        strings: <String, String>{
+          'assets/models/classifier-xgb-best/bundle.json':
+              jsonEncode(<String, Object>{
+            'classes': <String>['a', 'b'],
+            'model': <String, Object>{
+              'trees': <Object>[<String, Object>{}],
+            },
+          }),
+        },
+      ),
+    );
+
+    final state = await controller.check();
+
+    expect(state.isReady, isFalse);
+    expect(
+      state.messages,
+      containsAll(<String>[
+        'RC1 mobile STT model is missing.',
+        'RC1 Windows STT encoder.onnx is missing.',
+        'RC1 Windows STT decoder.onnx is missing.',
+        'RC1 Windows STT tokens.txt is missing.',
+      ]),
+    );
   });
 
   test('not ready when active assets missing', () async {

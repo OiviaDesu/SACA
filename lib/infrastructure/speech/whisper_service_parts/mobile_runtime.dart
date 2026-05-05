@@ -7,46 +7,23 @@ extension _WhisperMobileRuntime on WhisperService {
       return;
     }
 
-    if (_language == SacaLanguage.gurindji) {
-      // Phase 2: custom fine-tuned model bundled in assets
-      final dir = await getApplicationDocumentsDirectory();
-      final modelPath = '${dir.path}/ggml-gurindji-small-q5_0.bin';
-
-      if (!File(modelPath).existsSync()) {
-        debugPrint(
-          '[SACA] Gurindji model not found at $modelPath â€“ falling back to whisper-small.',
-        );
-        _whisper = const Whisper(model: WhisperModel.small);
-        return;
-      }
-
-      _whisper = Whisper(
-        model: WhisperModel.none,
-        modelDir: dir.path,
-        // Override download host so whisper_kit won't try to fetch online.
-        downloadHost: 'file://${dir.path}',
-      );
-      return;
-    }
-
-    final englishModelDir = await _prepareBundledEnglishMobileModel();
-    if (englishModelDir != null) {
+    final rc1ModelDir = await _prepareBundledRc1MobileModel();
+    if (rc1ModelDir != null) {
       debugPrint(
-        '[SACA] Mobile English STT: using bundled ggml-base.en.bin via WhisperModel.base alias.',
+        '[SACA] Mobile English/Gurindji STT: using ${SacaSttModelAssets.rc1Label}.',
       );
       _whisper = Whisper(
         model: WhisperModel.base,
-        modelDir: englishModelDir.path,
+        modelDir: rc1ModelDir.path,
       );
       return;
     }
 
-    // Current whisper_kit runtime does not expose .en model enums.
     debugPrint(
-      '[SACA] Mobile English STT: no bundled .en model found and whisper_kit 0.3.0 has no .en enum; falling back to multilingual whisper-small.',
+      '[SACA] Mobile RC1 STT asset missing; falling back to multilingual whisper-base download/cache.',
     );
     _whisper = Whisper(
-      model: WhisperModel.small,
+      model: WhisperModel.base,
       onDownloadProgress: (received, total) {
         if (total > 0) {
           debugPrint(
@@ -57,14 +34,15 @@ extension _WhisperMobileRuntime on WhisperService {
     );
   }
 
-  Future<Directory?> _prepareBundledEnglishMobileModel() async {
-    if (_language != SacaLanguage.english || !_isWhisperKitPlatform) {
+  Future<Directory?> _prepareBundledRc1MobileModel() async {
+    if (!_isWhisperKitPlatform) {
       return null;
     }
 
-    const assetPath = 'assets/models/whisper-base.en/ggml-base.en.bin';
-    final hasBundledEnglishModel = await _assetExists(assetPath);
-    if (!hasBundledEnglishModel) {
+    final hasBundledRc1Model = await _assetExists(
+      SacaSttModelAssets.rc1MobileAssetPath,
+    );
+    if (!hasBundledRc1Model) {
       return null;
     }
 
@@ -76,7 +54,7 @@ extension _WhisperMobileRuntime on WhisperService {
     }
 
     try {
-      final data = await rootBundle.load(assetPath);
+      final data = await rootBundle.load(SacaSttModelAssets.rc1MobileAssetPath);
       final bytes = data.buffer.asUint8List(
         data.offsetInBytes,
         data.lengthInBytes,
