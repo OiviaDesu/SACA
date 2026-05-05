@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,10 @@ from transformers import (
     WhisperForConditionalGeneration,
     WhisperProcessor,
 )
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from whisper_metrics import load_orthography_mapping, normalize_for_metric
 
 
 @dataclass
@@ -43,10 +48,13 @@ class DataCollatorSpeechSeq2SeqWithPadding:
         return batch
 
 
-def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any]:
+def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any, WhisperProcessor]:
     processor = WhisperProcessor.from_pretrained(args.model_name)
     model = WhisperForConditionalGeneration.from_pretrained(args.model_name)
     _disable_unsupported_gue_language_tokens(model)
+    orthography_mapping, mapping_warnings = load_orthography_mapping(args.orthography_mapping)
+    for warning in mapping_warnings:
+        print(f"metric_mapping_warning: {warning}")
 
     data_files = {
         "train": str(args.data_dir / "train.jsonl"),
@@ -86,9 +94,19 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any]:
         label_ids[label_ids == -100] = processor.tokenizer.pad_token_id
         pred_str = processor.tokenizer.batch_decode(pred_ids, skip_special_tokens=True)
         label_str = processor.tokenizer.batch_decode(label_ids, skip_special_tokens=True)
+        pred_norm = [
+            normalize_for_metric(text, orthography_mapping, hyphen_mode=args.hyphen_mode)
+            for text in pred_str
+        ]
+        label_norm = [
+            normalize_for_metric(text, orthography_mapping, hyphen_mode=args.hyphen_mode)
+            for text in label_str
+        ]
         return {
-            "wer": jiwer.wer(label_str, pred_str),
-            "cer": jiwer.cer(label_str, pred_str),
+            "raw_wer": jiwer.wer(label_str, pred_str),
+            "raw_cer": jiwer.cer(label_str, pred_str),
+            "norm_wer": jiwer.wer(label_norm, pred_norm),
+            "norm_cer": jiwer.cer(label_norm, pred_norm),
         }
 
     training_args = Seq2SeqTrainingArguments(
@@ -111,7 +129,7 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any]:
         predict_with_generate=True,
         generation_max_length=args.generation_max_length,
         load_best_model_at_end=True,
-        metric_for_best_model="cer",
+        metric_for_best_model="norm_cer",
         greater_is_better=False,
         report_to="none",
         push_to_hub=False,
@@ -135,7 +153,7 @@ def build_trainer(args: argparse.Namespace) -> tuple[Seq2SeqTrainer, Any]:
         if args.early_stopping_patience > 0
         else None,
     )
-    return trainer, vectorized
+    return trainer, vectorized, processor
 
 
 def _disable_unsupported_gue_language_tokens(
@@ -169,6 +187,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--model-name", default="openai/whisper-small")
+    parser.add_argument(
+        "--orthography-mapping",
+        type=Path,
+        default=Path(__file__).resolve().parents[1] / "orthography_mapping.tsv",
+    )
+    parser.add_argument("--hyphen-mode", choices=["space", "keep"], default="space")
     parser.add_argument("--num-proc", type=int, default=1)
     parser.add_argument("--per-device-train-batch-size", type=int, default=4)
     parser.add_argument("--gradient-accumulation-steps", type=int, default=4)
@@ -189,7 +213,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    trainer, vectorized = build_trainer(args)
+    trainer, vectorized, processor = build_trainer(args)
     print("dataset", vectorized)
     if args.dry_run:
         print("dry_run=true; training skipped")

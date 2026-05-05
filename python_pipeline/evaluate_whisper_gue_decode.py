@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 from pathlib import Path
 
 import jiwer
@@ -10,12 +9,7 @@ import torch
 from transformers import WhisperForConditionalGeneration, WhisperProcessor
 
 from training.train_whisper_gue import _disable_unsupported_gue_language_tokens, _load_audio
-
-
-def normalize_for_metric(text: str) -> str:
-    text = text.lower()
-    text = re.sub(r"[^\w\s-]", " ", text, flags=re.UNICODE)
-    return re.sub(r"\s+", " ", text).strip()
+from whisper_metrics import load_orthography_mapping, normalize_for_metric
 
 
 def load_rows(path: Path, limit: int) -> list[dict[str, str]]:
@@ -38,12 +32,19 @@ def main() -> None:
         help="Whisper processor/tokenizer path. Defaults to --model when tokenizer files exist.",
     )
     parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument(
+        "--orthography-mapping",
+        type=Path,
+        default=Path(__file__).resolve().parent / "orthography_mapping.tsv",
+    )
+    parser.add_argument("--hyphen-mode", choices=["space", "keep"], default="space")
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
     processor_path = args.processor or args.model
+    orthography_mapping, mapping_warnings = load_orthography_mapping(args.orthography_mapping)
     processor = WhisperProcessor.from_pretrained(processor_path)
     model = WhisperForConditionalGeneration.from_pretrained(args.model)
     _disable_unsupported_gue_language_tokens(model)
@@ -94,15 +95,22 @@ def main() -> None:
                 ]
             )
 
-    normalized_predictions = [normalize_for_metric(text) for text in predictions]
-    normalized_references = [normalize_for_metric(text) for text in references]
+    normalized_predictions = [
+        normalize_for_metric(text, orthography_mapping, hyphen_mode=args.hyphen_mode)
+        for text in predictions
+    ]
+    normalized_references = [
+        normalize_for_metric(text, orthography_mapping, hyphen_mode=args.hyphen_mode)
+        for text in references
+    ]
     summary = [
         f"raw_wer={jiwer.wer(references, predictions):.6f}",
         f"raw_cer={jiwer.cer(references, predictions):.6f}",
-        f"normalized_wer={jiwer.wer(normalized_references, normalized_predictions):.6f}",
-        f"normalized_cer={jiwer.cer(normalized_references, normalized_predictions):.6f}",
-        "",
+        f"norm_wer={jiwer.wer(normalized_references, normalized_predictions):.6f}",
+        f"norm_cer={jiwer.cer(normalized_references, normalized_predictions):.6f}",
     ]
+    summary.extend(f"warning={warning}" for warning in mapping_warnings)
+    summary.append("")
     text = "\n".join(summary + lines)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
