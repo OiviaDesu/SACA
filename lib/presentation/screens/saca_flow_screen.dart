@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show LinearProgressIndicator;
 import 'package:flutter/services.dart';
 
 import '../../core/theme/saca_theme.dart';
 import '../../domain/models/saca_models.dart';
+import '../../domain/services/duration_interpreter.dart';
 import '../adaptive/saca_platform_style.dart';
 import '../controllers/saca_flow_controller.dart';
 import '../localization/saca_localizer.dart';
@@ -136,7 +138,18 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                             onSettings: _showSettings,
                             child: content,
                           )
-                        : _MobileShell(child: content);
+                        : _MobileShell(
+                            state: state,
+                            localizer: _localizer,
+                            onBack: state.step == SacaStep.settings
+                                ? _controller.goBack
+                                : _canGoBack(state.step)
+                                    ? _controller.goBack
+                                    : null,
+                            onInfo: () => _showPrototypeInfo(context),
+                            onSettings: _showSettings,
+                            child: content,
+                          );
 
                     return Stack(
                       fit: StackFit.expand,

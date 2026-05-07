@@ -17,6 +17,9 @@ python_pipeline/
   data/processed/    normalized training-ready datasets
   data/samples/      small examples and smoke-test manifests
 ```
+
+Root-level scripts remain as compatibility wrappers for older docs and HPC
+commands. Prefer the category folders above for new work.
 ## Environment Setup
 
 Python `3.9+` is recommended.
@@ -52,7 +55,7 @@ research, not for medical symptom classification.
 Run:
 
 ```powershell
-python python_pipeline/data_ingestion/extract_doreco_gurindji.py
+python python_pipeline/data_ingestion/01_extract_doreco_gurindji.py
 ```
 
 Outputs are local-only under `python_pipeline/outputs/doreco_gurindji/`:
@@ -144,7 +147,7 @@ Recommended run order:
 1. **Audit local data first**
 
     ```powershell
-    python python_pipeline/audit_local_data.py
+    python python_pipeline/data_ingestion/audit_local_data.py
     ```
 
     Audit output is written to
@@ -244,11 +247,11 @@ The repo includes dedicated split-job scripts so LR and XGBoost can use differen
 Slurm budgets while each job still runs **both** the normalized single dataset and
 the built multi-dataset flow.
 
-- `python_pipeline/slurm_train_classifier_lr.sh`
+- `python_pipeline/hpc/slurm_train_classifier_lr.sh`
    - historical recommendation: `16 CPU`, `1h`, `12G RAM`, **no GPU**
    - reason: historical combined jobs reached XGBoost after about 15 minutes on
       both 16 CPU and 32 CPU, so LR did not benefit much from extra CPU
-- `python_pipeline/slurm_train_classifier_xgb.sh`
+- `python_pipeline/hpc/slurm_train_classifier_xgb.sh`
    - historical recommendation: `32 CPU`, `3h`, `20G RAM`, `gpu:1`
    - reason: historical combined jobs saturated CPU/GPU and timed out in the
       XGBoost phase at 4h, so XGBoost needs its own GPU-backed budget

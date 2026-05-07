@@ -50,14 +50,14 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         const _LanguageCarouselText(),
         const SizedBox(height: 20),
         SacaOptionButton(
-          label: 'English',
+          label: _localizer.t(SacaLanguage.english, 'languageEnglishLabel'),
           icon: CupertinoIcons.chat_bubble_text,
           selected: state.language == SacaLanguage.english,
           onPressed: () => _controller.selectLanguage(SacaLanguage.english),
         ),
         const SizedBox(height: 12),
         SacaOptionButton(
-          label: 'Gurindji',
+          label: _localizer.t(SacaLanguage.gurindji, 'languageGurindjiLabel'),
           icon: CupertinoIcons.chat_bubble_text_fill,
           selected: state.language == SacaLanguage.gurindji,
           onPressed: () => _controller.selectLanguage(SacaLanguage.gurindji),
@@ -129,13 +129,11 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           _localizer.t(state.language, 'voiceSubtitle'),
         ),
         const SizedBox(height: 14),
-        SacaPrimaryButton(
+        _RecordingButton(
+          isRecording: state.isRecording,
           label: state.isRecording
               ? _localizer.t(state.language, 'stopRecording')
               : _localizer.t(state.language, 'record'),
-          icon:
-              state.isRecording ? CupertinoIcons.stop_fill : CupertinoIcons.mic,
-          filled: state.isRecording,
           onPressed: state.isBusy
               ? null
               : () {
@@ -435,6 +433,12 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
             ?.clamp(1, 10)
             .toInt() ??
         5;
+    final severityDescriptorKey = switch (severity) {
+      <= 3 => 'severityDescriptorLow',
+      <= 6 => 'severityDescriptorModerate',
+      <= 8 => 'severityDescriptorHigh',
+      _ => 'severityDescriptorEmergency',
+    };
 
     return _wrapStep(
       state: state,
@@ -450,6 +454,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         SacaSeveritySlider(
           value: severity,
           semanticLabel: _localizer.t(state.language, 'severityTitle'),
+          descriptor: _localizer.t(state.language, severityDescriptorKey),
           onChanged: (value) =>
               _controller.answerQuestion('severity', value.toString()),
         ),
@@ -472,20 +477,43 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     SacaFlowState state,
     SacaPlatformStyle style,
   ) {
-    return _singleChoiceQuestion(
+    final selectedAnswer = state.questionAnswers['duration'];
+    final choices = [
+      _choice(state.language, DurationInterpreter.lessThanOneDay, '<1 day'),
+      _choice(state.language, DurationInterpreter.oneToThreeDays, '1-3 days'),
+      _choice(state.language, DurationInterpreter.fourToSevenDays, '4-7 days'),
+      _choice(state.language, DurationInterpreter.moreThanSevenDays, '>7 days'),
+    ];
+    final answer = selectedAnswer ?? DurationInterpreter.lessThanOneDay;
+    return _wrapStep(
       state: state,
       style: style,
-      title: _localizer.t(state.language, 'durationTitle'),
-      subtitle: _localizer.t(state.language, 'durationSubtitle'),
-      questionId: 'duration',
-      choices: [
-        _choice(state.language, 'less than one day', '<1 day'),
-        _choice(state.language, 'one to three days', '1-3 days'),
-        _choice(state.language, 'four to seven days', '4-7 days'),
-        _choice(state.language, 'more than seven days', '>7 days'),
+      children: [
+        _title(
+          style,
+          _localizer.t(state.language, 'durationTitle'),
+          _localizer.t(state.language, 'durationSubtitle'),
+        ),
+        _voiceQuestionControls(state),
+        const SizedBox(height: 18),
+        _singleChoiceOptionsGrid(
+          state: state,
+          style: style,
+          questionId: 'duration',
+          selected: selectedAnswer,
+          choices: choices,
+        ),
+        const SizedBox(height: 24),
+        SacaPrimaryButton(
+          label: _localizer.t(state.language, 'continue'),
+          icon: CupertinoIcons.arrow_right_circle,
+          filled: true,
+          onPressed: () {
+            _controller.answerQuestion('duration', answer);
+            _controller.nextQuestion();
+          },
+        ),
       ],
-      nextLabel: _localizer.t(state.language, 'continue'),
-      onNext: _controller.nextQuestion,
     );
   }
 
@@ -494,8 +522,11 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     SacaFlowState state,
     SacaPlatformStyle style,
   ) {
+    final otherText = state.questionAnswers['related_other'] ?? '';
+    final showOther = state.questionAnswers.containsKey('related_other');
     final answered =
-        (state.questionAnswers['related_symptoms'] ?? '').isNotEmpty;
+        (state.questionAnswers['related_symptoms'] ?? '').isNotEmpty ||
+            otherText.trim().isNotEmpty;
     final suggestedIds = state.suggestedRelatedSymptomIds.toSet();
 
     final orderedSymptoms = <Symptom>[
@@ -506,6 +537,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       for (final symptom in SacaFlowState.relatedSymptoms)
         if (!suggestedIds.contains(symptom.id)) symptom,
     ];
+    final compactSymptoms = orderedSymptoms.take(8).toList();
 
     return _wrapStep(
       style: style,
@@ -517,12 +549,10 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           _localizer.t(state.language, 'relatedSubtitle'),
         ),
         if (suggestedIds.isNotEmpty) ...[
-          const SizedBox(height: 10),
           Text(
-            'Suggested from your first symptom',
-            style: TextStyle(
-              color: SacaTheme.mutedText,
-              fontSize: style == SacaPlatformStyle.windowsDesktop ? 15 : 13,
+            _localizer.t(state.language, 'suggestedFromFirstSymptom'),
+            style: SacaTheme.small.copyWith(
+              color: SacaThemeColors.of(context).mutedText,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -533,7 +563,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           spacing: 10,
           runSpacing: 10,
           children: [
-            for (final symptom in orderedSymptoms)
+            for (final symptom in compactSymptoms)
               SacaChipButton(
                 label: _localizer.symptomLabel(state.language, symptom),
                 selected: _controller.hasQuestionAnswer(
@@ -545,8 +575,28 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
                   symptom.id,
                 ),
               ),
+            SacaChipButton(
+              label: _localizer.t(state.language, 'relatedOtherPlaceholder'),
+              selected: showOther || otherText.trim().isNotEmpty,
+              onPressed: () => showOther
+                  ? _controller.updateQuestionAnswer('related_other', '')
+                  : _controller.showQuestionAnswerField('related_other'),
+            ),
           ],
         ),
+        if (showOther || otherText.trim().isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _SacaTextField(
+            key: const ValueKey('relatedOtherField'),
+            value: otherText,
+            placeholder:
+                _localizer.t(state.language, 'relatedOtherPlaceholder'),
+            minLines: 1,
+            maxLines: 2,
+            onChanged: (value) =>
+                _controller.updateQuestionAnswer('related_other', value),
+          ),
+        ],
         const SizedBox(height: 24),
         SacaPrimaryButton(
           label: _localizer.t(state.language, 'continue'),
@@ -1110,12 +1160,27 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       return _localizer.t(state.language, 'notSelected');
     }
     return state.questionAnswers.entries
+        .where((entry) => entry.value.trim().isNotEmpty)
         .map((entry) => entry.value
             .split('|')
-            .map(
-                (value) => _localizer.choiceLabel(state.language, value, value))
+            .map((value) => _reviewAnswerLabel(state, entry.key, value))
             .join(', '))
         .join(' • ');
+  }
+
+  String _reviewAnswerLabel(
+    SacaFlowState state,
+    String questionId,
+    String value,
+  ) {
+    if (questionId == 'related_symptoms') {
+      for (final symptom in SacaFlowState.relatedSymptoms) {
+        if (symptom.id == value) {
+          return _localizer.compactSymptomLabel(state.language, symptom);
+        }
+      }
+    }
+    return _localizer.choiceLabel(state.language, value, value);
   }
 }
 

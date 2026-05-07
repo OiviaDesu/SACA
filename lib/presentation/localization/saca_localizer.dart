@@ -44,10 +44,20 @@ class SacaLocalizer {
 
   String resultDiseaseLabel(SacaLanguage? language, String disease) {
     if (language == SacaLanguage.gurindji) {
-      return _gurindjiDiseaseLabels[disease] ??
-          _vocabulary.resultDiseaseLabel(language, disease);
+      return _gurindjiDiseaseLabels[_normalizeDiseaseKey(disease)] ??
+          _guessGurindjiDiseaseLabel(disease);
     }
-    return _englishDiseaseLabels[disease] ?? disease;
+    return _englishDiseaseLabels[_normalizeDiseaseKey(disease)] ?? disease;
+  }
+
+  String conditionExplanation(SacaLanguage? language, String disease) {
+    final key = _normalizeDiseaseKey(disease);
+    if (language == SacaLanguage.gurindji) {
+      return _gurindjiConditionExplanations[key] ??
+          _gurindjiConditionExplanations['general symptoms']!;
+    }
+    return _englishConditionExplanations[key] ??
+        _englishConditionExplanations['general symptoms']!;
   }
 
   String choiceLabel(
@@ -99,11 +109,11 @@ class SacaLocalizer {
   }
 
   List<String> guidance(SacaLanguage? language, AnalysisResult result) {
+    final key = _normalizeDiseaseKey(result.disease);
     if (language != SacaLanguage.gurindji) {
-      return _englishGuidance[result.disease] ?? result.guidance;
+      return _englishGuidance[key] ?? result.guidance;
     }
-    return _gurindjiGuidance[result.disease] ??
-        _gurindjiGuidance['General symptoms']!;
+    return _gurindjiGuidance[key] ?? _gurindjiGuidance['general symptoms']!;
   }
 
   String disclaimer(SacaLanguage? language, String fallback) {
@@ -124,4 +134,31 @@ class SacaLocalizer {
   Map<String, String> _tableFor(SacaLanguage? language) {
     return language == SacaLanguage.gurindji ? _gurindji : _english;
   }
+
+  String _guessGurindjiDiseaseLabel(String disease) {
+    final key = _normalizeDiseaseKey(disease);
+    final parts = <String>[];
+    for (final entry in _gurindjiDiseaseKeywordGuesses.entries) {
+      if (_diseaseKeyContainsWord(key, entry.key) &&
+          !parts.contains(entry.value)) {
+        parts.add(entry.value);
+      }
+    }
+    if (parts.isEmpty) return _gurindjiGenericDiseaseLabel;
+    return parts.take(3).join(' / ');
+  }
+}
+
+String _normalizeDiseaseKey(String input) {
+  final normalized = input
+      .toLowerCase()
+      .replaceAll('&', ' and ')
+      .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+      .trim()
+      .replaceAll(RegExp(r'\s+'), ' ');
+  return _gurindjiDiseaseAliases[normalized] ?? normalized;
+}
+
+bool _diseaseKeyContainsWord(String key, String word) {
+  return RegExp('(^| )${RegExp.escape(word)}( |\$)').hasMatch(key);
 }

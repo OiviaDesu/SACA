@@ -17,8 +17,8 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
       children: [
         _title(
           style,
-          'Settings',
-          'Adjust appearance for comfort and readability.',
+          _localizer.t(state.language, 'settingsTitle'),
+          _localizer.t(state.language, 'settingsSubtitle'),
         ),
         const SizedBox(height: 18),
         AnimatedBuilder(
@@ -26,23 +26,60 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
           builder: (context, _) {
             final settingsState = _settings.state;
             final colors = SacaThemeColors.of(context);
+            final currentLanguage = state.language ?? SacaLanguage.english;
             final panels = <Widget>[
               _SettingsPanel(
-                title: 'Appearance',
+                title: _localizer.t(state.language, 'settingsLanguageTitle'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      _localizer.t(state.language, 'settingsLanguageSubtitle'),
+                      style: SacaTheme.small.copyWith(color: colors.mutedText),
+                    ),
+                    const SizedBox(height: 12),
+                    CupertinoSlidingSegmentedControl<SacaLanguage>(
+                      key: const ValueKey('settingsLanguageControl'),
+                      groupValue: currentLanguage,
+                      children: <SacaLanguage, Widget>{
+                        SacaLanguage.english: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(_localizer.t(
+                              SacaLanguage.english, 'languageEnglishLabel')),
+                        ),
+                        SacaLanguage.gurindji: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(_localizer.t(
+                              SacaLanguage.gurindji, 'languageGurindjiLabel')),
+                        ),
+                      },
+                      onValueChanged: (value) {
+                        if (value != null) {
+                          _controller.updateLanguage(value);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              _SettingsPanel(
+                title: _localizer.t(state.language, 'settingsAppearanceTitle'),
                 child: CupertinoSlidingSegmentedControl<SacaThemePreference>(
                   groupValue: settingsState.themePreference,
-                  children: const <SacaThemePreference, Widget>{
+                  children: <SacaThemePreference, Widget>{
                     SacaThemePreference.light: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text('Light'),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child:
+                          Text(_localizer.t(state.language, 'settingsLight')),
                     ),
                     SacaThemePreference.dark: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text('Dark'),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(_localizer.t(state.language, 'settingsDark')),
                     ),
                     SacaThemePreference.system: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text('System'),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child:
+                          Text(_localizer.t(state.language, 'settingsSystem')),
                     ),
                   },
                   onValueChanged: (value) {
@@ -53,7 +90,7 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                 ),
               ),
               _SettingsPanel(
-                title: 'Text size',
+                title: _localizer.t(state.language, 'settingsTextSizeTitle'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -61,7 +98,7 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                       children: [
                         Expanded(
                           child: Text(
-                            'Text scale',
+                            _localizer.t(state.language, 'settingsTextScale'),
                             style: SacaTheme.body.copyWith(color: colors.text),
                           ),
                         ),
@@ -81,7 +118,7 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                       onChanged: _settings.setTextScale,
                     ),
                     Text(
-                      'Preview: larger text helps patients read instructions clearly.',
+                      _localizer.t(state.language, 'settingsTextPreview'),
                       style: SacaTheme.body.copyWith(
                         fontSize: 17 * settingsState.textScale,
                         color: colors.mutedText,
@@ -97,7 +134,7 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                 _ResponsivePanelGrid(children: panels),
                 const SizedBox(height: 18),
                 SacaPrimaryButton(
-                  label: 'Done',
+                  label: _localizer.t(state.language, 'settingsDone'),
                   icon: CupertinoIcons.check_mark_circled,
                   filled: true,
                   onPressed: _closeSettings,

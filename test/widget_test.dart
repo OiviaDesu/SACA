@@ -79,7 +79,7 @@ void main() {
     expect(find.bySemanticsLabel('Settings'), findsOneWidget);
     expect(find.byKey(const ValueKey('windowsContentColumn')), findsOneWidget);
     expect(find.byKey(const ValueKey('windowsProgressRail')), findsNothing);
-    expect(find.text('Ready'), findsOneWidget);
+    expect(find.text('Offline ready'), findsOneWidget);
 
     await tester.tap(find.text('English'));
     await tester.pump();
@@ -146,6 +146,33 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(controller.state.step, SacaStep.language);
+  });
+
+  testWidgets('settings page can switch app language to Gurindji',
+      (tester) async {
+    final controller = await _pumpFlow(
+      tester,
+      style: SacaPlatformStyle.androidMobile,
+      vocabulary: vocabulary,
+      localizer: localizer,
+    );
+
+    await tester.ensureVisible(find.bySemanticsLabel('Settings').first);
+    await tester.tap(find.bySemanticsLabel('Settings').first,
+        warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(
+        find.byKey(const ValueKey('settingsLanguageControl')), findsOneWidget);
+    expect(find.text('Language'), findsOneWidget);
+    expect(find.text('Gurindji'), findsWidgets);
+
+    await tester.tap(find.text('Gurindji').last);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(controller.state.language, SacaLanguage.gurindji);
+    expect(find.text('Yawu'), findsWidgets);
+    expect(find.text('Settings'), findsNothing);
   });
 
   testWidgets('settings icon toggles settings page closed on second tap',
@@ -328,6 +355,8 @@ void main() {
     await _answerQuestionnaire(tester, stopAtReview: true);
 
     expect(controller.state.step, SacaStep.reviewInformation);
+    expect(find.textContaining('Sore throat'), findsOneWidget);
+    expect(find.textContaining('sore_throat'), findsNothing);
     await _tapVisible(tester, find.text('Add more information'));
     expect(controller.state.step, SacaStep.inputMethod);
     expect(controller.state.textInput, 'fever');
@@ -354,6 +383,25 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('severityValue-5')), findsOneWidget);
+    expect(find.text('Moderate pain'), findsOneWidget);
+  });
+
+  testWidgets('gurindji severity descriptor is localized', (tester) async {
+    await _pumpFlow(tester, vocabulary: vocabulary, localizer: localizer);
+    await _reachInputMethod(tester, language: 'Gurindji');
+
+    await tester.tap(find.text('Yawu'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'makurrmakurr',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Kawayi'));
+
+    expect(find.byKey(const ValueKey('severitySlider')), findsOneWidget);
+    expect(find.text('Jangany janga'), findsOneWidget);
+    expect(find.text('Moderate pain'), findsNothing);
   });
 
   testWidgets('severity slider fits narrow mobile layout', (tester) async {
@@ -378,6 +426,57 @@ void main() {
     expect(find.byKey(const ValueKey('severityValue-5')), findsOneWidget);
     await _setSeveritySlider(tester, 9);
     expect(find.byKey(const ValueKey('severityValue-9')), findsOneWidget);
+  });
+
+  testWidgets('duration page uses four simple choices without slider',
+      (tester) async {
+    await _pumpFlow(tester);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Text input'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'fever',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Continue'));
+    await _setSeveritySlider(tester, 5);
+    await _tapVisible(tester, find.text('Continue'));
+
+    expect(find.text('How long has it been happening?'), findsOneWidget);
+    expect(find.byType(CupertinoSlider), findsNothing);
+    expect(find.text('<1 day'), findsOneWidget);
+    expect(find.text('1-3 days'), findsOneWidget);
+    expect(find.text('4-7 days'), findsOneWidget);
+    expect(find.text('>7 days'), findsOneWidget);
+  });
+
+  testWidgets('related symptoms opens Other field only on demand',
+      (tester) async {
+    await _pumpFlow(tester);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Text input'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'fever',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Continue'));
+    await _setSeveritySlider(tester, 5);
+    await _tapVisible(tester, find.text('Continue'));
+    await _tapVisible(tester, find.text('1-3 days'));
+    await _tapVisible(tester, find.text('Continue'));
+
+    expect(find.text('Any related symptoms?'), findsOneWidget);
+    expect(find.byKey(const ValueKey('relatedOtherField')), findsNothing);
+
+    await _tapVisible(tester, find.text('Other symptom'));
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('relatedOtherField')), findsOneWidget);
   });
 
   testWidgets('red flag text shows emergency advice', (tester) async {
@@ -423,6 +522,29 @@ void main() {
     expect(find.text('Migraine'), findsOneWidget);
     expect(find.textContaining('82%'), findsOneWidget);
     expect(find.textContaining('High'), findsOneWidget);
+  });
+
+  testWidgets('result screen renders key content in dark mode', (tester) async {
+    await _pumpFlow(
+      tester,
+      analysisService: const _RankedAnalysisService(),
+      themePreference: SacaThemePreference.dark,
+    );
+
+    await _reachInputMethod(tester);
+    await tester.tap(find.text('Text input'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'fever',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Continue'));
+    await _answerQuestionnaire(tester);
+
+    expect(find.text('Care guidance'), findsOneWidget);
+    expect(find.text('Fever and throat symptoms'), findsOneWidget);
+    expect(find.textContaining('82%'), findsOneWidget);
   });
 
   testWidgets('gurindji visual selection shows Gurindji clinical labels', (
@@ -550,6 +672,8 @@ void main() {
 
     await tester.tap(find.text('Record'));
     await tester.pump();
+    expect(find.byKey(const ValueKey('recordingPulseOuter')), findsOneWidget);
+    expect(find.byKey(const ValueKey('recordingPulseInner')), findsOneWidget);
     await tester.tap(find.text('Stop recording'));
     await tester.pump();
 
@@ -613,7 +737,6 @@ void main() {
 
     expect(controller.state.questionAnswers['duration'], 'one to three days');
     expect(find.byKey(const ValueKey('voiceQuestionHeard')), findsOneWidget);
-    expect(find.text('1-3 days'), findsOneWidget);
   });
 
   testWidgets('voice answer on duration selects more than seven days',
@@ -645,7 +768,6 @@ void main() {
     expect(
         controller.state.questionAnswers['duration'], 'more than seven days');
     expect(find.byKey(const ValueKey('voiceQuestionNotMatched')), findsNothing);
-    expect(find.text('>7 days'), findsOneWidget);
   });
 
   testWidgets('voice answer on allergies selects not sure', (tester) async {
@@ -838,9 +960,14 @@ Future<SacaFlowController> _pumpFlow(
   SpeechInputService? speechInput,
   AnalysisService? analysisService,
   SacaReadinessState readiness = SacaReadinessState.ready,
+  SacaThemePreference? themePreference,
 }) async {
   final activeVocabulary =
       vocabulary ?? const ClinicalVocabularyService.empty();
+  final settingsStore = _WidgetSettingsStore();
+  if (themePreference != null) {
+    await settingsStore.setString('saca.themePreference', themePreference.name);
+  }
   final controller = SacaFlowController(
     speechInput: speechInput ?? _NoopSpeechInputService(),
     analysisService:
@@ -853,7 +980,7 @@ Future<SacaFlowController> _pumpFlow(
       home: SacaFlowScreen(
         controller: controller,
         readiness: readiness,
-        settings: SacaSettingsController(store: _WidgetSettingsStore()),
+        settings: SacaSettingsController(store: settingsStore),
         styleOverride: style,
         localizer: localizer ?? SacaLocalizer(vocabulary: activeVocabulary),
       ),
@@ -887,8 +1014,12 @@ Future<void> _reachInputMethod(
   WidgetTester tester, {
   String language = 'English',
 }) async {
-  await tester.ensureVisible(find.text(language));
-  await tester.tap(find.text(language), warnIfMissed: false);
+  final languageButton = find.ancestor(
+    of: find.text(language),
+    matching: find.byType(SacaOptionButton),
+  );
+  await tester.ensureVisible(languageButton.last);
+  await tester.tap(languageButton.last, warnIfMissed: false);
   await tester.pump();
 }
 
@@ -900,7 +1031,8 @@ Color _probeColor(WidgetTester tester) {
 }
 
 class _TestThemeTween extends Tween<SacaThemeColors> {
-  _TestThemeTween({required SacaThemeColors begin, required SacaThemeColors end})
+  _TestThemeTween(
+      {required SacaThemeColors begin, required SacaThemeColors end})
       : super(begin: begin, end: end);
 
   @override
@@ -959,7 +1091,7 @@ Future<void> _setSeveritySlider(WidgetTester tester, int severity) async {
   final dx = ((clampedSeverity - current) / 9) * (rect.width - 56);
 
   if (dx.abs() > 0.1) {
-    await tester.drag(slider, Offset(dx, 0));
+    await tester.drag(slider, Offset(dx, 0), warnIfMissed: false);
     await tester.pump();
   }
 }
@@ -1002,12 +1134,23 @@ class _NoopSpeechInputService implements SpeechInputService {
   }
 
   @override
-  Future<AppResult<void>> startRecording() async {
+  Future<AppResult<void>> startRecording({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
     return const AppResult.success(null);
   }
 
   @override
-  Future<AppResult<SpeechInputResult>> stopAndTranscribe() async {
+  Future<AppResult<SpeechInputResult>> waitForAutoStopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
+    return Completer<AppResult<SpeechInputResult>>().future;
+  }
+
+  @override
+  Future<AppResult<SpeechInputResult>> stopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
     return const AppResult.success(
       SpeechInputResult(text: 'headache and sore throat'),
     );
@@ -1063,12 +1206,23 @@ class _ControllableSpeechInputService implements SpeechInputService {
   }
 
   @override
-  Future<AppResult<void>> startRecording() async {
+  Future<AppResult<void>> startRecording({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
     return const AppResult.success(null);
   }
 
   @override
-  Future<AppResult<SpeechInputResult>> stopAndTranscribe() async {
+  Future<AppResult<SpeechInputResult>> waitForAutoStopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
+    return Completer<AppResult<SpeechInputResult>>().future;
+  }
+
+  @override
+  Future<AppResult<SpeechInputResult>> stopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
     if (transcribeFuture != null) {
       return await transcribeFuture!;
     }

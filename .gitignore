@@ -26,6 +26,10 @@ Microsoft/
 note.txt
 session_logs/
 
+# Local Impeccable polish context
+/PRODUCT.md
+/DESIGN.md
+
 # Local environment / HPC overrides
 .env
 .env.*
@@ -112,6 +116,7 @@ lib/infrastructure/analysis/generated_local/**
 !lib/infrastructure/analysis/generated_local/README.md
 
 # Internal assistant/automation artifacts (kept locally, not tracked)
+/adb-artifacts/
 .agents/
 .adal/
 .augment/

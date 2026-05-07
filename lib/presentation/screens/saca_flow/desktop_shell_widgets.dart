@@ -249,7 +249,7 @@ class _DesktopToolbar extends StatelessWidget {
               child: Row(
                 children: [
                   SacaIconButton(
-                    semanticLabel: 'Back',
+                    semanticLabel: localizer.t(state.language, 'back'),
                     icon: CupertinoIcons.chevron_left,
                     onPressed: onBack,
                   ),
@@ -274,10 +274,20 @@ class _DesktopToolbar extends StatelessWidget {
                             if (!compact) ...[
                               const SizedBox(width: 14),
                               _StatusPill(
-                                label: readiness.isReady ? 'Ready' : 'Not ready',
+                                label: readiness.isReady
+                                    ? localizer.t(
+                                        state.language, 'offlineReady')
+                                    : localizer.t(
+                                        state.language,
+                                        'offlineNotReady',
+                                      ),
                                 isReady: readiness.isReady,
-                                onPressed: () =>
-                                    _showReadinessDialog(context, readiness),
+                                onPressed: () => _showReadinessDialog(
+                                  context,
+                                  readiness,
+                                  localizer,
+                                  state.language,
+                                ),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -300,12 +310,12 @@ class _DesktopToolbar extends StatelessWidget {
                   SizedBox(width: compact ? 4 : 12),
                   if (!compact)
                     SacaIconButton(
-                      semanticLabel: 'Prototype information',
+                      semanticLabel: localizer.t(state.language, 'infoLabel'),
                       icon: CupertinoIcons.info,
                       onPressed: onInfo,
                     ),
                   SacaIconButton(
-                    semanticLabel: 'Settings',
+                    semanticLabel: localizer.t(state.language, 'settingsLabel'),
                     icon: CupertinoIcons.gear_alt,
                     selected: state.step == SacaStep.settings,
                     onPressed: onSettings,
@@ -321,17 +331,26 @@ class _DesktopToolbar extends StatelessWidget {
   }
 }
 
-void _showReadinessDialog(BuildContext context, SacaReadinessState readiness) {
+void _showReadinessDialog(
+  BuildContext context,
+  SacaReadinessState readiness,
+  SacaLocalizer localizer,
+  SacaLanguage? language,
+) {
   showCupertinoDialog<void>(
     context: context,
     builder: (dialogContext) {
       return CupertinoAlertDialog(
-        title: Text(readiness.isReady ? 'Ready' : 'Not ready'),
+        title: Text(
+          readiness.isReady
+              ? localizer.t(language, 'offlineReady')
+              : localizer.t(language, 'offlineNotReady'),
+        ),
         content: Text(readiness.messages.join('\n')),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('OK'),
+            child: Text(localizer.t(language, 'ok')),
           ),
         ],
       );

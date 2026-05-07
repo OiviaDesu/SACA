@@ -73,7 +73,10 @@ extension _WhisperMobileRuntime on WhisperService {
     return getLibraryDirectory();
   }
 
-  Future<List<TranscriptSegment>> _transcribeMobile(String audioPath) async {
+  Future<List<TranscriptSegment>> _transcribeMobile(
+    String audioPath, {
+    required WhisperTranscriptionOptions options,
+  }) async {
     if (!_isWhisperKitPlatform) {
       return const [];
     }
@@ -99,12 +102,18 @@ extension _WhisperMobileRuntime on WhisperService {
     final request = TranscribeRequest(
       audio: audioPath,
       language: langCode,
-      isNoTimestamps: false,
-      splitOnWord: true,
+      isNoTimestamps: options.isNoTimestamps,
+      splitOnWord: options.splitOnWord,
       threads: 4,
     );
 
+    final stopwatch = Stopwatch()..start();
     final response = await _whisper!.transcribe(transcribeRequest: request);
+    stopwatch.stop();
+    debugPrint(
+      '[SACA] Mobile STT ${options.isNoTimestamps ? 'command' : 'dictation'} '
+      'latency=${stopwatch.elapsedMilliseconds}ms',
+    );
     final segments = response.segments;
 
     if (segments != null && segments.isNotEmpty) {

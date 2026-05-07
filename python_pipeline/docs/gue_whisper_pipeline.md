@@ -29,7 +29,7 @@ The source mapping is:
 ## Prepare Manifests
 
 ```bash
-python python_pipeline/prepare_gue_whisper_manifests.py \
+python python_pipeline/data_ingestion/prepare_gue_whisper_manifests.py \
   --source python_pipeline/gue_whisper_dataset.jsonl \
   --output-dir python_pipeline/whisper_gue_ready
 ```
@@ -169,7 +169,7 @@ tail -f /fred/oz396/dunguyen/saca_whisper/outputs/logs/gue_small_<job_id>.out
 After a checkpoint exists, write human-readable samples plus review TSVs:
 
 ```bash
-python python_pipeline/evaluate_whisper_gue_decode.py \
+python python_pipeline/analysis/evaluate_whisper_gue_decode.py \
   --model /fred/oz396/dunguyen/saca_whisper/outputs/whisper-small-gue-example-only/checkpoint-200 \
   --manifest python_pipeline/whisper_gue_ready/example_only/validation.jsonl \
   --limit 73 \

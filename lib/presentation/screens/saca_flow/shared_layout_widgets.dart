@@ -75,13 +75,6 @@ class _StepLayout extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (style == SacaPlatformStyle.androidMobile)
-          _MobileTopBar(
-            canBack: showBack && onBack != null,
-            onBack: onBack,
-            onInfo: onInfo,
-            onSettings: onSettings,
-          ),
         if (state.errorMessage != null) ...[
           const SizedBox(height: 8),
           SacaErrorBanner(
@@ -98,12 +91,16 @@ class _StepLayout extends StatelessWidget {
 
 class _MobileTopBar extends StatelessWidget {
   const _MobileTopBar({
+    required this.state,
+    required this.localizer,
     required this.canBack,
     this.onBack,
     this.onInfo,
     this.onSettings,
   });
 
+  final SacaFlowState state;
+  final SacaLocalizer localizer;
   final bool canBack;
   final VoidCallback? onBack;
   final VoidCallback? onInfo;
@@ -119,7 +116,7 @@ class _MobileTopBar extends StatelessWidget {
             width: 48,
             child: canBack
                 ? SacaIconButton(
-                    semanticLabel: 'Back',
+                    semanticLabel: localizer.t(state.language, 'back'),
                     icon: CupertinoIcons.chevron_left,
                     onPressed: onBack,
                   )
@@ -127,12 +124,12 @@ class _MobileTopBar extends StatelessWidget {
           ),
           const Spacer(),
           SacaIconButton(
-            semanticLabel: 'Prototype information',
+            semanticLabel: localizer.t(state.language, 'infoLabel'),
             icon: CupertinoIcons.info,
             onPressed: onInfo,
           ),
           SacaIconButton(
-            semanticLabel: 'Settings',
+            semanticLabel: localizer.t(state.language, 'settingsLabel'),
             icon: CupertinoIcons.gear_alt,
             onPressed: onSettings,
           ),

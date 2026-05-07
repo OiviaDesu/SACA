@@ -20,12 +20,26 @@ class SacaLogoHeader extends StatelessWidget {
         children: [
           Align(
             alignment: compact ? Alignment.topCenter : Alignment.center,
-            child: Text(
-              'SACA',
-              style: SacaTheme.logoText.copyWith(
-                fontSize: logoSize,
-                color: colors.text,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'SACA',
+                  style: SacaTheme.logoText.copyWith(
+                    fontSize: logoSize,
+                    color: colors.text,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Smart Adaptive Clinical Assistant',
+                  textAlign: TextAlign.center,
+                  style: SacaTheme.small.copyWith(
+                    color: colors.mutedText,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
           Positioned(

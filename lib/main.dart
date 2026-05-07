@@ -155,8 +155,7 @@ class _AnimatedSacaThemeState
 }
 
 class _SacaThemeColorsTween extends Tween<SacaThemeColors> {
-  _SacaThemeColorsTween({required SacaThemeColors begin})
-      : super(begin: begin);
+  _SacaThemeColorsTween({required SacaThemeColors begin}) : super(begin: begin);
 
   @override
   SacaThemeColors lerp(double t) {

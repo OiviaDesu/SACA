@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="saca_demo"
+        android:label="SACA"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

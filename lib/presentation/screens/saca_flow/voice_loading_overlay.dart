@@ -1,6 +1,6 @@
 part of '../saca_flow_screen.dart';
 
-class _VoiceLoadingOverlay extends StatelessWidget {
+class _VoiceLoadingOverlay extends StatefulWidget {
   const _VoiceLoadingOverlay({
     required this.visible,
     required this.title,
@@ -12,9 +12,39 @@ class _VoiceLoadingOverlay extends StatelessWidget {
   final String? subtitle;
 
   @override
+  State<_VoiceLoadingOverlay> createState() => _VoiceLoadingOverlayState();
+}
+
+class _VoiceLoadingOverlayState extends State<_VoiceLoadingOverlay> {
+  double _progress = 0;
+
+  @override
+  void didUpdateWidget(covariant _VoiceLoadingOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.visible && !oldWidget.visible) {
+      _progress = 0.08;
+      _tickProgress();
+    }
+    if (!widget.visible && oldWidget.visible) {
+      _progress = 0;
+    }
+  }
+
+  void _tickProgress() {
+    Future<void>.delayed(const Duration(milliseconds: 180), () {
+      if (!mounted || !widget.visible) return;
+      setState(() {
+        _progress = (_progress + (0.95 - _progress) * 0.16).clamp(0, 0.95);
+      });
+      if (_progress < 0.95) _tickProgress();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return IgnorePointer(
-      ignoring: !visible,
+      ignoring: !widget.visible,
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 180),
         switchInCurve: Curves.easeOutCubic,
@@ -38,52 +68,100 @@ class _VoiceLoadingOverlay extends StatelessWidget {
             ),
           );
         },
-        child: visible
+        child: widget.visible
             ? Stack(
                 key: const ValueKey('voiceLoadingOverlay'),
                 fit: StackFit.expand,
                 children: [
-                  const ColoredBox(color: Color(0x22000000)),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.text.withValues(alpha: 0.18),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          colors.accent.withValues(alpha: 0.16),
+                          colors.background.withValues(alpha: 0.62),
+                          colors.text.withValues(alpha: 0.20),
+                        ],
+                      ),
+                    ),
+                  ),
                   Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 280),
+                      constraints: const BoxConstraints(maxWidth: 320),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          gradient: SacaTheme.surfaceGradient,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: SacaTheme.selectedBorder),
-                          boxShadow: const [
+                          gradient: colors.surfaceGradient,
+                          borderRadius: BorderRadius.circular(26),
+                          border: Border.all(color: colors.selectedBorder),
+                          boxShadow: [
                             BoxShadow(
-                              color: Color(0x18000000),
-                              blurRadius: 24,
-                              offset: Offset(0, 12),
+                              color: colors.shadow,
+                              blurRadius: 34,
+                              offset: const Offset(0, 18),
                             ),
                           ],
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                          padding: const EdgeInsets.fromLTRB(24, 22, 24, 22),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const CupertinoActivityIndicator(radius: 14),
-                              if (title != null) ...[
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: colors.selectedGradient,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          colors.accent.withValues(alpha: 0.28),
+                                      blurRadius: 18,
+                                    ),
+                                  ],
+                                ),
+                                child: const SizedBox(
+                                  width: 54,
+                                  height: 54,
+                                  child: Center(
+                                    child:
+                                        CupertinoActivityIndicator(radius: 14),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(999),
+                                child: LinearProgressIndicator(
+                                  value: _progress,
+                                  minHeight: 8,
+                                  backgroundColor:
+                                      colors.border.withValues(alpha: 0.45),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    colors.accent,
+                                  ),
+                                ),
+                              ),
+                              if (widget.title != null) ...[
                                 const SizedBox(height: 14),
                                 Text(
-                                  title!,
+                                  widget.title!,
                                   key: const ValueKey('voiceLoadingTitle'),
                                   textAlign: TextAlign.center,
                                   style: SacaTheme.body.copyWith(
-                                    color: SacaTheme.text,
+                                    color: colors.text,
                                   ),
                                 ),
                               ],
-                              if (subtitle != null) ...[
+                              if (widget.subtitle != null) ...[
                                 const SizedBox(height: 6),
                                 Text(
-                                  subtitle!,
+                                  widget.subtitle!,
                                   key: const ValueKey('voiceLoadingSubtitle'),
                                   textAlign: TextAlign.center,
-                                  style: SacaTheme.small,
+                                  style: SacaTheme.small.copyWith(
+                                    color: colors.mutedText,
+                                  ),
                                 ),
                               ],
                             ],

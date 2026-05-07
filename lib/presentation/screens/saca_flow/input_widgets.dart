@@ -42,15 +42,16 @@ class _SelectedSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     final text = values.isEmpty ? emptyText : values.join(', ');
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: SacaTheme.surfaceGradient,
+        gradient: colors.surfaceGradient,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: SacaTheme.border),
-        boxShadow: const [
+        border: Border.all(color: colors.border),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x12000000),
+            color: colors.shadow,
             blurRadius: 18,
             offset: Offset(0, 8),
           ),
@@ -63,10 +64,10 @@ class _SelectedSummary extends StatelessWidget {
           children: [
             Text(
               title,
-              style: SacaTheme.small.copyWith(color: SacaTheme.text),
+              style: SacaTheme.small.copyWith(color: colors.text),
             ),
             const SizedBox(height: 6),
-            Text(text, style: SacaTheme.body),
+            Text(text, style: SacaTheme.body.copyWith(color: colors.text)),
           ],
         ),
       ),
@@ -89,14 +90,15 @@ class _ReviewSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: SacaTheme.surfaceGradient,
+        gradient: colors.surfaceGradient,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: SacaTheme.border),
-        boxShadow: const [
+        border: Border.all(color: colors.border),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x12000000),
+            color: colors.shadow,
             blurRadius: 18,
             offset: Offset(0, 8),
           ),
@@ -113,6 +115,7 @@ class _ReviewSummaryCard extends StatelessWidget {
                   child: Text(
                     title,
                     style: SacaTheme.body.copyWith(
+                      color: colors.text,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -135,7 +138,7 @@ class _ReviewSummaryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(value, style: SacaTheme.small.copyWith(color: SacaTheme.text)),
+            Text(value, style: SacaTheme.small.copyWith(color: colors.text)),
           ],
         ),
       ),
@@ -191,6 +194,7 @@ class _SacaTextFieldState extends State<_SacaTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return CupertinoTextField(
       controller: _textController,
       minLines: widget.minLines,
@@ -198,20 +202,146 @@ class _SacaTextFieldState extends State<_SacaTextField> {
       placeholder: widget.placeholder,
       padding: const EdgeInsets.all(16),
       onChanged: widget.onChanged,
-      style: SacaTheme.body,
-      placeholderStyle: SacaTheme.body.copyWith(color: SacaTheme.mutedText),
+      style: SacaTheme.body.copyWith(color: colors.text),
+      placeholderStyle: SacaTheme.body.copyWith(color: colors.mutedText),
       decoration: BoxDecoration(
-        gradient: SacaTheme.surfaceGradient,
+        gradient: colors.surfaceGradient,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: SacaTheme.border),
-        boxShadow: const [
+        border: Border.all(color: colors.border),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x12000000),
+            color: colors.shadow,
             blurRadius: 18,
             offset: Offset(0, 8),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RecordingButton extends StatefulWidget {
+  const _RecordingButton({
+    required this.label,
+    required this.isRecording,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool isRecording;
+  final VoidCallback? onPressed;
+
+  @override
+  State<_RecordingButton> createState() => _RecordingButtonState();
+}
+
+class _RecordingButtonState extends State<_RecordingButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    if (widget.isRecording) _controller.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant _RecordingButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isRecording && !_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    } else if (!widget.isRecording && _controller.isAnimating) {
+      _controller.stop();
+      _controller.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final pulse = widget.isRecording ? 1 + (_controller.value * 0.05) : 1.0;
+        final ringOpacity =
+            widget.isRecording ? 0.28 + _controller.value * 0.18 : 0.0;
+        return Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            if (widget.isRecording) ...[
+              Positioned.fill(
+                key: const ValueKey('recordingPulseOuter'),
+                child: Transform.scale(
+                  scale: 1.12 + _controller.value * 0.14,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(
+                        color: colors.accent.withValues(alpha: ringOpacity),
+                        width: 3,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                key: const ValueKey('recordingPulseInner'),
+                child: Transform.scale(
+                  scale: 1.04 + _controller.value * 0.08,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(
+                        color: colors.accent.withValues(alpha: 0.35),
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            Transform.scale(
+              scale: pulse,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.accent.withValues(
+                        alpha: widget.isRecording ? 0.40 : 0.18,
+                      ),
+                      blurRadius: widget.isRecording ? 38 : 20,
+                      spreadRadius: widget.isRecording ? 5 : 0,
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  height: 86,
+                  child: SacaPrimaryButton(
+                    label: widget.label,
+                    icon: widget.isRecording
+                        ? CupertinoIcons.waveform
+                        : CupertinoIcons.mic_fill,
+                    filled: true,
+                    onPressed: widget.onPressed,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
