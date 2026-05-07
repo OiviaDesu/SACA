@@ -14,6 +14,22 @@ class TranscriptSegment {
   });
 }
 
+class WhisperTranscriptionOptions {
+  const WhisperTranscriptionOptions({
+    this.isNoTimestamps = false,
+    this.splitOnWord = true,
+  });
+
+  final bool isNoTimestamps;
+  final bool splitOnWord;
+
+  static const dictation = WhisperTranscriptionOptions();
+  static const command = WhisperTranscriptionOptions(
+    isNoTimestamps: true,
+    splitOnWord: false,
+  );
+}
+
 class WhisperService {
   static final WhisperService _instance = WhisperService._internal();
   factory WhisperService() => _instance;
@@ -25,7 +41,10 @@ class WhisperService {
     // Web fallback only; primary runtime target is Windows desktop.
   }
 
-  Future<List<TranscriptSegment>> transcribe(String audioPath) async {
+  Future<List<TranscriptSegment>> transcribe(
+    String audioPath, {
+    WhisperTranscriptionOptions options = WhisperTranscriptionOptions.dictation,
+  }) async {
     return const [];
   }
 

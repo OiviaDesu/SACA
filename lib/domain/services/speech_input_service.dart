@@ -7,12 +7,21 @@ class SpeechInputResult {
   final String text;
 }
 
+enum SpeechInputMode { dictation, command }
+
 abstract interface class SpeechInputService {
   bool get supportsOnDeviceStt;
 
   Future<AppResult<void>> prepare(SacaLanguage language);
-  Future<AppResult<void>> startRecording();
-  Future<AppResult<SpeechInputResult>> stopAndTranscribe();
+  Future<AppResult<void>> startRecording({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  });
+  Future<AppResult<SpeechInputResult>> waitForAutoStopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  });
+  Future<AppResult<SpeechInputResult>> stopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  });
   Future<void> cancel();
   void dispose();
 }

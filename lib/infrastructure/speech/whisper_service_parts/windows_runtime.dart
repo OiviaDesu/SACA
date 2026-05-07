@@ -113,8 +113,8 @@ extension _WhisperWindowsRuntime on WhisperService {
         return const [];
       }
 
-      final durationMs = ((wave.samples.length / wave.sampleRate) * 1000)
-          .round();
+      final durationMs =
+          ((wave.samples.length / wave.sampleRate) * 1000).round();
       final safeDuration = Duration(
         milliseconds: durationMs < 0 ? 0 : durationMs,
       );

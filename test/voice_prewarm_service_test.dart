@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:saca_demo/core/errors/app_error.dart';
 import 'package:saca_demo/domain/models/saca_models.dart';
@@ -66,12 +68,23 @@ class _FakeSpeechInputService implements SpeechInputService {
   }
 
   @override
-  Future<AppResult<void>> startRecording() async {
+  Future<AppResult<void>> startRecording({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
     return const AppResult.success(null);
   }
 
   @override
-  Future<AppResult<SpeechInputResult>> stopAndTranscribe() async {
+  Future<AppResult<SpeechInputResult>> waitForAutoStopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
+    return Completer<AppResult<SpeechInputResult>>().future;
+  }
+
+  @override
+  Future<AppResult<SpeechInputResult>> stopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
     return const AppResult.success(SpeechInputResult(text: ''));
   }
 

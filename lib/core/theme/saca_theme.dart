@@ -26,6 +26,7 @@ class SacaThemeColors {
     required this.selected,
     required this.selectedBorder,
     required this.accent,
+    required this.shadow,
     required this.shellGradient,
     required this.surfaceGradient,
     required this.selectedGradient,
@@ -41,6 +42,7 @@ class SacaThemeColors {
   final Color selected;
   final Color selectedBorder;
   final Color accent;
+  final Color shadow;
   final LinearGradient shellGradient;
   final LinearGradient surfaceGradient;
   final LinearGradient selectedGradient;
@@ -61,6 +63,7 @@ class SacaThemeColors {
       selected: Color.lerp(a.selected, b.selected, t)!,
       selectedBorder: Color.lerp(a.selectedBorder, b.selectedBorder, t)!,
       accent: Color.lerp(a.accent, b.accent, t)!,
+      shadow: Color.lerp(a.shadow, b.shadow, t)!,
       shellGradient: LinearGradient.lerp(a.shellGradient, b.shellGradient, t)!,
       surfaceGradient:
           LinearGradient.lerp(a.surfaceGradient, b.surfaceGradient, t)!,
@@ -145,6 +148,7 @@ class SacaTheme {
     selected: selected,
     selectedBorder: selectedBorder,
     accent: accent,
+    shadow: Color(0x12000000),
     shellGradient: shellGradient,
     surfaceGradient: surfaceGradient,
     selectedGradient: selectedGradient,
@@ -179,6 +183,7 @@ class SacaTheme {
     selected: darkSelected,
     selectedBorder: darkSelectedBorder,
     accent: Color(0xFFFF8FA5),
+    shadow: Color(0x66000000),
     shellGradient: darkShellGradient,
     surfaceGradient: darkSurfaceGradient,
     selectedGradient: darkSelectedGradient,

@@ -58,6 +58,22 @@ class TranscriptSegment {
   });
 }
 
+class WhisperTranscriptionOptions {
+  const WhisperTranscriptionOptions({
+    this.isNoTimestamps = false,
+    this.splitOnWord = true,
+  });
+
+  final bool isNoTimestamps;
+  final bool splitOnWord;
+
+  static const dictation = WhisperTranscriptionOptions();
+  static const command = WhisperTranscriptionOptions(
+    isNoTimestamps: true,
+    splitOnWord: false,
+  );
+}
+
 class WhisperService {
   static final WhisperService _instance = WhisperService._internal();
   factory WhisperService() => _instance;
@@ -181,13 +197,16 @@ class WhisperService {
   }
 
   /// Transcribe a WAV file at [audioPath]. Returns segments with timestamps.
-  Future<List<TranscriptSegment>> transcribe(String audioPath) async {
+  Future<List<TranscriptSegment>> transcribe(
+    String audioPath, {
+    WhisperTranscriptionOptions options = WhisperTranscriptionOptions.dictation,
+  }) async {
     if (_isSherpaWindowsPlatform) {
       return _transcribeWindows(audioPath);
     }
 
     if (_isWhisperKitPlatform) {
-      return _transcribeMobile(audioPath);
+      return _transcribeMobile(audioPath, options: options);
     }
 
     return const [];

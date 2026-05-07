@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/errors/app_error.dart';
 import '../../domain/models/saca_models.dart' as domain;
 import '../../domain/services/speech_input_service.dart';
+import '../../domain/services/transcript_sanitizer.dart';
 import 'audio_recorder_service.dart';
 import 'whisper_service.dart' as whisper;
 
@@ -10,11 +11,15 @@ class WhisperSpeechInputService implements SpeechInputService {
   WhisperSpeechInputService({
     AudioRecorderService? recorder,
     whisper.WhisperService? whisperService,
+    TranscriptSanitizer? transcriptSanitizer,
   })  : _recorder = recorder ?? AudioRecorderService(),
-        _whisper = whisperService ?? whisper.WhisperService();
+        _whisper = whisperService ?? whisper.WhisperService(),
+        _transcriptSanitizer =
+            transcriptSanitizer ?? const TranscriptSanitizer();
 
   final AudioRecorderService _recorder;
   final whisper.WhisperService _whisper;
+  final TranscriptSanitizer _transcriptSanitizer;
 
   @override
   bool get supportsOnDeviceStt => _whisper.supportsOnDeviceStt;
@@ -46,7 +51,9 @@ class WhisperSpeechInputService implements SpeechInputService {
   }
 
   @override
-  Future<AppResult<void>> startRecording() async {
+  Future<AppResult<void>> startRecording({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
     try {
       final hasPermission = await _recorder.hasPermission();
       if (!hasPermission) {
@@ -58,7 +65,10 @@ class WhisperSpeechInputService implements SpeechInputService {
         );
       }
 
-      await _recorder.startRecording();
+      await _recorder.startRecording(
+        maxDuration: _maxDurationFor(mode),
+        silenceDelay: _silenceDelayFor(mode),
+      );
       return const AppResult.success(null);
     } catch (error, stackTrace) {
       debugPrint('[SACA] Recording failed: $error\n$stackTrace');
@@ -73,7 +83,26 @@ class WhisperSpeechInputService implements SpeechInputService {
   }
 
   @override
-  Future<AppResult<SpeechInputResult>> stopAndTranscribe() async {
+  Future<AppResult<SpeechInputResult>> waitForAutoStopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
+    final audioPath = await _recorder.waitForAutoStop();
+    if (audioPath == null || audioPath.isEmpty) {
+      return const AppResult.failure(
+        AppFailure(
+          kind: AppFailureKind.recordingFailed,
+          message:
+              'Recording stopped before audio was saved. Please try again.',
+        ),
+      );
+    }
+    return _transcribeSavedAudio(audioPath, mode: mode);
+  }
+
+  @override
+  Future<AppResult<SpeechInputResult>> stopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
     try {
       final audioPath = await _recorder.stopRecording();
       if (audioPath == null || audioPath.isEmpty) {
@@ -84,14 +113,42 @@ class WhisperSpeechInputService implements SpeechInputService {
           ),
         );
       }
+      return _transcribeSavedAudio(audioPath, mode: mode);
+    } catch (error, stackTrace) {
+      debugPrint('[SACA] Transcription failed: $error\n$stackTrace');
+      return AppResult.failure(
+        AppFailure(
+          kind: AppFailureKind.transcriptionFailed,
+          message: 'Could not transcribe the recording. Try text input.',
+          debugMessage: error,
+        ),
+      );
+    }
+  }
 
-      final segments = await _whisper.transcribe(audioPath);
-      final text = segments.map((segment) => segment.text).join(' ').trim();
-      if (text.isEmpty) {
+  Future<AppResult<SpeechInputResult>> _transcribeSavedAudio(
+    String audioPath, {
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
+    try {
+      final stopwatch = Stopwatch()..start();
+      final segments = await _whisper.transcribe(
+        audioPath,
+        options: _transcriptionOptionsFor(mode),
+      );
+      final rawText = segments.map((segment) => segment.text).join(' ').trim();
+      final text = _transcriptSanitizer.clean(rawText);
+      stopwatch.stop();
+      debugPrint(
+        '[SACA] Voice ${mode.name} stop-to-text '
+        'latency=${stopwatch.elapsedMilliseconds}ms',
+      );
+      if (!_transcriptSanitizer.isUsable(text)) {
         return const AppResult.failure(
           AppFailure(
             kind: AppFailureKind.emptyInput,
-            message: 'No speech was detected. Try again or type the symptom.',
+            message:
+                'No usable speech was detected. Try again or type the symptom.',
           ),
         );
       }
@@ -127,5 +184,29 @@ class WhisperSpeechInputService implements SpeechInputService {
       case domain.SacaLanguage.gurindji:
         return whisper.SacaLanguage.gurindji;
     }
+  }
+
+  Duration _maxDurationFor(SpeechInputMode mode) {
+    return switch (mode) {
+      SpeechInputMode.dictation => AudioRecorderService.maxRecordingDuration,
+      SpeechInputMode.command => const Duration(seconds: 3),
+    };
+  }
+
+  Duration _silenceDelayFor(SpeechInputMode mode) {
+    return switch (mode) {
+      SpeechInputMode.dictation => AudioRecorderService.silenceAutoStopDelay,
+      SpeechInputMode.command => const Duration(milliseconds: 900),
+    };
+  }
+
+  whisper.WhisperTranscriptionOptions _transcriptionOptionsFor(
+    SpeechInputMode mode,
+  ) {
+    return switch (mode) {
+      SpeechInputMode.dictation =>
+        whisper.WhisperTranscriptionOptions.dictation,
+      SpeechInputMode.command => whisper.WhisperTranscriptionOptions.command,
+    };
   }
 }

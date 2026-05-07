@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 
+import '../../core/errors/app_error.dart';
 import '../../domain/models/saca_models.dart';
 import '../../domain/services/analysis_service.dart';
+import '../../domain/services/duration_interpreter.dart';
 import '../../domain/services/speech_input_service.dart';
 import '../../domain/services/symptom_suggestion_service.dart';
 
@@ -18,6 +20,7 @@ class SacaFlowController extends ChangeNotifier {
   final SpeechInputService _speechInput;
   final AnalysisService _analysisService;
   final SymptomSuggestionService _symptomSuggestionService;
+  final DurationInterpreter _durationInterpreter = const DurationInterpreter();
 
   SacaFlowState _state = const SacaFlowState();
   SacaStep? _settingsReturnStep;
@@ -34,6 +37,15 @@ class SacaFlowController extends ChangeNotifier {
       _state.copyWith(
         language: language,
         step: SacaStep.inputMethod,
+        clearError: true,
+      ),
+    );
+  }
+
+  void updateLanguage(SacaLanguage language) {
+    _setState(
+      _state.copyWith(
+        language: language,
         clearError: true,
       ),
     );
@@ -85,6 +97,9 @@ class SacaFlowController extends ChangeNotifier {
   }
 
   Future<void> startRecording() async {
+    final mode = _isFollowUpQuestion(_state.step)
+        ? SpeechInputMode.command
+        : SpeechInputMode.dictation;
     _setState(
       _state.copyWith(
         isBusy: true,
@@ -92,7 +107,7 @@ class SacaFlowController extends ChangeNotifier {
         clearError: true,
       ),
     );
-    final result = await _speechInput.startRecording();
+    final result = await _speechInput.startRecording(mode: mode);
     if (!result.isSuccess) {
       _setState(
         _state.copyWith(
@@ -113,6 +128,13 @@ class SacaFlowController extends ChangeNotifier {
         clearError: true,
       ),
     );
+    _waitForAutoStop(mode);
+  }
+
+  Future<void> _waitForAutoStop(SpeechInputMode mode) async {
+    final result = await _speechInput.waitForAutoStopAndTranscribe(mode: mode);
+    if (!_state.isRecording) return;
+    await _handleTranscriptionResult(result);
   }
 
   Future<void> stopRecording() async {
@@ -123,11 +145,21 @@ class SacaFlowController extends ChangeNotifier {
         voiceBusyPhase: VoiceBusyPhase.transcribing,
       ),
     );
-    final result = await _speechInput.stopAndTranscribe();
+    final mode = _isFollowUpQuestion(_state.step)
+        ? SpeechInputMode.command
+        : SpeechInputMode.dictation;
+    final result = await _speechInput.stopAndTranscribe(mode: mode);
+    await _handleTranscriptionResult(result);
+  }
+
+  Future<void> _handleTranscriptionResult(
+    AppResult<SpeechInputResult> result,
+  ) async {
     if (!result.isSuccess) {
       _setState(
         _state.copyWith(
           isBusy: false,
+          isRecording: false,
           voiceBusyPhase: VoiceBusyPhase.none,
           errorMessage: result.failure?.message,
         ),
@@ -137,14 +169,24 @@ class SacaFlowController extends ChangeNotifier {
 
     final transcript = result.value?.text ?? '';
     if (_isFollowUpQuestion(_state.step)) {
+      final stopwatch = Stopwatch()..start();
       final answer = _voiceAnswerForStep(_state.step, transcript);
+      stopwatch.stop();
+      debugPrint(
+        '[SACA] Voice command parser match=${answer != null} '
+        'latency=${stopwatch.elapsedMilliseconds}ms',
+      );
       final nextAnswers = Map<String, String>.from(_state.questionAnswers);
       if (answer != null) {
         nextAnswers[answer.questionId] = answer.value;
       }
+      final nextStep =
+          answer == null ? _state.step : _nextQuestionStep(_state.step);
       _setState(
         _state.copyWith(
           isBusy: false,
+          isRecording: false,
+          step: nextStep,
           voiceBusyPhase: VoiceBusyPhase.none,
           questionAnswers: nextAnswers,
           voiceAnswerTranscript: transcript,
@@ -158,6 +200,7 @@ class SacaFlowController extends ChangeNotifier {
     _setState(
       _state.copyWith(
         isBusy: false,
+        isRecording: false,
         voiceBusyPhase: VoiceBusyPhase.none,
         transcript: transcript,
         voiceAnswerTranscript: '',
@@ -288,13 +331,14 @@ class SacaFlowController extends ChangeNotifier {
 
   void nextQuestion() {
     final nextStep = switch (_state.step) {
-      SacaStep.questionSeverity => SacaStep.questionDuration,
-      SacaStep.questionDuration => SacaStep.questionRelatedSymptoms,
-      SacaStep.questionRelatedSymptoms => SacaStep.questionMedication,
-      SacaStep.questionMedication => SacaStep.questionFood,
-      SacaStep.questionFood => SacaStep.questionAllergies,
-      SacaStep.questionAllergies => SacaStep.questionHealthChanges,
-      SacaStep.questionHealthChanges => SacaStep.reviewInformation,
+      SacaStep.questionSeverity ||
+      SacaStep.questionDuration ||
+      SacaStep.questionRelatedSymptoms ||
+      SacaStep.questionMedication ||
+      SacaStep.questionFood ||
+      SacaStep.questionAllergies ||
+      SacaStep.questionHealthChanges =>
+        _nextQuestionStep(_state.step),
       _ => _state.step,
     };
 
@@ -309,6 +353,19 @@ class SacaFlowController extends ChangeNotifier {
     if (nextStep == SacaStep.questionRelatedSymptoms) {
       _refineRelatedSymptomSuggestions();
     }
+  }
+
+  SacaStep _nextQuestionStep(SacaStep step) {
+    return switch (step) {
+      SacaStep.questionSeverity => SacaStep.questionDuration,
+      SacaStep.questionDuration => SacaStep.questionRelatedSymptoms,
+      SacaStep.questionRelatedSymptoms => SacaStep.questionMedication,
+      SacaStep.questionMedication => SacaStep.questionFood,
+      SacaStep.questionFood => SacaStep.questionAllergies,
+      SacaStep.questionAllergies => SacaStep.questionHealthChanges,
+      SacaStep.questionHealthChanges => SacaStep.reviewInformation,
+      _ => step,
+    };
   }
 
   void showReview() {
@@ -466,62 +523,64 @@ class SacaFlowController extends ChangeNotifier {
     if (normalized.isEmpty) return null;
     return switch (step) {
       SacaStep.questionSeverity => _severityVoiceAnswer(normalized),
-      SacaStep.questionDuration => _choiceVoiceAnswer('duration', normalized, {
-          'more than seven days': [
-            'more than seven days',
-            'more than 7 days',
-            'more than seven',
-            'more than 7',
-            'over seven days',
-            'over 7 days',
-            'over seven',
-            'over 7',
-            'greater than seven',
-            'greater than 7',
-            'longer than seven',
-            'longer than 7',
-            'after seven days',
-            'after 7 days',
-            'seven plus',
-            '7 plus',
-            'above seven',
-            'above 7',
-            'more than week',
-          ],
-          'four to seven days': [
-            'four to seven days',
-            '4 to 7 days',
-            'four seven days',
-            '4 7 days',
-            'four to seven',
-            '4 to 7',
-            'four seven',
-            '4 7',
-            'one week',
-            'a week',
-            'week',
-          ],
-          'one to three days': [
-            'one to three days',
-            '1 to 3 days',
-            'one three days',
-            '1 3 days',
-            'one to three',
-            '1 to 3',
-            'one three',
-            '1 3',
-            'three days',
-            '3 days',
-          ],
-          'less than one day': [
-            'less than one day',
-            'less than 1 day',
-            'under one day',
-            'under 1 day',
-            'less than day',
-            'today',
-          ],
-        }),
+      SacaStep.questionDuration => _durationVoiceAnswer(normalized) ??
+          _choiceVoiceAnswer('duration', normalized, {
+            'more than seven days': [
+              'more than seven days',
+              'more than 7 days',
+              'more than seven',
+              'more than 7',
+              'over seven days',
+              'over 7 days',
+              'over seven',
+              'over 7',
+              'greater than seven',
+              'greater than 7',
+              'longer than seven',
+              'longer than 7',
+              'after seven days',
+              'after 7 days',
+              'seven plus',
+              '7 plus',
+              'above seven',
+              'above 7',
+              'more than week',
+            ],
+            'four to seven days': [
+              'four to seven days',
+              '4 to 7 days',
+              'four seven days',
+              '4 7 days',
+              'four to seven',
+              '4 to 7',
+              'four seven',
+              '4 7',
+              'one week',
+              'a week',
+              'week',
+            ],
+            'one to three days': [
+              'one to three days',
+              '1 to 3 days',
+              'one three days',
+              '1 3 days',
+              'one to three',
+              '1 to 3',
+              'one three',
+              '1 3',
+              'three days',
+              '3 days',
+            ],
+            'less than one day': [
+              'less than one day',
+              'less than 1 day',
+              'under one day',
+              'under 1 day',
+              'less than day',
+              'today',
+              'jala',
+            ],
+          }),
       SacaStep.questionRelatedSymptoms =>
         _relatedSymptomsVoiceAnswer(normalized),
       SacaStep.questionMedication =>
@@ -535,10 +594,18 @@ class SacaFlowController extends ChangeNotifier {
           'taken medication': [
             'taken medication',
             'yes',
+            'yuwayi',
             'medicine',
-            'medication'
+            'medication',
+            'mirrijin',
           ],
-          'no medication': ['no medication', 'none medication', 'no', 'none'],
+          'no medication': [
+            'no medication',
+            'none medication',
+            'no',
+            'none',
+            'lawara',
+          ],
         }),
       SacaStep.questionFood => _choiceVoiceAnswer('food', normalized, {
           'not sure food': ['not sure food', 'not sure', 'unsure', 'maybe'],
@@ -559,7 +626,8 @@ class SacaFlowController extends ChangeNotifier {
             'no change',
             'same food',
             'normal food',
-            'no'
+            'no',
+            'lawara',
           ],
         }),
       SacaStep.questionAllergies =>
@@ -578,9 +646,10 @@ class SacaFlowController extends ChangeNotifier {
             'no allergy',
             'no known',
             'none',
-            'no'
+            'no',
+            'lawara',
           ],
-          'possible allergies': ['allergy', 'allergies', 'yes'],
+          'possible allergies': ['allergy', 'allergies', 'yes', 'yuwayi'],
         }),
       SacaStep.questionHealthChanges =>
         _choiceVoiceAnswer('health_changes', normalized, {
@@ -597,7 +666,8 @@ class SacaFlowController extends ChangeNotifier {
             'no health change',
             'no change',
             'normal',
-            'no'
+            'no',
+            'lawara',
           ],
         }),
       _ => null,
@@ -607,10 +677,15 @@ class SacaFlowController extends ChangeNotifier {
   _VoiceAnswer? _severityVoiceAnswer(String normalized) {
     const words = {
       'one': 1,
+      'jintaku': 1,
       'two': 2,
+      'kujarra': 2,
       'three': 3,
+      'murrkun': 3,
       'four': 4,
+      'kujarra kujarra': 4,
       'five': 5,
+      'ngarra': 5,
       'six': 6,
       'seven': 7,
       'eight': 8,
@@ -627,12 +702,48 @@ class SacaFlowController extends ChangeNotifier {
     if (value == null) {
       if (normalized.contains('emergency')) value = 10;
       if (normalized.contains('severe')) value = 9;
+      if (normalized.contains('warlarrp')) value = 9;
       if (normalized.contains('moderate')) value = 5;
       if (normalized.contains('mild')) value = 2;
+      if (normalized.contains('yamak')) value = 2;
     }
     return value == null
         ? null
         : _VoiceAnswer('severity', value.clamp(1, 10).toString());
+  }
+
+  void updateQuestionAnswer(String questionId, String answer) {
+    final next = Map<String, String>.from(_state.questionAnswers);
+    if (answer.trim().isEmpty) {
+      next.remove(questionId);
+    } else {
+      next[questionId] = answer;
+    }
+    _setState(
+      _state.copyWith(
+        questionAnswers: next,
+        voiceAnswerMatched: true,
+        clearError: true,
+      ),
+    );
+  }
+
+  void showQuestionAnswerField(String questionId) {
+    final next = Map<String, String>.from(_state.questionAnswers);
+    next.putIfAbsent(questionId, () => '');
+    _setState(
+      _state.copyWith(
+        questionAnswers: next,
+        voiceAnswerMatched: true,
+        clearError: true,
+      ),
+    );
+  }
+
+  _VoiceAnswer? _durationVoiceAnswer(String normalized) {
+    final interpreted = _durationInterpreter.fromVoice(normalized);
+    if (interpreted == null) return null;
+    return _VoiceAnswer('duration', interpreted.answer);
   }
 
   _VoiceAnswer? _choiceVoiceAnswer(

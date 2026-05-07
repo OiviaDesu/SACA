@@ -13,16 +13,17 @@ class _ResultPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: SacaTheme.surfaceGradient,
+        gradient: colors.surfaceGradient,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: result.isEmergency ? SacaTheme.emergency : SacaTheme.border,
+          color: result.isEmergency ? SacaTheme.emergency : colors.border,
         ),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x16000000),
+            color: colors.shadow,
             blurRadius: 24,
             offset: Offset(0, 10),
           ),
@@ -36,7 +37,7 @@ class _ResultPanel extends StatelessWidget {
             Text(
               localizer.t(language, 'possiblePattern'),
               textAlign: TextAlign.center,
-              style: SacaTheme.small,
+              style: SacaTheme.small.copyWith(color: colors.mutedText),
             ),
             const SizedBox(height: 12),
             _PredictionList(
@@ -59,7 +60,10 @@ class _ResultPanel extends StatelessWidget {
             const SizedBox(height: 18),
             Text(
               localizer.t(language, 'recommendations'),
-              style: SacaTheme.body.copyWith(fontWeight: FontWeight.w800),
+              style: SacaTheme.body.copyWith(
+                color: colors.text,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 10),
             for (final item in localizer.guidance(language, result))
@@ -68,7 +72,7 @@ class _ResultPanel extends StatelessWidget {
             Text(
               localizer.disclaimer(language, result.disclaimer),
               textAlign: TextAlign.center,
-              style: SacaTheme.small,
+              style: SacaTheme.small.copyWith(color: colors.mutedText),
             ),
             if (result.isEmergency) ...[
               const SizedBox(height: 18),
@@ -139,13 +143,13 @@ class _PredictionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient:
-            primary ? SacaTheme.selectedGradient : SacaTheme.surfaceGradient,
+        gradient: primary ? colors.selectedGradient : colors.surfaceGradient,
         borderRadius: BorderRadius.circular(primary ? 20 : 16),
         border: Border.all(
-          color: primary ? SacaTheme.selectedBorder : SacaTheme.border,
+          color: primary ? colors.selectedBorder : colors.border,
         ),
       ),
       child: Padding(
@@ -153,8 +157,8 @@ class _PredictionCard extends StatelessWidget {
         child: Row(
           children: [
             DecoratedBox(
-              decoration: const BoxDecoration(
-                color: SacaTheme.surface,
+              decoration: BoxDecoration(
+                color: colors.surface,
                 shape: BoxShape.circle,
               ),
               child: SizedBox(
@@ -164,7 +168,7 @@ class _PredictionCard extends StatelessWidget {
                   child: Text(
                     '${prediction.rank}',
                     style: SacaTheme.body.copyWith(
-                      color: SacaTheme.accent,
+                      color: colors.accent,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -180,13 +184,14 @@ class _PredictionCard extends StatelessWidget {
                     localizer.resultDiseaseLabel(language, prediction.label),
                     style:
                         (primary ? SacaTheme.title : SacaTheme.body).copyWith(
+                      color: colors.text,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _conditionExplanation(prediction.label),
-                    style: SacaTheme.small,
+                    localizer.conditionExplanation(language, prediction.label),
+                    style: SacaTheme.small.copyWith(color: colors.mutedText),
                   ),
                 ],
               ),
@@ -203,17 +208,6 @@ class _PredictionCard extends StatelessWidget {
     );
   }
 
-  String _conditionExplanation(String disease) {
-    return switch (disease) {
-      'Urgent symptoms' =>
-        'These symptoms may need emergency care and should not wait.',
-      'Influenza' =>
-        'Can match fever, headache, throat symptoms, or flu-like illness.',
-      'Stomach upset' =>
-        'Can match stomach pain, vomiting, nausea, or bloating.',
-      _ => 'General pattern from the information provided.',
-    };
-  }
 }
 
 class _ConfidenceChip extends StatelessWidget {
@@ -239,7 +233,7 @@ class _ConfidenceChip extends StatelessWidget {
     final color = switch (level) {
       ConfidenceLevel.high => SacaTheme.safe,
       ConfidenceLevel.medium => const Color(0xFFB87000),
-      ConfidenceLevel.low => SacaTheme.accent,
+      ConfidenceLevel.low => SacaThemeColors.of(context).accent,
     };
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -272,17 +266,22 @@ class _ConfidenceWarning extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: SacaTheme.selected.withValues(alpha: 0.42),
+        color: SacaThemeColors.of(context).selected.withValues(alpha: 0.42),
         borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: SacaTheme.selectedBorder.withValues(alpha: 0.45)),
+        border: Border.all(
+          color: SacaThemeColors.of(context)
+              .selectedBorder
+              .withValues(alpha: 0.45),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Text(
           text,
           textAlign: TextAlign.center,
-          style: SacaTheme.small.copyWith(color: SacaTheme.text),
+          style: SacaTheme.small.copyWith(
+            color: SacaThemeColors.of(context).text,
+          ),
         ),
       ),
     );
@@ -335,21 +334,24 @@ class _GuidanceLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(top: 3),
             child: Icon(
               CupertinoIcons.check_mark_circled,
               size: 18,
-              color: SacaTheme.text,
+              color: colors.text,
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: SacaTheme.body)),
+          Expanded(
+              child: Text(text,
+                  style: SacaTheme.body.copyWith(color: colors.text))),
         ],
       ),
     );
@@ -369,6 +371,7 @@ class _SeverityMeter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
     final label = localizer.severityLabel(language, severity);
     final color = switch (severity) {
       SeverityLevel.mild => SacaTheme.safe,
@@ -398,8 +401,7 @@ class _SeverityMeter extends StatelessWidget {
               '${localizer.t(language, 'severity')}: $label',
               textAlign: TextAlign.center,
               style: SacaTheme.body.copyWith(
-                color:
-                    severity == SeverityLevel.moderate ? SacaTheme.text : color,
+                color: severity == SeverityLevel.moderate ? colors.text : color,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -431,9 +433,9 @@ class _SeverityMeter extends StatelessWidget {
                   ),
                   Positioned(
                     left: (constraints.maxWidth - 18) * position,
-                    child: const DecoratedBox(
+                    child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: SacaTheme.text,
+                        color: colors.text,
                         shape: BoxShape.circle,
                       ),
                       child: SizedBox(width: 18, height: 18),

@@ -314,6 +314,31 @@ void main() {
       expect(controller.state.voiceAnswerMatched, isFalse);
     });
 
+    test('voice maps Gurindji command words', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.gurindji);
+      await controller.chooseInputMethod(InputMethod.voice);
+      controller.updateTranscript('ngurrulyp');
+      controller.continueFromInput();
+
+      expect(controller.answerCurrentQuestionByVoice('yamak'), isTrue);
+      expect(controller.state.questionAnswers['severity'], '2');
+      controller.nextQuestion();
+      expect(controller.answerCurrentQuestionByVoice('jala'), isTrue);
+      expect(controller.state.questionAnswers['duration'], 'less than one day');
+      controller.nextQuestion();
+      controller.toggleQuestionOption('related_symptoms', 'none');
+      controller.nextQuestion();
+      expect(controller.answerCurrentQuestionByVoice('lawara'), isTrue);
+      expect(controller.state.questionAnswers['medication'], 'no medication');
+    });
+
     test('voice maps more than seven day duration variants', () async {
       final controller = SacaFlowController(
         speechInput: _FakeSpeechInputService(),
@@ -380,6 +405,65 @@ void main() {
           controller.state.questionAnswers['allergies'], 'no known allergies');
       expect(controller.state.voiceAnswerMatched, isFalse);
     });
+
+    test('follow-up voice uses command mode and auto-advances on match',
+        () async {
+      final speechInput = _FakeSpeechInputService(
+        transcribeFuture: Future.value(
+          const AppResult.success(SpeechInputResult(text: 'yuwayi')),
+        ),
+      );
+      final controller = SacaFlowController(
+        speechInput: speechInput,
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.gurindji);
+      await controller.chooseInputMethod(InputMethod.voice);
+      controller.updateTranscript('ngurrulyp');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'less than one day');
+      controller.nextQuestion();
+      controller.toggleQuestionOption('related_symptoms', 'none');
+      controller.nextQuestion();
+
+      await controller.startRecording();
+      await controller.stopRecording();
+
+      expect(speechInput.startedModes, contains(SpeechInputMode.command));
+      expect(speechInput.stoppedModes, contains(SpeechInputMode.command));
+      expect(
+          controller.state.questionAnswers['medication'], 'taken medication');
+      expect(controller.state.step, SacaStep.questionFood);
+    });
+
+    test('unmatched follow-up voice stays on current step', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          transcribeFuture: Future.value(
+            const AppResult.success(SpeechInputResult(text: 'banana sky')),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      controller.updateTranscript('pain');
+      controller.continueFromInput();
+
+      await controller.startRecording();
+      await controller.stopRecording();
+
+      expect(controller.state.step, SacaStep.questionSeverity);
+      expect(controller.state.voiceAnswerMatched, isFalse);
+    });
   });
 }
 
@@ -393,6 +477,8 @@ class _FakeSpeechInputService implements SpeechInputService {
   final AppResult<void> prepareResult;
   final Future<AppResult<void>>? prepareFuture;
   final Future<AppResult<SpeechInputResult>>? transcribeFuture;
+  final List<SpeechInputMode> startedModes = <SpeechInputMode>[];
+  final List<SpeechInputMode> stoppedModes = <SpeechInputMode>[];
 
   @override
   bool get supportsOnDeviceStt => true;
@@ -406,12 +492,25 @@ class _FakeSpeechInputService implements SpeechInputService {
   }
 
   @override
-  Future<AppResult<void>> startRecording() async {
+  Future<AppResult<void>> startRecording({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
+    startedModes.add(mode);
     return const AppResult.success(null);
   }
 
   @override
-  Future<AppResult<SpeechInputResult>> stopAndTranscribe() async {
+  Future<AppResult<SpeechInputResult>> waitForAutoStopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
+    return Completer<AppResult<SpeechInputResult>>().future;
+  }
+
+  @override
+  Future<AppResult<SpeechInputResult>> stopAndTranscribe({
+    SpeechInputMode mode = SpeechInputMode.dictation,
+  }) async {
+    stoppedModes.add(mode);
     if (transcribeFuture != null) {
       return transcribeFuture!;
     }
