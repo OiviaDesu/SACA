@@ -9,9 +9,6 @@ PODS:
     - Flutter
   - whisper_kit (0.0.1):
     - Flutter
-    - whisper_kit/EnhancedAudio (= 0.0.1)
-  - whisper_kit/EnhancedAudio (0.0.1):
-    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -37,7 +34,7 @@ SPEC CHECKSUMS:
   record_ios: 412daca2350b228e698fffcd08f1f94ceb1e3844
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sherpa_onnx_ios: dd99d1ea762b50700812684ce429a95709f3756e
-  whisper_kit: ab111b2ed44e52d78aa52761b647e62f389d0d32
+  whisper_kit: e81791bacc2e1729c7b4622172a95f3f2b098307
 
 PODFILE CHECKSUM: e30f02f9d1c72c47bb6344a0a748c9d268180865
 
