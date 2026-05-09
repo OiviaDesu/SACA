@@ -51,7 +51,18 @@ python_pipeline/.config/
 /build/
 /coverage/
 /dist/
-/ios/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+ios/Pods/
+ios/.symlinks/
+ios/.build/
+ios/Flutter/.last_build_id
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/ephemeral/
+macos/Pods/
+macos/.symlinks/
+macos/.build/
 
 # Local dataset/cache outputs. Keep raw corpora and generated artifacts out of Git.
 python_pipeline/data/**
@@ -92,8 +103,6 @@ python_pipeline/write_test.txt
 android/local.properties
 android/.gradle/
 android/saca_demo_android.iml
-ios/Flutter/Generated.xcconfig
-ios/Flutter/flutter_export_environment.sh
 windows/flutter/ephemeral/
 
 # Local model assets. See docs/MODEL_ASSETS.md.

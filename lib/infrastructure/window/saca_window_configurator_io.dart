@@ -5,9 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../core/theme/saca_theme.dart';
+import '../platform/desktop_shell_policy.dart';
 
 Future<void> configureSacaDesktopWindow() async {
-  if (defaultTargetPlatform != TargetPlatform.windows) return;
+  if (!DesktopShellPolicy.supportsManagedWindow(defaultTargetPlatform)) return;
 
   await windowManager.ensureInitialized();
 

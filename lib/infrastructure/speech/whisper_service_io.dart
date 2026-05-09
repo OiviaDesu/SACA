@@ -1,6 +1,6 @@
 // WhisperService â€“ platform service for on-device STT.
 //
-// - Windows: sherpa_onnx + bundled Whisper ONNX model
+// - Windows/macOS: sherpa_onnx + bundled Whisper ONNX model
 // - Android/iOS: whisper_kit + bundled GGML model
 
 import 'dart:io';
@@ -15,6 +15,8 @@ part 'whisper_service_parts/windows_runtime.dart';
 part 'whisper_service_parts/whisper_asset_bundle.dart';
 
 enum SacaLanguage { english, gurindji }
+
+enum _SpeechRuntimeFamily { desktopSherpa, mobileWhisperKit, unsupported }
 
 class SacaSttModelAssets {
   const SacaSttModelAssets._();
@@ -88,10 +90,22 @@ class WhisperService {
   String? _initializingRuntimeKey;
   Future<void>? _initFuture;
 
-  bool get _isWhisperKitPlatform => Platform.isAndroid || Platform.isIOS;
-  bool get _isSherpaWindowsPlatform => Platform.isWindows;
+  _SpeechRuntimeFamily get _runtimeFamily {
+    if (Platform.isWindows || Platform.isMacOS) {
+      return _SpeechRuntimeFamily.desktopSherpa;
+    }
+    if (Platform.isAndroid || Platform.isIOS) {
+      return _SpeechRuntimeFamily.mobileWhisperKit;
+    }
+    return _SpeechRuntimeFamily.unsupported;
+  }
+
+  bool get _usesWhisperKit =>
+      _runtimeFamily == _SpeechRuntimeFamily.mobileWhisperKit;
+  bool get _usesDesktopSherpa =>
+      _runtimeFamily == _SpeechRuntimeFamily.desktopSherpa;
   bool get supportsOnDeviceStt =>
-      _isWhisperKitPlatform || _isSherpaWindowsPlatform;
+      _runtimeFamily != _SpeechRuntimeFamily.unsupported;
 
   static const _defaultWindowsBundle = _WhisperAssetBundle(
     assetBase: SacaSttModelAssets.rc1WindowsAssetBase,
@@ -139,12 +153,12 @@ class WhisperService {
   }
 
   Future<void> _initForLanguage(SacaLanguage language) async {
-    if (_isSherpaWindowsPlatform) {
+    if (_usesDesktopSherpa) {
       await _initWindowsRecognizer();
       return;
     }
 
-    if (_isWhisperKitPlatform) {
+    if (_usesWhisperKit) {
       await _initMobileRecognizer();
       return;
     }
@@ -159,11 +173,11 @@ class WhisperService {
       return false;
     }
 
-    if (_isSherpaWindowsPlatform) {
+    if (_usesDesktopSherpa) {
       return _windowsRecognizer != null;
     }
 
-    if (_isWhisperKitPlatform) {
+    if (_usesWhisperKit) {
       return _whisper != null;
     }
 
@@ -171,11 +185,11 @@ class WhisperService {
   }
 
   Future<String> _resolveRuntimeKey(SacaLanguage language) async {
-    if (_isSherpaWindowsPlatform) {
-      return 'windows:${SacaSttModelAssets.windowsRuntimeKey(language)}';
+    if (_usesDesktopSherpa) {
+      return 'desktop:${SacaSttModelAssets.windowsRuntimeKey(language)}';
     }
 
-    if (_isWhisperKitPlatform) {
+    if (_usesWhisperKit) {
       final hasRc1Model = await _assetExists(
         SacaSttModelAssets.rc1MobileAssetPath,
       );
@@ -201,11 +215,11 @@ class WhisperService {
     String audioPath, {
     WhisperTranscriptionOptions options = WhisperTranscriptionOptions.dictation,
   }) async {
-    if (_isSherpaWindowsPlatform) {
+    if (_usesDesktopSherpa) {
       return _transcribeWindows(audioPath);
     }
 
-    if (_isWhisperKitPlatform) {
+    if (_usesWhisperKit) {
       return _transcribeMobile(audioPath, options: options);
     }
 

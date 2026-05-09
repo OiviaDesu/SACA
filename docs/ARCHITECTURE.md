@@ -54,7 +54,7 @@ reuse the same runtime.
   - default language code for transcription requests: `en`
   - English mode prefers an optional local `ggml-base.en.bin` bundle; otherwise falls back to multilingual `small`
   - Gurindji mode attempts local custom model path; otherwise falls back to standard small model
-- Windows:
+- Windows / macOS:
   - backend: `sherpa_onnx` (`OfflineRecognizer`)
   - prefers optional English-only ONNX assets when available; otherwise uses `assets/models/sherpa-onnx-whisper-base/`
 - Web:

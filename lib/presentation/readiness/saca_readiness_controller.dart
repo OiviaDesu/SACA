@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:saca_demo/infrastructure/speech/whisper_service_io.dart';
+import 'package:saca_demo/infrastructure/speech/stt_model_catalog.dart';
 
 class SacaReadinessState {
   const SacaReadinessState({required this.isReady, required this.messages});
@@ -17,7 +17,7 @@ class SacaReadinessState {
 
 class SacaReadinessController {
   SacaReadinessController({AssetBundle? bundle})
-      : _bundle = bundle ?? rootBundle;
+    : _bundle = bundle ?? rootBundle;
 
   final AssetBundle _bundle;
   Set<String>? _assetManifestKeys;
@@ -25,8 +25,9 @@ class SacaReadinessController {
   Future<SacaReadinessState> check() async {
     final issues = <String>[];
     try {
-      final source = await _bundle
-          .loadString('assets/models/classifier-xgb-best/bundle.json');
+      final source = await _bundle.loadString(
+        'assets/models/classifier-xgb-best/bundle.json',
+      );
       final bundle = jsonDecode(source) as Map<String, dynamic>;
       final classes = bundle['classes'] as List<dynamic>? ?? const <dynamic>[];
       final model = bundle['model'] as Map<String, dynamic>?;
@@ -45,19 +46,10 @@ class SacaReadinessController {
   }
 
   Future<void> _checkSttAssets(List<String> issues) async {
-    final hasMobileRc1 = await _hasAssetManifestEntry(
-      SacaSttModelAssets.rc1MobileAssetPath,
-    );
-    if (!hasMobileRc1) {
-      issues.add('RC1 mobile STT model is missing.');
-    }
-
-    for (final fileName in SacaSttModelAssets.windowsRequiredFiles) {
-      final hasWindowsAsset = await _hasAssetManifestEntry(
-        '${SacaSttModelAssets.rc1WindowsAssetBase}/$fileName',
-      );
-      if (!hasWindowsAsset) {
-        issues.add('RC1 Windows STT $fileName is missing.');
+    for (final asset in SttModelCatalog.activeAssets) {
+      final exists = await _hasAssetManifestEntry(asset.path);
+      if (!exists) {
+        issues.add('${asset.label} is missing.');
       }
     }
   }
