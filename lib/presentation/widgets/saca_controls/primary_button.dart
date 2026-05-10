@@ -28,7 +28,12 @@ class SacaPrimaryButton extends StatelessWidget {
       minimumSize: const Size(0, SacaTheme.minTapTarget),
       padding: EdgeInsets.zero,
       pressedOpacity: 1,
-      onPressed: onPressed,
+      onPressed: enabled
+          ? () {
+              unawaited(filled ? SacaHaptics.confirm() : SacaHaptics.tap());
+              onPressed?.call();
+            }
+          : null,
       child: _SacaInteractiveSurface(
         surfaceKey: _controlSurfaceKey(key),
         enabled: enabled,

@@ -63,6 +63,26 @@ void main() {
       expect(released.boxShadow!.first.blurRadius, equals(16));
     });
 
+    testWidgets('haptic wrapper keeps button callbacks single-fire', (
+      tester,
+    ) async {
+      var pressed = 0;
+      await _pumpHarness(
+        tester,
+        child: SacaPrimaryButton(
+          key: const ValueKey('primary'),
+          label: 'Continue',
+          onPressed: () => pressed += 1,
+          filled: true,
+        ),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('primary')));
+      await tester.pump();
+
+      expect(pressed, 1);
+    });
+
     testWidgets('selected option keeps selected styling while hovered', (
       tester,
     ) async {

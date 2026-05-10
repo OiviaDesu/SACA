@@ -27,7 +27,14 @@ class SacaIconButton extends StatelessWidget {
       padding: EdgeInsets.zero,
       minimumSize: minimumSize,
       pressedOpacity: 1,
-      onPressed: onPressed,
+      onPressed: enabled
+          ? () {
+              unawaited(
+                destructive ? SacaHaptics.warning() : SacaHaptics.tap(),
+              );
+              onPressed?.call();
+            }
+          : null,
       child: Semantics(
         label: semanticLabel,
         button: true,

@@ -340,6 +340,51 @@ void main() {
     expect(find.text('Skip'), findsOneWidget);
   });
 
+  testWidgets('wide visual body layout constrains diagram beside controls', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(tester, style: SacaPlatformStyle.windowsDesktop);
+    await _openVisualFrontStage(tester);
+
+    expect(find.byKey(const ValueKey('visualBodyWideLayout')), findsOneWidget);
+    expect(find.byKey(const ValueKey('visualBodySidePanel')), findsOneWidget);
+
+    final frameSize = tester.getSize(
+      find.byKey(const ValueKey('visualBodyDiagramFrame')),
+    );
+    expect(frameSize.width, lessThanOrEqualTo(760));
+  });
+
+  testWidgets('tablet-wide visual body layout uses two columns',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(
+      tester,
+      style: SacaPlatformStyle.androidMobile,
+      mediaSize: const Size(1400, 900),
+    );
+    await _openVisualFrontStage(tester);
+
+    expect(find.byKey(const ValueKey('visualBodyWideLayout')), findsOneWidget);
+  });
+
+  testWidgets('narrow visual body layout stays vertical', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(720, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(tester, style: SacaPlatformStyle.androidMobile);
+    await _openVisualFrontStage(tester);
+
+    expect(
+        find.byKey(const ValueKey('visualBodyNarrowLayout')), findsOneWidget);
+    expect(find.byKey(const ValueKey('visualBodyWideLayout')), findsNothing);
+  });
+
   testWidgets('review gate supports adding more information', (tester) async {
     final controller = await _pumpFlow(tester);
     await _reachInputMethod(tester);
@@ -383,6 +428,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('severityValue-5')), findsOneWidget);
+    expect(find.byKey(const ValueKey('severityGradientTrack')), findsOneWidget);
     expect(find.text('Moderate pain'), findsOneWidget);
   });
 
@@ -426,6 +472,13 @@ void main() {
     expect(find.byKey(const ValueKey('severityValue-5')), findsOneWidget);
     await _setSeveritySlider(tester, 9);
     expect(find.byKey(const ValueKey('severityValue-9')), findsOneWidget);
+    final cardCenter = tester.getCenter(
+      find.byKey(const ValueKey('severitySliderInlineControl')),
+    );
+    final valueCenter = tester.getCenter(
+      find.byKey(const ValueKey('severityValue-9')),
+    );
+    expect(valueCenter.dx, closeTo(cardCenter.dx, 2));
   });
 
   testWidgets('duration page uses four simple choices without slider',
@@ -501,7 +554,7 @@ void main() {
     expect(find.text('Severity: Emergency'), findsOneWidget);
   });
 
-  testWidgets('result screen shows ranked top three confidence cards', (
+  testWidgets('result screen frames ranked possibilities as non-diagnosis', (
     tester,
   ) async {
     await _pumpFlow(tester, analysisService: const _RankedAnalysisService());
@@ -517,11 +570,24 @@ void main() {
     await _tapVisible(tester, find.text('Continue'));
     await _answerQuestionnaire(tester);
 
+    expect(find.text('Possible explanations, not a diagnosis'), findsOneWidget);
+    expect(
+      find.text(
+        'These are ranked possibilities based on your answers. You may not have all of them.',
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Fever and throat symptoms'), findsOneWidget);
     expect(find.text('Common Cold'), findsOneWidget);
     expect(find.text('Migraine'), findsOneWidget);
-    expect(find.textContaining('82%'), findsOneWidget);
-    expect(find.textContaining('High'), findsOneWidget);
+    expect(find.text('Best match from your answers'), findsOneWidget);
+    expect(find.text('Other possibilities to discuss'), findsOneWidget);
+    expect(find.text('Also possible'), findsOneWidget);
+    expect(find.text('Less likely'), findsOneWidget);
+    expect(find.textContaining('%'), findsNothing);
+    expect(find.text('High'), findsNothing);
+    expect(find.text('Medium'), findsNothing);
+    expect(find.text('Low'), findsNothing);
   });
 
   testWidgets('result screen renders key content in dark mode', (tester) async {
@@ -544,7 +610,8 @@ void main() {
 
     expect(find.text('Care guidance'), findsOneWidget);
     expect(find.text('Fever and throat symptoms'), findsOneWidget);
-    expect(find.textContaining('82%'), findsOneWidget);
+    expect(find.text('Best match from your answers'), findsOneWidget);
+    expect(find.textContaining('%'), findsNothing);
   });
 
   testWidgets('gurindji visual selection shows Gurindji clinical labels', (
@@ -672,9 +739,12 @@ void main() {
 
     await tester.tap(find.text('Record'));
     await tester.pump();
-    expect(find.byKey(const ValueKey('recordingPulseOuter')), findsOneWidget);
-    expect(find.byKey(const ValueKey('recordingPulseInner')), findsOneWidget);
-    await tester.tap(find.text('Stop recording'));
+    expect(find.text('Listening… Speak clearly'), findsOneWidget);
+    expect(find.text('Stop'), findsOneWidget);
+    expect(find.text('Transcript preview'), findsOneWidget);
+    expect(find.byKey(const ValueKey('recordingPulseOuter')), findsNothing);
+    expect(find.byKey(const ValueKey('recordingPulseInner')), findsNothing);
+    await tester.tap(find.text('Stop'));
     await tester.pump();
 
     expect(find.byKey(const ValueKey('voiceLoadingOverlay')), findsOneWidget);
@@ -955,6 +1025,7 @@ void main() {
 Future<SacaFlowController> _pumpFlow(
   WidgetTester tester, {
   SacaPlatformStyle? style = SacaPlatformStyle.androidMobile,
+  Size? mediaSize,
   ClinicalVocabularyService? vocabulary,
   SacaLocalizer? localizer,
   SpeechInputService? speechInput,
@@ -974,16 +1045,23 @@ Future<SacaFlowController> _pumpFlow(
         analysisService ?? MockAnalysisService(vocabulary: activeVocabulary),
   );
 
+  final screen = SacaFlowScreen(
+    controller: controller,
+    readiness: readiness,
+    settings: SacaSettingsController(store: settingsStore),
+    styleOverride: style,
+    localizer: localizer ?? SacaLocalizer(vocabulary: activeVocabulary),
+  );
+
   await tester.pumpWidget(
     CupertinoApp(
       theme: SacaTheme.cupertinoTheme,
-      home: SacaFlowScreen(
-        controller: controller,
-        readiness: readiness,
-        settings: SacaSettingsController(store: settingsStore),
-        styleOverride: style,
-        localizer: localizer ?? SacaLocalizer(vocabulary: activeVocabulary),
-      ),
+      home: mediaSize == null
+          ? screen
+          : MediaQuery(
+              data: MediaQueryData(size: mediaSize),
+              child: screen,
+            ),
     ),
   );
   await tester.pump(const Duration(milliseconds: 700));
@@ -1021,6 +1099,16 @@ Future<void> _reachInputMethod(
   await tester.ensureVisible(languageButton.last);
   await tester.tap(languageButton.last, warnIfMissed: false);
   await tester.pump();
+}
+
+Future<void> _openVisualFrontStage(WidgetTester tester) async {
+  await _reachInputMethod(tester);
+  await _tapVisible(tester, find.text('Body map'));
+  await _tapVisible(tester, find.text('Fever'));
+  await _pressPrimaryButton(
+    tester,
+    const ValueKey('visualSymptomsContinueButton'),
+  );
 }
 
 Color _probeColor(WidgetTester tester) {
@@ -1085,15 +1173,11 @@ Future<void> _setSeveritySlider(WidgetTester tester, int severity) async {
   await tester.ensureVisible(slider);
   await tester.pump();
 
-  final current = tester.widget<CupertinoSlider>(slider).value;
   final rect = tester.getRect(slider);
   final clampedSeverity = severity.clamp(1, 10);
-  final dx = ((clampedSeverity - current) / 9) * (rect.width - 56);
-
-  if (dx.abs() > 0.1) {
-    await tester.drag(slider, Offset(dx, 0), warnIfMissed: false);
-    await tester.pump();
-  }
+  final progress = (clampedSeverity - 1) / 9;
+  await tester.tapAt(Offset(rect.left + rect.width * progress, rect.center.dy));
+  await tester.pump();
 }
 
 Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
@@ -1127,6 +1211,9 @@ Future<void> _pressPrimaryButton(
 class _NoopSpeechInputService implements SpeechInputService {
   @override
   bool get supportsOnDeviceStt => true;
+
+  @override
+  Stream<String> get partialTranscriptStream => const Stream<String>.empty();
 
   @override
   Future<AppResult<void>> prepare(SacaLanguage language) async {
@@ -1196,6 +1283,9 @@ class _ControllableSpeechInputService implements SpeechInputService {
 
   @override
   bool get supportsOnDeviceStt => true;
+
+  @override
+  Stream<String> get partialTranscriptStream => const Stream<String>.empty();
 
   @override
   Future<AppResult<void>> prepare(SacaLanguage language) async {
