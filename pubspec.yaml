@@ -37,6 +37,7 @@ flutter:
   assets:
     - assets/data/gurindji_lexicon.json
     - assets/models/
+    - assets/models/saca-hybrid-logreg-v1/
     - assets/models/classifier-xgb-best/
     - assets/models/classifier-xgb-quick/
     - assets/models/whisper-gue-base-run4-rc1/
