@@ -132,7 +132,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         _RecordingButton(
           isRecording: state.isRecording,
           label: state.isRecording
-              ? _localizer.t(state.language, 'stopRecording')
+              ? _localizer.t(state.language, 'stop')
               : _localizer.t(state.language, 'record'),
           onPressed: state.isBusy
               ? null
@@ -143,6 +143,17 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
                 },
         ),
         const SizedBox(height: 18),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            _localizer.t(state.language, 'transcriptPreview'),
+            style: SacaTheme.small.copyWith(
+              color: SacaThemeColors.of(context).mutedText,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
         _SacaTextField(
           key: const ValueKey('voiceTranscriptField'),
           value: state.transcript,
@@ -319,47 +330,18 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
               _localizer.t(state.language, 'visualFrontSubtitle'),
             ),
             const SizedBox(height: 18),
-            BodyDiagram(
+            _visualBodySelectionLayout(
+              state: state,
               view: BodyView.front,
-              selectedIds: state.selectedBodyAreaIds,
-              onToggle: _controller.toggleBodyArea,
-              labelForArea: (area) => _localizer.bodyAreaLabel(
-                state.language,
-                area,
-              ),
-              semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
-            ),
-            const SizedBox(height: 16),
-            _SelectedSummary(
-              title: _localizer.t(state.language, 'selected'),
-              emptyText: _localizer.t(state.language, 'selectedEmpty'),
-              values: selectedLabels,
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: SacaPrimaryButton(
-                    key: const ValueKey('visualFrontBackButton'),
-                    label: _localizer.t(state.language, 'back'),
-                    icon: CupertinoIcons.arrow_left_circle,
-                    onPressed: () =>
-                        _setVisualStage(_VisualInputStage.symptoms),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SacaPrimaryButton(
-                    key: const ValueKey('visualFrontContinueButton'),
-                    label: _visualStageHasSelection(state, BodyView.front)
-                        ? _localizer.t(state.language, 'continue')
-                        : _localizer.t(state.language, 'skip'),
-                    icon: CupertinoIcons.arrow_right_circle,
-                    filled: true,
-                    onPressed: () => _setVisualStage(_VisualInputStage.back),
-                  ),
-                ),
-              ],
+              selectedLabels: selectedLabels,
+              backButtonKey: const ValueKey('visualFrontBackButton'),
+              continueButtonKey: const ValueKey('visualFrontContinueButton'),
+              backLabel: _localizer.t(state.language, 'back'),
+              continueLabel: _visualStageHasSelection(state, BodyView.front)
+                  ? _localizer.t(state.language, 'continue')
+                  : _localizer.t(state.language, 'skip'),
+              onBack: () => _setVisualStage(_VisualInputStage.symptoms),
+              onContinue: () => _setVisualStage(_VisualInputStage.back),
             ),
           ],
         ),
@@ -377,51 +359,134 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
               _localizer.t(state.language, 'visualBackSubtitle'),
             ),
             const SizedBox(height: 18),
-            BodyDiagram(
+            _visualBodySelectionLayout(
+              state: state,
               view: BodyView.back,
-              selectedIds: state.selectedBodyAreaIds,
-              onToggle: _controller.toggleBodyArea,
-              labelForArea: (area) => _localizer.bodyAreaLabel(
-                state.language,
-                area,
-              ),
-              semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
-            ),
-            const SizedBox(height: 16),
-            _SelectedSummary(
-              title: _localizer.t(state.language, 'selected'),
-              emptyText: _localizer.t(state.language, 'selectedEmpty'),
-              values: selectedLabels,
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: SacaPrimaryButton(
-                    key: const ValueKey('visualBackBackButton'),
-                    label: _localizer.t(state.language, 'back'),
-                    icon: CupertinoIcons.arrow_left_circle,
-                    onPressed: () => _setVisualStage(_VisualInputStage.front),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SacaPrimaryButton(
-                    key: const ValueKey('visualBackContinueButton'),
-                    label: _visualStageHasSelection(state, BodyView.back)
-                        ? _localizer.t(state.language, 'continue')
-                        : _localizer.t(state.language, 'skip'),
-                    icon: CupertinoIcons.arrow_right_circle,
-                    filled: true,
-                    onPressed:
-                        hasSelection ? _controller.continueFromInput : null,
-                  ),
-                ),
-              ],
+              selectedLabels: selectedLabels,
+              backButtonKey: const ValueKey('visualBackBackButton'),
+              continueButtonKey: const ValueKey('visualBackContinueButton'),
+              backLabel: _localizer.t(state.language, 'back'),
+              continueLabel: _visualStageHasSelection(state, BodyView.back)
+                  ? _localizer.t(state.language, 'continue')
+                  : _localizer.t(state.language, 'skip'),
+              onBack: () => _setVisualStage(_VisualInputStage.front),
+              onContinue: hasSelection ? _controller.continueFromInput : null,
             ),
           ],
         ),
     };
+  }
+
+  Widget _visualBodySelectionLayout({
+    required SacaFlowState state,
+    required BodyView view,
+    required List<String> selectedLabels,
+    required Key backButtonKey,
+    required Key continueButtonKey,
+    required String backLabel,
+    required String continueLabel,
+    required VoidCallback onBack,
+    required VoidCallback? onContinue,
+  }) {
+    final diagram = Center(
+      child: ConstrainedBox(
+        key: const ValueKey('visualBodyDiagramFrame'),
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: BodyDiagram(
+          view: view,
+          selectedIds: state.selectedBodyAreaIds,
+          onToggle: _controller.toggleBodyArea,
+          labelForArea: (area) => _localizer.bodyAreaLabel(
+            state.language,
+            area,
+          ),
+          semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
+        ),
+      ),
+    );
+
+    final sidePanel = _visualBodySidePanel(
+      state: state,
+      selectedLabels: selectedLabels,
+      backButtonKey: backButtonKey,
+      continueButtonKey: continueButtonKey,
+      backLabel: backLabel,
+      continueLabel: continueLabel,
+      onBack: onBack,
+      onContinue: onContinue,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 800) {
+          return Row(
+            key: const ValueKey('visualBodyWideLayout'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: diagram),
+              const SizedBox(width: 28),
+              SizedBox(width: 320, child: sidePanel),
+            ],
+          );
+        }
+
+        return Column(
+          key: const ValueKey('visualBodyNarrowLayout'),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            diagram,
+            const SizedBox(height: 16),
+            sidePanel,
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _visualBodySidePanel({
+    required SacaFlowState state,
+    required List<String> selectedLabels,
+    required Key backButtonKey,
+    required Key continueButtonKey,
+    required String backLabel,
+    required String continueLabel,
+    required VoidCallback onBack,
+    required VoidCallback? onContinue,
+  }) {
+    return Column(
+      key: const ValueKey('visualBodySidePanel'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SelectedSummary(
+          title: _localizer.t(state.language, 'selected'),
+          emptyText: _localizer.t(state.language, 'selectedEmpty'),
+          values: selectedLabels,
+        ),
+        const SizedBox(height: 22),
+        Row(
+          children: [
+            Expanded(
+              child: SacaPrimaryButton(
+                key: backButtonKey,
+                label: backLabel,
+                icon: CupertinoIcons.arrow_left_circle,
+                onPressed: onBack,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SacaPrimaryButton(
+                key: continueButtonKey,
+                label: continueLabel,
+                icon: CupertinoIcons.arrow_right_circle,
+                filled: true,
+                onPressed: onContinue,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _severityStep(

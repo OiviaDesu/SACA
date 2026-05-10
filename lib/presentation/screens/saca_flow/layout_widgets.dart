@@ -22,7 +22,7 @@ class _MobileShell extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final isTablet = width >= 600;
     final contentMaxWidth = width >= 900
-        ? 820.0
+        ? 980.0
         : width >= 600
             ? 640.0
             : SacaTheme.phoneWidth;
@@ -40,7 +40,7 @@ class _MobileShell extends StatelessWidget {
         Expanded(
           child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isTablet ? 980 : 720),
+              constraints: BoxConstraints(maxWidth: isTablet ? 1100 : 720),
               child: SingleChildScrollView(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(

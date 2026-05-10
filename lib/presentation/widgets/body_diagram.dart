@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../../domain/models/saca_models.dart';
 import 'saca_controls.dart';
 
-class BodyDiagram extends StatelessWidget {
+class BodyDiagram extends StatefulWidget {
   const BodyDiagram({
     super.key,
     required this.view,
@@ -20,15 +20,38 @@ class BodyDiagram extends StatelessWidget {
   final String semanticsPrefix;
 
   @override
+  State<BodyDiagram> createState() => _BodyDiagramState();
+}
+
+class _BodyDiagramState extends State<BodyDiagram>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final areas = SacaFlowState.bodyAreas
-        .where((area) => area.view == view)
+        .where((area) => area.view == widget.view)
         .toList(growable: false);
 
     final visibleIds = areas.map((area) => area.id).toSet();
 
     return KeyedSubtree(
-      key: ValueKey<String>('bodyDiagram-${view.name}'),
+      key: ValueKey<String>('bodyDiagram-${widget.view.name}'),
       child: AspectRatio(
         aspectRatio: 0.92,
         child: DecoratedBox(
@@ -54,58 +77,82 @@ class BodyDiagram extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
             child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Stack(
-                  children: [
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: Image.asset(
-                            view == BodyView.front
-                                ? 'assets/Images/Body-front.png'
-                                : 'assets/Images/Body-back.png',
-                            fit: BoxFit.contain,
+              builder: (context, _) {
+                const designSize = Size(820, 890);
+
+                return ClipRect(
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: designSize.width,
+                      height: designSize.height,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                child: Image.asset(
+                                  widget.view == BodyView.front
+                                      ? 'assets/Images/Body-front.png'
+                                      : 'assets/Images/Body-back.png',
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: AnimatedBuilder(
+                                key: const ValueKey('bodyIndicatorPulse'),
+                                animation: _pulseController,
+                                builder: (context, _) {
+                                  return CustomPaint(
+                                    size: designSize,
+                                    painter: _BodyHighlightPainter(
+                                      selectedIds: widget.selectedIds,
+                                      visibleIds: visibleIds,
+                                      pulse: _pulseController.value,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                size: designSize,
+                                painter: _BodyConnectorPainter(
+                                  areas: areas,
+                                  view: widget.view,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: _BodyTapLayer(
+                              areas: areas,
+                              size: designSize,
+                              onToggle: widget.onToggle,
+                            ),
+                          ),
+                          for (final area in areas)
+                            _PositionedAreaChip(
+                              area: area,
+                              label: widget.labelForArea(area),
+                              semanticsPrefix: widget.semanticsPrefix,
+                              selected: widget.selectedIds.contains(area.id),
+                              size: designSize,
+                              onPressed: () => widget.onToggle(area.id),
+                            ),
+                        ],
                       ),
                     ),
-
-                    // Red highlight points for selected body parts
-                    // on the current view only.
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: CustomPaint(
-                          painter: _BodyHighlightPainter(
-                            selectedIds: selectedIds,
-                            visibleIds: visibleIds,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Connector lines between labels and body parts.
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: CustomPaint(
-                          painter: _BodyConnectorPainter(
-                            areas: areas,
-                            view: view,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    for (final area in areas)
-                      _PositionedAreaChip(
-                        area: area,
-                        label: labelForArea(area),
-                        semanticsPrefix: semanticsPrefix,
-                        selected: selectedIds.contains(area.id),
-                        size: constraints.biggest,
-                        onPressed: () => onToggle(area.id),
-                      ),
-                  ],
+                  ),
                 );
               },
             ),
@@ -176,14 +223,60 @@ class _PositionedAreaChip extends StatelessWidget {
   }
 }
 
+class _BodyTapLayer extends StatelessWidget {
+  const _BodyTapLayer({
+    required this.areas,
+    required this.size,
+    required this.onToggle,
+  });
+
+  final List<BodyArea> areas;
+  final Size size;
+  final ValueChanged<String> onToggle;
+
+  static const double tapRadius = 56;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      key: const ValueKey('bodyTapLayer'),
+      behavior: HitTestBehavior.translucent,
+      onTapDown: (details) {
+        final id = _nearestAreaId(details.localPosition);
+        if (id == null) return;
+        onToggle(id);
+      },
+    );
+  }
+
+  String? _nearestAreaId(Offset tapPosition) {
+    String? nearestId;
+    var nearestDistance = double.infinity;
+
+    for (final area in areas) {
+      final target = _BodyTargetPoints.positionFor(area.id, size);
+      if (target == null) continue;
+      final distance = (tapPosition - target).distance;
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestId = area.id;
+      }
+    }
+
+    return nearestDistance <= tapRadius ? nearestId : null;
+  }
+}
+
 class _BodyHighlightPainter extends CustomPainter {
   const _BodyHighlightPainter({
     required this.selectedIds,
     required this.visibleIds,
+    required this.pulse,
   });
 
   final Set<String> selectedIds;
   final Set<String> visibleIds;
+  final double pulse;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -198,7 +291,11 @@ class _BodyHighlightPainter extends CustomPainter {
       if (center == null) continue;
 
       final outerPaint = Paint()
-        ..color = const Color(0x44E85B5B)
+        ..color = Color.lerp(
+          const Color(0x22E85B5B),
+          const Color(0x55E85B5B),
+          pulse,
+        )!
         ..style = PaintingStyle.fill;
 
       final middlePaint = Paint()
@@ -209,7 +306,7 @@ class _BodyHighlightPainter extends CustomPainter {
         ..color = const Color(0xFFE85B5B)
         ..style = PaintingStyle.fill;
 
-      canvas.drawCircle(center, 24, outerPaint);
+      canvas.drawCircle(center, 22 + (pulse * 7), outerPaint);
       canvas.drawCircle(center, 14, middlePaint);
       canvas.drawCircle(center, 6, innerPaint);
     }
@@ -218,7 +315,8 @@ class _BodyHighlightPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _BodyHighlightPainter oldDelegate) {
     return oldDelegate.selectedIds != selectedIds ||
-        oldDelegate.visibleIds != visibleIds;
+        oldDelegate.visibleIds != visibleIds ||
+        oldDelegate.pulse != pulse;
   }
 }
 

@@ -32,6 +32,48 @@ void main() {
       expect(toggled, <String>['chest']);
     });
 
+    testWidgets('black box: tapping body target toggles nearest chip',
+        (tester) async {
+      final toggled = <String>[];
+
+      await _pumpHarness(
+        tester,
+        child: BodyDiagram(
+          view: BodyView.front,
+          selectedIds: const <String>{},
+          semanticsPrefix: 'Body area',
+          labelForArea: (area) => area.label,
+          onToggle: toggled.add,
+        ),
+      );
+
+      await _tapDesignPoint(tester, const Offset(0.48, 0.29));
+      await tester.pump(const Duration(milliseconds: 180));
+
+      expect(toggled, <String>['chest']);
+    });
+
+    testWidgets('black box: tapping empty body space does not toggle',
+        (tester) async {
+      final toggled = <String>[];
+
+      await _pumpHarness(
+        tester,
+        child: BodyDiagram(
+          view: BodyView.front,
+          selectedIds: const <String>{},
+          semanticsPrefix: 'Body area',
+          labelForArea: (area) => area.label,
+          onToggle: toggled.add,
+        ),
+      );
+
+      await _tapDesignPoint(tester, const Offset(0.50, 0.80));
+      await tester.pump(const Duration(milliseconds: 180));
+
+      expect(toggled, isEmpty);
+    });
+
     testWidgets('black box: back view renders back labels only',
         (tester) async {
       await _pumpHarness(
@@ -100,7 +142,36 @@ void main() {
       expect(opacity.opacity, 1);
       expect(scale.curve, Curves.easeOutCubic);
     });
+
+    testWidgets('white box: selected indicators use pulse animation',
+        (tester) async {
+      await _pumpHarness(
+        tester,
+        child: BodyDiagram(
+          view: BodyView.front,
+          selectedIds: const <String>{'chest'},
+          semanticsPrefix: 'Body area',
+          labelForArea: (area) => area.label,
+          onToggle: (_) {},
+        ),
+      );
+
+      expect(find.byKey(const ValueKey('bodyIndicatorPulse')), findsOneWidget);
+    });
   });
+}
+
+Future<void> _tapDesignPoint(
+    WidgetTester tester, Offset normalizedPoint) async {
+  const designSize = Size(820, 890);
+  final tapLayer = tester.renderObject<RenderBox>(
+    find.byKey(const ValueKey('bodyTapLayer')),
+  );
+  final point = Offset(
+    normalizedPoint.dx * designSize.width,
+    normalizedPoint.dy * designSize.height,
+  );
+  await tester.tapAt(tapLayer.localToGlobal(point));
 }
 
 Future<void> _pumpHarness(
