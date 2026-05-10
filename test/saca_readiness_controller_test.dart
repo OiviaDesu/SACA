@@ -27,15 +27,8 @@ void main() {
             '${SacaSttModelAssets.rc1WindowsAssetBase}/decoder.onnx':
                 <String>[],
             '${SacaSttModelAssets.rc1WindowsAssetBase}/tokens.txt': <String>[],
+            'assets/models/saca-hybrid-logreg-v1/bundle.json': <String>[],
           }),
-          'assets/models/classifier-xgb-best/bundle.json': jsonEncode(
-            <String, Object>{
-              'classes': <String>['a', 'b'],
-              'model': <String, Object>{
-                'trees': <Object>[<String, Object>{}],
-              },
-            },
-          ),
         },
       ),
     );
@@ -50,14 +43,9 @@ void main() {
       bundle: _FakeAssetBundle(
         bytes: <String, ByteData>{},
         strings: <String, String>{
-          'assets/models/classifier-xgb-best/bundle.json': jsonEncode(
-            <String, Object>{
-              'classes': <String>['a', 'b'],
-              'model': <String, Object>{
-                'trees': <Object>[<String, Object>{}],
-              },
-            },
-          ),
+          'AssetManifest.json': jsonEncode(<String, List<String>>{
+            'assets/models/saca-hybrid-logreg-v1/bundle.json': <String>[],
+          }),
         },
       ),
     );

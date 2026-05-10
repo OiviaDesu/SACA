@@ -11,6 +11,7 @@ enum SpeechInputMode { dictation, command }
 
 abstract interface class SpeechInputService {
   bool get supportsOnDeviceStt;
+  Stream<String> get partialTranscriptStream;
 
   Future<AppResult<void>> prepare(SacaLanguage language);
   Future<AppResult<void>> startRecording({

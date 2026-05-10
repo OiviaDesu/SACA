@@ -272,76 +272,124 @@ class _RecordingButtonState extends State<_RecordingButton>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final pulse = widget.isRecording ? 1 + (_controller.value * 0.05) : 1.0;
-        final ringOpacity =
-            widget.isRecording ? 0.28 + _controller.value * 0.18 : 0.0;
-        return Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.none,
-          children: [
-            if (widget.isRecording) ...[
-              Positioned.fill(
-                key: const ValueKey('recordingPulseOuter'),
-                child: Transform.scale(
-                  scale: 1.12 + _controller.value * 0.14,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(32),
-                      border: Border.all(
-                        color: colors.accent.withValues(alpha: ringOpacity),
-                        width: 3,
-                      ),
+        if (!widget.isRecording) {
+          return Center(
+            child: SacaPrimaryButton(
+              label: widget.label,
+              icon: CupertinoIcons.mic_fill,
+              filled: true,
+              onPressed: widget.onPressed,
+            ),
+          );
+        }
+        return Semantics(
+          label: 'Recording in progress',
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: colors.selectedBorder.withValues(alpha: 0.42),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.accent.withValues(alpha: 0.12),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  _RecordingDot(progress: _controller.value),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Listening… Speak clearly',
+                          style: SacaTheme.body.copyWith(
+                            color: colors.text,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        _MiniWaveform(progress: _controller.value),
+                      ],
                     ),
                   ),
-                ),
-              ),
-              Positioned.fill(
-                key: const ValueKey('recordingPulseInner'),
-                child: Transform.scale(
-                  scale: 1.04 + _controller.value * 0.08,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(
-                        color: colors.accent.withValues(alpha: 0.35),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            Transform.scale(
-              scale: pulse,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors.accent.withValues(
-                        alpha: widget.isRecording ? 0.40 : 0.18,
-                      ),
-                      blurRadius: widget.isRecording ? 38 : 20,
-                      spreadRadius: widget.isRecording ? 5 : 0,
-                    ),
-                  ],
-                ),
-                child: SizedBox(
-                  height: 86,
-                  child: SacaPrimaryButton(
+                  const SizedBox(width: 12),
+                  SacaPrimaryButton(
                     label: widget.label,
-                    icon: widget.isRecording
-                        ? CupertinoIcons.waveform
-                        : CupertinoIcons.mic_fill,
-                    filled: true,
+                    icon: CupertinoIcons.stop_fill,
+                    filled: false,
                     onPressed: widget.onPressed,
                   ),
-                ),
+                ],
               ),
             ),
-          ],
+          ),
         );
       },
+    );
+  }
+}
+
+class _RecordingDot extends StatelessWidget {
+  const _RecordingDot({required this.progress});
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = SacaThemeColors.of(context).accent;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12 + progress * 0.16),
+        shape: BoxShape.circle,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(7),
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          child: const SizedBox(width: 10, height: 10),
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniWaveform extends StatelessWidget {
+  const _MiniWaveform({required this.progress});
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    final heights = <double>[
+      8 + progress * 8,
+      16 - progress * 6,
+      10 + progress * 10,
+      18 - progress * 8,
+      9 + progress * 7,
+    ];
+    return Row(
+      children: [
+        for (final height in heights) ...[
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.accent.withValues(alpha: 0.58),
+              borderRadius: BorderRadius.circular(99),
+            ),
+            child: SizedBox(width: 4, height: height),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ],
     );
   }
 }

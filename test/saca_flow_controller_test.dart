@@ -270,6 +270,35 @@ void main() {
       expect(controller.state.transcript, 'headache and sore throat');
     });
 
+    test('partial transcript updates while recording and final replaces it',
+        () async {
+      final partials = StreamController<String>();
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          partialTranscriptStream: partials.stream,
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(() async {
+        await partials.close();
+        controller.dispose();
+      });
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      await controller.startRecording();
+
+      partials.add('sore throat draft');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.state.transcript, 'sore throat draft');
+
+      await controller.stopRecording();
+
+      expect(controller.state.transcript, 'headache and sore throat');
+    });
+
     test('voice maps severity transcripts to structured answer', () async {
       final controller = SacaFlowController(
         speechInput: _FakeSpeechInputService(),
@@ -464,6 +493,30 @@ void main() {
       expect(controller.state.step, SacaStep.questionSeverity);
       expect(controller.state.voiceAnswerMatched, isFalse);
     });
+
+    test('auto-stop transcription clears recording state', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          autoStopFuture: Future.value(
+            const AppResult.success(SpeechInputResult(text: 'throat pain')),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      await controller.startRecording();
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.state.isRecording, isFalse);
+      expect(controller.state.isBusy, isFalse);
+      expect(controller.state.voiceBusyPhase, VoiceBusyPhase.none);
+      expect(controller.state.transcript, 'throat pain');
+    });
   });
 }
 
@@ -472,11 +525,17 @@ class _FakeSpeechInputService implements SpeechInputService {
     this.prepareResult = const AppResult<void>.success(null),
     this.prepareFuture,
     this.transcribeFuture,
-  });
+    this.autoStopFuture,
+    Stream<String>? partialTranscriptStream,
+  }) : partialTranscriptStream =
+            partialTranscriptStream ?? const Stream<String>.empty();
 
   final AppResult<void> prepareResult;
   final Future<AppResult<void>>? prepareFuture;
   final Future<AppResult<SpeechInputResult>>? transcribeFuture;
+  final Future<AppResult<SpeechInputResult>>? autoStopFuture;
+  @override
+  final Stream<String> partialTranscriptStream;
   final List<SpeechInputMode> startedModes = <SpeechInputMode>[];
   final List<SpeechInputMode> stoppedModes = <SpeechInputMode>[];
 
@@ -503,6 +562,9 @@ class _FakeSpeechInputService implements SpeechInputService {
   Future<AppResult<SpeechInputResult>> waitForAutoStopAndTranscribe({
     SpeechInputMode mode = SpeechInputMode.dictation,
   }) async {
+    if (autoStopFuture != null) {
+      return autoStopFuture!;
+    }
     return Completer<AppResult<SpeechInputResult>>().future;
   }
 
