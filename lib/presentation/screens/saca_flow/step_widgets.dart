@@ -388,22 +388,24 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     required VoidCallback onBack,
     required VoidCallback? onContinue,
   }) {
-    final diagram = Center(
-      child: ConstrainedBox(
-        key: const ValueKey('visualBodyDiagramFrame'),
-        constraints: const BoxConstraints(maxWidth: 760),
-        child: BodyDiagram(
-          view: view,
-          selectedIds: state.selectedBodyAreaIds,
-          onToggle: _controller.toggleBodyArea,
-          labelForArea: (area) => _localizer.bodyAreaLabel(
-            state.language,
-            area,
+    Widget diagram({required double maxHeight}) {
+      return Center(
+        child: ConstrainedBox(
+          key: const ValueKey('visualBodyDiagramFrame'),
+          constraints: BoxConstraints(maxWidth: 760, maxHeight: maxHeight),
+          child: BodyDiagram(
+            view: view,
+            selectedIds: state.selectedBodyAreaIds,
+            onToggle: _controller.toggleBodyArea,
+            labelForArea: (area) => _localizer.bodyAreaLabel(
+              state.language,
+              area,
+            ),
+            semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
           ),
-          semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
         ),
-      ),
-    );
+      );
+    }
 
     final sidePanel = _visualBodySidePanel(
       state: state,
@@ -418,12 +420,19 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth >= 800) {
+        final isWide = constraints.maxWidth >= 800;
+        final maxDiagramHeight = _visualBodyDiagramMaxHeight(
+          context,
+          isWide: isWide,
+        );
+        final fittedDiagram = diagram(maxHeight: maxDiagramHeight);
+
+        if (isWide) {
           return Row(
             key: const ValueKey('visualBodyWideLayout'),
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: diagram),
+              Expanded(child: fittedDiagram),
               const SizedBox(width: 28),
               SizedBox(width: 320, child: sidePanel),
             ],
@@ -434,13 +443,23 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           key: const ValueKey('visualBodyNarrowLayout'),
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            diagram,
-            const SizedBox(height: 16),
+            fittedDiagram,
+            const SizedBox(height: 12),
             sidePanel,
           ],
         );
       },
     );
+  }
+
+  double _visualBodyDiagramMaxHeight(
+    BuildContext context, {
+    required bool isWide,
+  }) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final reservedHeight = isWide ? 258.0 : 342.0;
+    final upperBound = isWide ? 620.0 : 480.0;
+    return (screenHeight - reservedHeight).clamp(300.0, upperBound);
   }
 
   Widget _visualBodySidePanel({

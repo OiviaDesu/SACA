@@ -373,6 +373,61 @@ void main() {
     expect(find.byKey(const ValueKey('visualBodyWideLayout')), findsOneWidget);
   });
 
+  testWidgets('screenshot-sized body stage keeps controls visible without scroll',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1240, 780));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(
+      tester,
+      style: SacaPlatformStyle.windowsDesktop,
+      mediaSize: const Size(1240, 780),
+    );
+    await _openVisualFrontStage(tester);
+    await tester.tap(find.text('Stomach'));
+    await tester.pump();
+
+    const screenHeight = 780.0;
+    final frameBottom = tester.getBottomLeft(
+      find.byKey(const ValueKey('visualBodyDiagramFrame')),
+    ).dy;
+    final backBottom = tester.getBottomLeft(
+      find.byKey(const ValueKey('visualFrontBackButton')),
+    ).dy;
+    final continueBottom = tester.getBottomLeft(
+      find.byKey(const ValueKey('visualFrontContinueButton')),
+    ).dy;
+
+    expect(frameBottom, lessThanOrEqualTo(screenHeight));
+    expect(backBottom, lessThanOrEqualTo(screenHeight));
+    expect(continueBottom, lessThanOrEqualTo(screenHeight));
+    expect(find.textContaining('Stomach'), findsWidgets);
+  });
+
+  testWidgets('short body stage shrinks diagram before controls overflow',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1240, 680));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(
+      tester,
+      style: SacaPlatformStyle.windowsDesktop,
+      mediaSize: const Size(1240, 680),
+    );
+    await _openVisualFrontStage(tester);
+
+    final frameSize = tester.getSize(
+      find.byKey(const ValueKey('visualBodyDiagramFrame')),
+    );
+    final continueBottom = tester.getBottomLeft(
+      find.byKey(const ValueKey('visualFrontContinueButton')),
+    ).dy;
+    const screenHeight = 680.0;
+
+    expect(frameSize.height, lessThanOrEqualTo(430));
+    expect(continueBottom, lessThanOrEqualTo(screenHeight));
+  });
+
   testWidgets('narrow visual body layout stays vertical', (tester) async {
     await tester.binding.setSurfaceSize(const Size(720, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));

@@ -14,7 +14,7 @@ dependencies:
     path: third_party/whisper_kit
 
   # Sherpa-ONNX: used when deploying fine-tuned ONNX model later
-  sherpa_onnx: ^1.13.0
+  sherpa_onnx: ^1.13.1
 
   # Audio recording (16 kHz mono PCM)
   record: ^6.2.0
@@ -44,3 +44,4 @@ flutter:
     - assets/models/sherpa-onnx-whisper-gue-base-run4-rc1/
     - assets/Images/
     
+
