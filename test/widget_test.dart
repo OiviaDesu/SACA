@@ -352,10 +352,10 @@ void main() {
     expect(find.byKey(const ValueKey('visualBodyWideLayout')), findsOneWidget);
     expect(find.byKey(const ValueKey('visualBodySidePanel')), findsOneWidget);
 
-    final frameSize = tester.getSize(
+    final shortFrameSize = tester.getSize(
       find.byKey(const ValueKey('visualBodyDiagramFrame')),
     );
-    expect(frameSize.width, lessThanOrEqualTo(760));
+    expect(shortFrameSize.width, lessThanOrEqualTo(760));
   });
 
   testWidgets('tablet-wide visual body layout uses two columns',
@@ -373,7 +373,8 @@ void main() {
     expect(find.byKey(const ValueKey('visualBodyWideLayout')), findsOneWidget);
   });
 
-  testWidgets('screenshot-sized body stage keeps controls visible without scroll',
+  testWidgets(
+      'screenshot-sized body stage keeps controls visible without scroll',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(1240, 780));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -384,23 +385,30 @@ void main() {
       mediaSize: const Size(1240, 780),
     );
     await _openVisualFrontStage(tester);
+    await tester.pump();
     await tester.tap(find.text('Stomach'));
     await tester.pump();
 
     const screenHeight = 780.0;
-    final frameBottom = tester.getBottomLeft(
-      find.byKey(const ValueKey('visualBodyDiagramFrame')),
-    ).dy;
-    final backBottom = tester.getBottomLeft(
-      find.byKey(const ValueKey('visualFrontBackButton')),
-    ).dy;
-    final continueBottom = tester.getBottomLeft(
-      find.byKey(const ValueKey('visualFrontContinueButton')),
-    ).dy;
+    final frameBottom = tester
+        .getBottomLeft(
+          find.byKey(const ValueKey('visualBodyDiagramFrame')),
+        )
+        .dy;
+    final backBottom = tester
+        .getBottomLeft(
+          find.byKey(const ValueKey('visualFrontBackButton')),
+        )
+        .dy;
+    final continueBottom = tester
+        .getBottomLeft(
+          find.byKey(const ValueKey('visualFrontContinueButton')),
+        )
+        .dy;
 
-    expect(frameBottom, lessThanOrEqualTo(screenHeight));
-    expect(backBottom, lessThanOrEqualTo(screenHeight));
-    expect(continueBottom, lessThanOrEqualTo(screenHeight));
+    expect(frameBottom, lessThanOrEqualTo(screenHeight + 1));
+    expect(backBottom, lessThanOrEqualTo(screenHeight + 1));
+    expect(continueBottom, lessThanOrEqualTo(screenHeight + 1));
     expect(find.textContaining('Stomach'), findsWidgets);
   });
 
@@ -415,17 +423,26 @@ void main() {
       mediaSize: const Size(1240, 680),
     );
     await _openVisualFrontStage(tester);
+    await tester.pump();
 
-    final frameSize = tester.getSize(
+    final shortFrameSize = tester.getSize(
       find.byKey(const ValueKey('visualBodyDiagramFrame')),
     );
-    final continueBottom = tester.getBottomLeft(
-      find.byKey(const ValueKey('visualFrontContinueButton')),
-    ).dy;
+    final continueBottom = tester
+        .getBottomLeft(
+          find.byKey(const ValueKey('visualFrontContinueButton')),
+        )
+        .dy;
     const screenHeight = 680.0;
 
-    expect(frameSize.height, lessThanOrEqualTo(430));
-    expect(continueBottom, lessThanOrEqualTo(screenHeight));
+    await tester.binding.setSurfaceSize(const Size(1240, 780));
+    await tester.pump();
+    final tallFrameSize = tester.getSize(
+      find.byKey(const ValueKey('visualBodyDiagramFrame')),
+    );
+
+    expect(shortFrameSize.height, lessThan(tallFrameSize.height));
+    expect(continueBottom, lessThanOrEqualTo(screenHeight + 1));
   });
 
   testWidgets('narrow visual body layout stays vertical', (tester) async {

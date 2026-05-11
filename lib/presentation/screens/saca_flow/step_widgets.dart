@@ -418,48 +418,10 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       onContinue: onContinue,
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 800;
-        final maxDiagramHeight = _visualBodyDiagramMaxHeight(
-          context,
-          isWide: isWide,
-        );
-        final fittedDiagram = diagram(maxHeight: maxDiagramHeight);
-
-        if (isWide) {
-          return Row(
-            key: const ValueKey('visualBodyWideLayout'),
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: fittedDiagram),
-              const SizedBox(width: 28),
-              SizedBox(width: 320, child: sidePanel),
-            ],
-          );
-        }
-
-        return Column(
-          key: const ValueKey('visualBodyNarrowLayout'),
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            fittedDiagram,
-            const SizedBox(height: 12),
-            sidePanel,
-          ],
-        );
-      },
+    return _ResponsiveVisualBodySelectionLayout(
+      diagramBuilder: diagram,
+      sidePanel: sidePanel,
     );
-  }
-
-  double _visualBodyDiagramMaxHeight(
-    BuildContext context, {
-    required bool isWide,
-  }) {
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final reservedHeight = isWide ? 258.0 : 342.0;
-    final upperBound = isWide ? 620.0 : 480.0;
-    return (screenHeight - reservedHeight).clamp(300.0, upperBound);
   }
 
   Widget _visualBodySidePanel({
@@ -1265,6 +1227,223 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       }
     }
     return _localizer.choiceLabel(state.language, value, value);
+  }
+}
+
+class _ResponsiveVisualBodySelectionLayout extends StatefulWidget {
+  const _ResponsiveVisualBodySelectionLayout({
+    required this.diagramBuilder,
+    required this.sidePanel,
+  });
+
+  final Widget Function({required double maxHeight}) diagramBuilder;
+  final Widget sidePanel;
+
+  @override
+  State<_ResponsiveVisualBodySelectionLayout> createState() =>
+      _ResponsiveVisualBodySelectionLayoutState();
+}
+
+class _ResponsiveVisualBodySelectionLayoutState
+    extends State<_ResponsiveVisualBodySelectionLayout> {
+  static const double _wideBreakpoint = 800;
+  static const double _wideGap = 28;
+  static const double _narrowGap = 12;
+  static const double _sidePanelWidth = 320;
+  static const double _diagramMaxWidth = 760;
+  static const double _diagramAspectRatio = 0.92;
+  static const double _minimumUsableDiagramHeight = 300;
+
+  double? _remainingViewportHeight;
+  double _sidePanelHeight = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return _RemainingViewportHeight(
+      onChanged: _setRemainingViewportHeight,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= _wideBreakpoint;
+          return isWide
+              ? _wideLayout(constraints.maxWidth)
+              : _narrowLayout(constraints.maxWidth);
+        },
+      ),
+    );
+  }
+
+  Widget _wideLayout(double availableWidth) {
+    final diagramColumnWidth = (availableWidth - _wideGap - _sidePanelWidth)
+        .clamp(0.0, _diagramMaxWidth);
+    final widthLimitedHeight = diagramColumnWidth / _diagramAspectRatio;
+    final diagramHeight = _boundedDiagramHeight(
+      widthLimitedHeight: widthLimitedHeight,
+      availableHeight: _remainingViewportHeight,
+    );
+
+    return Row(
+      key: const ValueKey('visualBodyWideLayout'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: widget.diagramBuilder(maxHeight: diagramHeight)),
+        const SizedBox(width: _wideGap),
+        SizedBox(
+          width: _sidePanelWidth,
+          child: _MeasureSize(
+            onChanged: _setSidePanelHeight,
+            child: widget.sidePanel,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _narrowLayout(double availableWidth) {
+    final widthLimitedHeight =
+        availableWidth.clamp(0.0, _diagramMaxWidth) / _diagramAspectRatio;
+    final remaining = _remainingViewportHeight;
+    final heightForDiagram = remaining == null || _sidePanelHeight == 0
+        ? widthLimitedHeight
+        : remaining - _sidePanelHeight - _narrowGap;
+    final diagramHeight = _boundedDiagramHeight(
+      widthLimitedHeight: widthLimitedHeight,
+      availableHeight: heightForDiagram > 0 ? heightForDiagram : null,
+    );
+
+    return Column(
+      key: const ValueKey('visualBodyNarrowLayout'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        widget.diagramBuilder(maxHeight: diagramHeight),
+        const SizedBox(height: _narrowGap),
+        _MeasureSize(
+          onChanged: _setSidePanelHeight,
+          child: widget.sidePanel,
+        ),
+      ],
+    );
+  }
+
+  double _boundedDiagramHeight({
+    required double widthLimitedHeight,
+    required double? availableHeight,
+  }) {
+    final preferredHeight = widthLimitedHeight > 0
+        ? widthLimitedHeight
+        : _minimumUsableDiagramHeight;
+    if (availableHeight == null ||
+        !availableHeight.isFinite ||
+        availableHeight <= 0) {
+      return preferredHeight;
+    }
+    final upperBound = availableHeight < _minimumUsableDiagramHeight
+        ? _minimumUsableDiagramHeight
+        : availableHeight;
+    return preferredHeight
+        .clamp(_minimumUsableDiagramHeight, upperBound)
+        .toDouble();
+  }
+
+  void _setRemainingViewportHeight(double value) {
+    if ((_remainingViewportHeight ?? -1) == value) return;
+    setState(() => _remainingViewportHeight = value);
+  }
+
+  void _setSidePanelHeight(Size value) {
+    if (_sidePanelHeight == value.height) return;
+    setState(() => _sidePanelHeight = value.height);
+  }
+}
+
+class _RemainingViewportHeight extends StatefulWidget {
+  const _RemainingViewportHeight({
+    required this.child,
+    required this.onChanged,
+  });
+
+  final Widget child;
+  final ValueChanged<double> onChanged;
+
+  @override
+  State<_RemainingViewportHeight> createState() =>
+      _RemainingViewportHeightState();
+}
+
+class _RemainingViewportHeightState extends State<_RemainingViewportHeight> {
+  @override
+  void initState() {
+    super.initState();
+    _scheduleMeasure();
+  }
+
+  @override
+  void didUpdateWidget(covariant _RemainingViewportHeight oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _scheduleMeasure();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _scheduleMeasure();
+    return widget.child;
+  }
+
+  void _scheduleMeasure() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final renderObject = context.findRenderObject();
+      if (renderObject is! RenderBox || !renderObject.hasSize) return;
+      final top = renderObject.localToGlobal(Offset.zero).dy;
+      final mediaQuery = MediaQuery.of(context);
+      final remainingHeight =
+          mediaQuery.size.height - mediaQuery.viewInsets.bottom - top;
+      if (remainingHeight.isFinite && remainingHeight > 0) {
+        widget.onChanged(remainingHeight);
+      }
+    });
+  }
+}
+
+class _MeasureSize extends StatefulWidget {
+  const _MeasureSize({
+    required this.child,
+    required this.onChanged,
+  });
+
+  final Widget child;
+  final ValueChanged<Size> onChanged;
+
+  @override
+  State<_MeasureSize> createState() => _MeasureSizeState();
+}
+
+class _MeasureSizeState extends State<_MeasureSize> {
+  @override
+  void initState() {
+    super.initState();
+    _scheduleMeasure();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MeasureSize oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _scheduleMeasure();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _scheduleMeasure();
+    return widget.child;
+  }
+
+  void _scheduleMeasure() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final renderObject = context.findRenderObject();
+      if (renderObject is RenderBox && renderObject.hasSize) {
+        widget.onChanged(renderObject.size);
+      }
+    });
   }
 }
 
