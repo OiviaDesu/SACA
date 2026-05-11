@@ -143,6 +143,54 @@ void main() {
       expect(scale.curve, Curves.easeOutCubic);
     });
 
+    testWidgets('mobile mode keeps labels readable in horizontal rail',
+        (tester) async {
+      await _pumpHarness(
+        tester,
+        size: const Size(360, 520),
+        child: BodyDiagram(
+          view: BodyView.front,
+          selectedIds: const <String>{'stomach'},
+          semanticsPrefix: 'Body area',
+          labelForArea: (area) => area.label,
+          onToggle: (_) {},
+        ),
+      );
+
+      expect(find.byKey(const ValueKey('bodyLabelRail')), findsOneWidget);
+      expect(find.byKey(const ValueKey('bodySelectedFloatingPill')),
+          findsOneWidget);
+      expect(find.text('Stomach'), findsOneWidget);
+      expect(find.text('Selected: Stomach'), findsOneWidget);
+
+      final label = tester.widget<Text>(find.text('Stomach'));
+      expect(label.style?.fontSize, greaterThanOrEqualTo(14));
+    });
+
+    testWidgets('mobile rail chip toggles body area', (tester) async {
+      final toggled = <String>[];
+
+      await _pumpHarness(
+        tester,
+        size: const Size(360, 520),
+        child: BodyDiagram(
+          view: BodyView.front,
+          selectedIds: const <String>{},
+          semanticsPrefix: 'Body area',
+          labelForArea: (area) => area.label,
+          onToggle: toggled.add,
+        ),
+      );
+
+      await tester
+          .ensureVisible(find.byKey(const ValueKey('bodyRailChip-chest')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('bodyRailChip-chest')));
+      await tester.pump(const Duration(milliseconds: 180));
+
+      expect(toggled, <String>['chest']);
+    });
+
     testWidgets('white box: selected indicators use pulse animation',
         (tester) async {
       await _pumpHarness(
@@ -177,13 +225,14 @@ Future<void> _tapDesignPoint(
 Future<void> _pumpHarness(
   WidgetTester tester, {
   required Widget child,
+  Size size = const Size(420, 520),
 }) async {
   await tester.pumpWidget(
     CupertinoApp(
       theme: SacaTheme.cupertinoTheme,
       home: CupertinoPageScaffold(
         child: Center(
-          child: SizedBox(width: 420, height: 520, child: child),
+          child: SizedBox(width: size.width, height: size.height, child: child),
         ),
       ),
     ),

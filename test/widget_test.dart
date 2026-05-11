@@ -310,8 +310,7 @@ void main() {
       const ValueKey('visualSymptomsContinueButton'),
     );
     expect(find.byKey(const ValueKey('bodyDiagram-front')), findsOneWidget);
-    await tester.tap(find.text('Throat').first);
-    await tester.pump();
+    await _tapVisible(tester, find.text('Throat').first);
     await _pressPrimaryButton(
       tester,
       const ValueKey('visualFrontContinueButton'),

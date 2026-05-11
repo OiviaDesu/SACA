@@ -47,115 +47,360 @@ class _BodyDiagramState extends State<BodyDiagram>
     final areas = SacaFlowState.bodyAreas
         .where((area) => area.view == widget.view)
         .toList(growable: false);
-
     final visibleIds = areas.map((area) => area.id).toSet();
 
     return KeyedSubtree(
       key: ValueKey<String>('bodyDiagram-${widget.view.name}'),
       child: AspectRatio(
         aspectRatio: 0.92,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFFEFBFA),
-                Color(0xFFF4FBFD),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 400;
+            return DecoratedBox(
+              decoration: _cardDecoration,
+              child: compact
+                  ? _buildCompactDiagram(
+                      areas: areas,
+                      visibleIds: visibleIds,
+                    )
+                  : _buildFullDiagram(
+                      areas: areas,
+                      visibleIds: visibleIds,
+                    ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  BoxDecoration get _cardDecoration => BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFFEFBFA),
+            Color(0xFFF4FBFD),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFD9E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 26,
+            offset: Offset(0, 10),
+          ),
+        ],
+      );
+
+  Widget _buildFullDiagram({
+    required List<BodyArea> areas,
+    required Set<String> visibleIds,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      child: _ScaledBodyCanvas(
+        areas: areas,
+        visibleIds: visibleIds,
+        selectedIds: widget.selectedIds,
+        view: widget.view,
+        pulseController: _pulseController,
+        labelForArea: widget.labelForArea,
+        semanticsPrefix: widget.semanticsPrefix,
+        onToggle: widget.onToggle,
+        showConnectors: true,
+        showCanvasLabels: true,
+      ),
+    );
+  }
+
+  Widget _buildCompactDiagram({
+    required List<BodyArea> areas,
+    required Set<String> visibleIds,
+  }) {
+    final selectedVisibleAreas = areas
+        .where((area) => widget.selectedIds.contains(area.id))
+        .toList(growable: false);
+    final selectedLabel = selectedVisibleAreas.isEmpty
+        ? null
+        : selectedVisibleAreas.map(widget.labelForArea).join(', ');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+      child: Column(
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: _ScaledBodyCanvas(
+                    areas: areas,
+                    visibleIds: visibleIds,
+                    selectedIds: widget.selectedIds,
+                    view: widget.view,
+                    pulseController: _pulseController,
+                    labelForArea: widget.labelForArea,
+                    semanticsPrefix: widget.semanticsPrefix,
+                    onToggle: widget.onToggle,
+                    showConnectors: false,
+                    showCanvasLabels: false,
+                  ),
+                ),
+                Positioned(
+                  left: 10,
+                  right: 10,
+                  top: 8,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: selectedLabel == null
+                        ? const SizedBox.shrink()
+                        : _SelectedBodyPill(
+                            key: ValueKey<String>(selectedLabel),
+                            label: selectedLabel,
+                          ),
+                  ),
+                ),
               ],
             ),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFFD9E7EB)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 26,
-                offset: Offset(0, 10),
-              ),
-            ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-            child: LayoutBuilder(
-              builder: (context, _) {
-                const designSize = Size(820, 890);
+          const SizedBox(height: 10),
+          _BodyLabelRail(
+            areas: areas,
+            selectedIds: widget.selectedIds,
+            labelForArea: widget.labelForArea,
+            semanticsPrefix: widget.semanticsPrefix,
+            onToggle: widget.onToggle,
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-                return ClipRect(
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: designSize.width,
-                      height: designSize.height,
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                child: Image.asset(
-                                  widget.view == BodyView.front
-                                      ? 'assets/Images/Body-front.png'
-                                      : 'assets/Images/Body-back.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: AnimatedBuilder(
-                                key: const ValueKey('bodyIndicatorPulse'),
-                                animation: _pulseController,
-                                builder: (context, _) {
-                                  return CustomPaint(
-                                    size: designSize,
-                                    painter: _BodyHighlightPainter(
-                                      selectedIds: widget.selectedIds,
-                                      visibleIds: visibleIds,
-                                      pulse: _pulseController.value,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: CustomPaint(
-                                size: designSize,
-                                painter: _BodyConnectorPainter(
-                                  areas: areas,
-                                  view: widget.view,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned.fill(
-                            child: _BodyTapLayer(
-                              areas: areas,
-                              size: designSize,
-                              onToggle: widget.onToggle,
-                            ),
-                          ),
-                          for (final area in areas)
-                            _PositionedAreaChip(
-                              area: area,
-                              label: widget.labelForArea(area),
-                              semanticsPrefix: widget.semanticsPrefix,
-                              selected: widget.selectedIds.contains(area.id),
-                              size: designSize,
-                              onPressed: () => widget.onToggle(area.id),
-                            ),
-                        ],
+class _ScaledBodyCanvas extends StatelessWidget {
+  const _ScaledBodyCanvas({
+    required this.areas,
+    required this.visibleIds,
+    required this.selectedIds,
+    required this.view,
+    required this.pulseController,
+    required this.labelForArea,
+    required this.semanticsPrefix,
+    required this.onToggle,
+    required this.showConnectors,
+    required this.showCanvasLabels,
+  });
+
+  final List<BodyArea> areas;
+  final Set<String> visibleIds;
+  final Set<String> selectedIds;
+  final BodyView view;
+  final AnimationController pulseController;
+  final String Function(BodyArea area) labelForArea;
+  final String semanticsPrefix;
+  final ValueChanged<String> onToggle;
+  final bool showConnectors;
+  final bool showCanvasLabels;
+
+  @override
+  Widget build(BuildContext context) {
+    const designSize = Size(820, 890);
+    return ClipRect(
+      child: FittedBox(
+        fit: BoxFit.contain,
+        alignment: Alignment.topCenter,
+        child: SizedBox(
+          width: designSize.width,
+          height: designSize.height,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Image.asset(
+                      view == BodyView.front
+                          ? 'assets/Images/Body-front.png'
+                          : 'assets/Images/Body-back.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedBuilder(
+                    key: const ValueKey('bodyIndicatorPulse'),
+                    animation: pulseController,
+                    builder: (context, _) {
+                      return CustomPaint(
+                        size: designSize,
+                        painter: _BodyHighlightPainter(
+                          selectedIds: selectedIds,
+                          visibleIds: visibleIds,
+                          pulse: pulseController.value,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              if (showConnectors)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      size: designSize,
+                      painter: _BodyConnectorPainter(
+                        areas: areas,
+                        view: view,
                       ),
                     ),
                   ),
-                );
-              },
+                ),
+              Positioned.fill(
+                child: _BodyTapLayer(
+                  areas: areas,
+                  size: designSize,
+                  onToggle: onToggle,
+                ),
+              ),
+              if (showCanvasLabels)
+                for (final area in areas)
+                  _PositionedAreaChip(
+                    area: area,
+                    label: labelForArea(area),
+                    semanticsPrefix: semanticsPrefix,
+                    selected: selectedIds.contains(area.id),
+                    size: designSize,
+                    onPressed: () => onToggle(area.id),
+                  ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectedBodyPill extends StatelessWidget {
+  const _SelectedBodyPill({super.key, required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: DecoratedBox(
+        key: const ValueKey('bodySelectedFloatingPill'),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFEEF2).withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: const Color(0xFFE46E83)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x18000000),
+              blurRadius: 14,
+              offset: Offset(0, 6),
             ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text(
+            'Selected: $label',
+            key: const ValueKey('bodySelectedFloatingText'),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.1,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1F1F1F),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BodyLabelRail extends StatelessWidget {
+  const _BodyLabelRail({
+    required this.areas,
+    required this.selectedIds,
+    required this.labelForArea,
+    required this.semanticsPrefix,
+    required this.onToggle,
+  });
+
+  final List<BodyArea> areas;
+  final Set<String> selectedIds;
+  final String Function(BodyArea area) labelForArea;
+  final String semanticsPrefix;
+  final ValueChanged<String> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: const ValueKey('bodyLabelRail'),
+      height: 50,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Row(
+          children: [
+            for (final area in areas) ...[
+              _BodyRailChip(
+                area: area,
+                label: labelForArea(area),
+                semanticsPrefix: semanticsPrefix,
+                selected: selectedIds.contains(area.id),
+                onPressed: () => onToggle(area.id),
+              ),
+              if (area != areas.last) const SizedBox(width: 8),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BodyRailChip extends StatelessWidget {
+  const _BodyRailChip({
+    required this.area,
+    required this.label,
+    required this.semanticsPrefix,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final BodyArea area;
+  final String label;
+  final String semanticsPrefix;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$semanticsPrefix ${label.replaceAll('\n', ' ')}',
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOutCubic,
+        scale: selected ? 1.03 : 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 86, minHeight: 42),
+          child: SacaChipButton(
+            key: ValueKey<String>('bodyRailChip-${area.id}'),
+            label: label,
+            selected: selected,
+            onPressed: onPressed,
           ),
         ),
       ),
