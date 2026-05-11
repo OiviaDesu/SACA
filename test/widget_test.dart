@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -436,6 +437,15 @@ void main() {
     const screenHeight = 680.0;
 
     await tester.binding.setSurfaceSize(const Size(1240, 780));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await _pumpFlow(
+      tester,
+      style: SacaPlatformStyle.windowsDesktop,
+      mediaSize: const Size(1240, 780),
+    );
+    await _openVisualFrontStage(tester);
+    await tester.pump();
     await tester.pump();
     final tallFrameSize = tester.getSize(
       find.byKey(const ValueKey('visualBodyDiagramFrame')),
@@ -443,6 +453,102 @@ void main() {
 
     expect(shortFrameSize.height, lessThan(tallFrameSize.height));
     expect(continueBottom, lessThanOrEqualTo(screenHeight + 1));
+  });
+
+  testWidgets('target viewport matrix keeps main flow responsive',
+      (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    for (final viewport in _targetViewports) {
+      await tester.binding.setSurfaceSize(viewport.size);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+
+      await _pumpFlow(
+        tester,
+        style: viewport.style,
+        mediaSize: viewport.size,
+      );
+      expect(find.text('English'), findsWidgets, reason: viewport.name);
+      await _reachInputMethod(tester);
+      expect(find.text('Body map'), findsOneWidget, reason: viewport.name);
+
+      await _openVisualFrontStageFromInputMethod(tester);
+      await tester.pump();
+      await tester.pump();
+      _expectWithinViewport(
+        tester,
+        find.byKey(const ValueKey('visualBodyDiagramFrame')),
+        viewport,
+      );
+      _expectWithinViewport(
+        tester,
+        find.byKey(const ValueKey('visualBodySidePanel')),
+        viewport,
+      );
+      _expectWithinViewport(
+        tester,
+        find.byKey(const ValueKey('visualFrontBackButton')),
+        viewport,
+      );
+      _expectWithinViewport(
+        tester,
+        find.byKey(const ValueKey('visualFrontContinueButton')),
+        viewport,
+      );
+
+      await _pressPrimaryButton(
+        tester,
+        const ValueKey('visualFrontContinueButton'),
+      );
+      await tester.pump();
+      expect(find.byKey(const ValueKey('bodyDiagram-back')), findsOneWidget,
+          reason: viewport.name);
+      _expectWithinViewport(
+        tester,
+        find.byKey(const ValueKey('visualBackContinueButton')),
+        viewport,
+      );
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    }
+  });
+
+  testWidgets('target viewport matrix keeps severity and result usable',
+      (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    for (final viewport in _targetViewports) {
+      await tester.binding.setSurfaceSize(viewport.size);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+
+      await _pumpFlow(
+        tester,
+        style: viewport.style,
+        mediaSize: viewport.size,
+      );
+      await _reachTextSeverityStep(tester);
+      expect(find.byKey(const ValueKey('severitySlider')), findsOneWidget,
+          reason: viewport.name);
+      await tester.ensureVisible(find.byKey(const ValueKey('severitySlider')));
+      await tester.pump();
+      _expectWithinViewport(
+        tester,
+        find.byKey(const ValueKey('severitySlider')),
+        viewport,
+      );
+
+      await _answerQuestionnaire(tester);
+      expect(
+          find.text('Possible explanations, not a diagnosis'), findsOneWidget,
+          reason: viewport.name);
+      _expectNoHorizontalOverflow(tester, viewport);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    }
   });
 
   testWidgets('narrow visual body layout stays vertical', (tester) async {
@@ -1094,6 +1200,70 @@ void main() {
   });
 }
 
+class _ViewportCase {
+  const _ViewportCase(this.name, this.size, this.style);
+
+  final String name;
+  final Size size;
+  final SacaPlatformStyle style;
+}
+
+const _targetViewports = <_ViewportCase>[
+  _ViewportCase(
+      'mobile-360x800', Size(360, 800), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'mobile-390x844', Size(390, 844), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'mobile-393x873', Size(393, 873), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'mobile-412x915', Size(412, 915), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'mobile-414x896', Size(414, 896), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'tablet-768x1024', Size(768, 1024), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'tablet-810x1080', Size(810, 1080), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'tablet-820x1180', Size(820, 1180), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'tablet-1280x800', Size(1280, 800), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'tablet-800x1280', Size(800, 1280), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'tablet-601x962', Size(601, 962), SacaPlatformStyle.androidMobile),
+  _ViewportCase(
+      'desktop-1366x768', Size(1366, 768), SacaPlatformStyle.windowsDesktop),
+  _ViewportCase(
+      'desktop-1536x864', Size(1536, 864), SacaPlatformStyle.windowsDesktop),
+  _ViewportCase(
+      'desktop-1920x1080', Size(1920, 1080), SacaPlatformStyle.windowsDesktop),
+  _ViewportCase(
+      'desktop-2560x1440', Size(2560, 1440), SacaPlatformStyle.windowsDesktop),
+  _ViewportCase(
+      'desktop-3840x2160', Size(3840, 2160), SacaPlatformStyle.windowsDesktop),
+];
+
+void _expectWithinViewport(
+  WidgetTester tester,
+  Finder finder,
+  _ViewportCase viewport,
+) {
+  expect(finder, findsOneWidget, reason: viewport.name);
+  final rect = tester.getRect(finder);
+  expect(rect.left, greaterThanOrEqualTo(-1), reason: viewport.name);
+  expect(rect.right, lessThanOrEqualTo(viewport.size.width + 1),
+      reason: viewport.name);
+  expect(rect.top, greaterThanOrEqualTo(-1), reason: viewport.name);
+  expect(rect.bottom, lessThanOrEqualTo(viewport.size.height + 1),
+      reason: viewport.name);
+}
+
+void _expectNoHorizontalOverflow(WidgetTester tester, _ViewportCase viewport) {
+  final renderView = tester.renderObject<RenderView>(find.byType(View).first);
+  expect(renderView.size.width, lessThanOrEqualTo(viewport.size.width + 1),
+      reason: viewport.name);
+}
+
 Future<SacaFlowController> _pumpFlow(
   WidgetTester tester, {
   SacaPlatformStyle? style = SacaPlatformStyle.androidMobile,
@@ -1181,6 +1351,26 @@ Future<void> _openVisualFrontStage(WidgetTester tester) async {
     tester,
     const ValueKey('visualSymptomsContinueButton'),
   );
+}
+
+Future<void> _openVisualFrontStageFromInputMethod(WidgetTester tester) async {
+  await _tapVisible(tester, find.text('Body map'));
+  await _tapVisible(tester, find.text('Fever'));
+  await _pressPrimaryButton(
+    tester,
+    const ValueKey('visualSymptomsContinueButton'),
+  );
+}
+
+Future<void> _reachTextSeverityStep(WidgetTester tester) async {
+  await _reachInputMethod(tester);
+  await _tapVisible(tester, find.text('Text input'));
+  await tester.enterText(
+    find.byKey(const ValueKey('symptomTextField')),
+    'fever cough sore throat',
+  );
+  await tester.pump();
+  await _tapVisible(tester, find.text('Continue'));
 }
 
 Color _probeColor(WidgetTester tester) {

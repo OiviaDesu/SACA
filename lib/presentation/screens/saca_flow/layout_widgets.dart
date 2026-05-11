@@ -21,7 +21,7 @@ class _MobileShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final isTablet = width >= 600;
-    final contentMaxWidth = width >= 900
+    final contentMaxWidth = width >= 760
         ? 980.0
         : width >= 600
             ? 640.0

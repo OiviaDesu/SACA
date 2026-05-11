@@ -1246,7 +1246,7 @@ class _ResponsiveVisualBodySelectionLayout extends StatefulWidget {
 
 class _ResponsiveVisualBodySelectionLayoutState
     extends State<_ResponsiveVisualBodySelectionLayout> {
-  static const double _wideBreakpoint = 800;
+  static const double _wideBreakpoint = 700;
   static const double _wideGap = 28;
   static const double _narrowGap = 12;
   static const double _sidePanelWidth = 320;
@@ -1370,6 +1370,8 @@ class _RemainingViewportHeight extends StatefulWidget {
 }
 
 class _RemainingViewportHeightState extends State<_RemainingViewportHeight> {
+  static const double _roundingGuard = 44;
+
   @override
   void initState() {
     super.initState();
@@ -1395,8 +1397,10 @@ class _RemainingViewportHeightState extends State<_RemainingViewportHeight> {
       if (renderObject is! RenderBox || !renderObject.hasSize) return;
       final top = renderObject.localToGlobal(Offset.zero).dy;
       final mediaQuery = MediaQuery.of(context);
-      final remainingHeight =
-          mediaQuery.size.height - mediaQuery.viewInsets.bottom - top;
+      final remainingHeight = mediaQuery.size.height -
+          mediaQuery.viewInsets.bottom -
+          top -
+          _roundingGuard;
       if (remainingHeight.isFinite && remainingHeight > 0) {
         widget.onChanged(remainingHeight);
       }
