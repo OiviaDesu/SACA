@@ -5,10 +5,11 @@ import '../../domain/models/saca_models.dart';
 import '../../domain/services/analysis_service.dart';
 import '../../domain/services/clinical_vocabulary_service.dart';
 import '../../domain/services/safety_rule_service.dart';
+import 'hybrid_logreg_runtime.dart';
 import 'mock_analysis_service.dart';
 import 'xgb_m2cgen_runtime.dart';
 
-enum DiagnosisModelMode { xgbBundle }
+enum DiagnosisModelMode { hybridLogReg, xgbBundle }
 
 class DiagnosisPrediction {
   const DiagnosisPrediction({
@@ -30,9 +31,36 @@ class DiagnosisClassifierFactory {
   const DiagnosisClassifierFactory._();
 
   static DiagnosisClassifier create({
-    DiagnosisModelMode mode = DiagnosisModelMode.xgbBundle,
+    DiagnosisModelMode mode = DiagnosisModelMode.hybridLogReg,
   }) {
-    return XgbBundleDiagnosisClassifier();
+    return switch (mode) {
+      DiagnosisModelMode.hybridLogReg => FallbackDiagnosisClassifier(
+          primary: HybridLogRegDiagnosisClassifier(),
+          fallback: XgbBundleDiagnosisClassifier(),
+        ),
+      DiagnosisModelMode.xgbBundle => XgbBundleDiagnosisClassifier(),
+    };
+  }
+}
+
+class FallbackDiagnosisClassifier implements DiagnosisClassifier {
+  const FallbackDiagnosisClassifier({
+    required this.primary,
+    required this.fallback,
+  });
+
+  final DiagnosisClassifier primary;
+  final DiagnosisClassifier fallback;
+
+  @override
+  Future<DiagnosisPrediction> predict(AnalysisRequest request) async {
+    try {
+      return await primary.predict(request);
+    } catch (error, stackTrace) {
+      debugPrint('[SACA] Hybrid LogReg unavailable, using XGB fallback: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return fallback.predict(request);
+    }
   }
 }
 

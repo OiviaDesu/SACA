@@ -23,14 +23,20 @@ class SacaOptionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
+    final enabled = onPressed != null;
     return CupertinoButton(
       minimumSize: const Size(0, SacaTheme.minTapTarget),
       padding: EdgeInsets.zero,
       pressedOpacity: 1,
-      onPressed: onPressed,
+      onPressed: enabled
+          ? () {
+              unawaited(SacaHaptics.selection());
+              onPressed?.call();
+            }
+          : null,
       child: _SacaInteractiveSurface(
         surfaceKey: _controlSurfaceKey(key),
-        enabled: onPressed != null,
+        enabled: enabled,
         selected: selected,
         baseGradient: colors.surfaceGradient,
         selectedGradient: colors.selectedGradient,

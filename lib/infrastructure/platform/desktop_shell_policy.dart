@@ -1,14 +1,15 @@
 import 'package:flutter/foundation.dart';
 
+import '../../core/layout/saca_adaptive_policy.dart';
+import '../../core/layout/saca_window_size_class.dart';
+
 class DesktopShellPolicy {
   const DesktopShellPolicy._();
 
-  static const double desktopBreakpoint = 760;
+  static const double desktopBreakpoint = SacaWindowSizeClasses.expanded;
 
   static bool supportsDesktopShell(TargetPlatform platform) {
-    return platform == TargetPlatform.windows ||
-        platform == TargetPlatform.macOS ||
-        platform == TargetPlatform.linux;
+    return SacaAdaptivePolicy.isDesktopPlatform(platform);
   }
 
   static bool usesDesktopLayout({
@@ -19,7 +20,6 @@ class DesktopShellPolicy {
   }
 
   static bool supportsManagedWindow(TargetPlatform platform) {
-    return platform == TargetPlatform.windows ||
-        platform == TargetPlatform.macOS;
+    return SacaAdaptivePolicy.supportsManagedWindow(platform);
   }
 }

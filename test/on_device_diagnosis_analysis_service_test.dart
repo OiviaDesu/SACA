@@ -127,10 +127,10 @@ void main() {
       expect(result.value?.disease, 'Influenza');
     });
 
-    test('default classifier factory uses XGB bundle', () {
+    test('default classifier factory uses fallback hybrid classifier', () {
       final classifier = DiagnosisClassifierFactory.create();
 
-      expect(classifier, isA<XgbBundleDiagnosisClassifier>());
+      expect(classifier, isA<FallbackDiagnosisClassifier>());
     });
 
     test('XGBoost bundle detects Git LFS pointer assets', () {

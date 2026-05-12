@@ -67,24 +67,32 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
   bool _pressed = false;
 
   void _setHovered(bool value) {
-    if (_hovered == value || !widget.enabled) {
+    if (!mounted || _hovered == value || !widget.enabled) {
       return;
     }
     setState(() => _hovered = value);
   }
 
   void _setFocused(bool value) {
-    if (_focused == value || !widget.enabled) {
+    if (!mounted || _focused == value || !widget.enabled) {
       return;
     }
     setState(() => _focused = value);
   }
 
   void _setPressed(bool value) {
-    if (_pressed == value || !widget.enabled) {
+    if (!mounted || _pressed == value || !widget.enabled) {
       return;
     }
     setState(() => _pressed = value);
+  }
+
+  @override
+  void dispose() {
+    _hovered = false;
+    _focused = false;
+    _pressed = false;
+    super.dispose();
   }
 
   @override

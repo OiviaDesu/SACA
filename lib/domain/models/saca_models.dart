@@ -170,6 +170,7 @@ class SacaFlowState {
     this.questionAnswers = const <String, String>{},
     this.voiceAnswerTranscript = '',
     this.voiceAnswerMatched = true,
+    this.voiceDraftNotice,
     this.addMoreCount = 0,
     this.analysisResult,
     this.isRecording = false,
@@ -189,6 +190,7 @@ class SacaFlowState {
   final Map<String, String> questionAnswers;
   final String voiceAnswerTranscript;
   final bool voiceAnswerMatched;
+  final String? voiceDraftNotice;
   final int addMoreCount;
   final AnalysisResult? analysisResult;
   final bool isRecording;
@@ -224,6 +226,8 @@ class SacaFlowState {
     Map<String, String>? questionAnswers,
     String? voiceAnswerTranscript,
     bool? voiceAnswerMatched,
+    String? voiceDraftNotice,
+    bool clearVoiceDraftNotice = false,
     int? addMoreCount,
     AnalysisResult? analysisResult,
     bool clearAnalysisResult = false,
@@ -247,6 +251,9 @@ class SacaFlowState {
       voiceAnswerTranscript:
           voiceAnswerTranscript ?? this.voiceAnswerTranscript,
       voiceAnswerMatched: voiceAnswerMatched ?? this.voiceAnswerMatched,
+      voiceDraftNotice: clearVoiceDraftNotice
+          ? null
+          : voiceDraftNotice ?? this.voiceDraftNotice,
       addMoreCount: addMoreCount ?? this.addMoreCount,
       analysisResult:
           clearAnalysisResult ? null : analysisResult ?? this.analysisResult,

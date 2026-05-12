@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
 
+import '../../core/layout/saca_window_size_class.dart';
 import '../../domain/models/saca_models.dart';
 import 'saca_controls.dart';
 
-class BodyDiagram extends StatelessWidget {
+class BodyDiagram extends StatefulWidget {
   const BodyDiagram({
     super.key,
     required this.view,
@@ -20,15 +21,39 @@ class BodyDiagram extends StatelessWidget {
   final String semanticsPrefix;
 
   @override
+  State<BodyDiagram> createState() => _BodyDiagramState();
+}
+
+class _BodyDiagramState extends State<BodyDiagram>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController;
+  String? _pressedId;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final areas = SacaFlowState.bodyAreas
-        .where((area) => area.view == view)
+        .where((area) => area.view == widget.view)
         .toList(growable: false);
 
     final visibleIds = areas.map((area) => area.id).toSet();
 
     return KeyedSubtree(
-      key: ValueKey<String>('bodyDiagram-${view.name}'),
+      key: ValueKey<String>('bodyDiagram-${widget.view.name}'),
       child: AspectRatio(
         aspectRatio: 0.92,
         child: DecoratedBox(
@@ -55,57 +80,95 @@ class BodyDiagram extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return Stack(
-                  children: [
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: Image.asset(
-                            view == BodyView.front
-                                ? 'assets/Images/Body-front.png'
-                                : 'assets/Images/Body-back.png',
-                            fit: BoxFit.contain,
+                const designSize = Size(820, 890);
+                final scale = _scaleFor(constraints.biggest, designSize);
+                final tokens = _BodyDiagramTokens.resolve(
+                  constraints.biggest,
+                  scale,
+                );
+
+                return ClipRect(
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: designSize.width,
+                      height: designSize.height,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                child: Image.asset(
+                                  widget.view == BodyView.front
+                                      ? 'assets/Images/Body-front.png'
+                                      : 'assets/Images/Body-back.png',
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: AnimatedBuilder(
+                                key: const ValueKey('bodyIndicatorPulse'),
+                                animation: _pulseController,
+                                builder: (context, _) {
+                                  return CustomPaint(
+                                    size: designSize,
+                                    painter: _BodyHighlightPainter(
+                                      selectedIds: widget.selectedIds,
+                                      visibleIds: visibleIds,
+                                      pressedId: _pressedId,
+                                      tokens: tokens,
+                                      pulse: _pulseController.value,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                size: designSize,
+                                painter: _BodyConnectorPainter(
+                                  areas: areas,
+                                  view: widget.view,
+                                  tokens: tokens,
+                                  selectedIds: widget.selectedIds,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: _BodyTapLayer(
+                              areas: areas,
+                              size: designSize,
+                              selectedIds: widget.selectedIds,
+                              semanticsPrefix: widget.semanticsPrefix,
+                              labelForArea: widget.labelForArea,
+                              tokens: tokens,
+                              onToggle: _handleAreaToggle,
+                            ),
+                          ),
+                          for (final area in areas)
+                            _PositionedAreaChip(
+                              area: area,
+                              label: widget.labelForArea(area),
+                              semanticsPrefix: widget.semanticsPrefix,
+                              selected: widget.selectedIds.contains(area.id),
+                              size: designSize,
+                              tokens: tokens,
+                              onPressed: () => widget.onToggle(area.id),
+                            ),
+                        ],
                       ),
                     ),
-
-                    // Red highlight points for selected body parts
-                    // on the current view only.
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: CustomPaint(
-                          painter: _BodyHighlightPainter(
-                            selectedIds: selectedIds,
-                            visibleIds: visibleIds,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Connector lines between labels and body parts.
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: CustomPaint(
-                          painter: _BodyConnectorPainter(
-                            areas: areas,
-                            view: view,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    for (final area in areas)
-                      _PositionedAreaChip(
-                        area: area,
-                        label: labelForArea(area),
-                        semanticsPrefix: semanticsPrefix,
-                        selected: selectedIds.contains(area.id),
-                        size: constraints.biggest,
-                        onPressed: () => onToggle(area.id),
-                      ),
-                  ],
+                  ),
                 );
               },
             ),
@@ -113,6 +176,107 @@ class BodyDiagram extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  double _scaleFor(Size available, Size designSize) {
+    if (available.width <= 0 || available.height <= 0) return 1;
+    return (available.width / designSize.width)
+        .clamp(0.1, available.height / designSize.height)
+        .toDouble();
+  }
+
+  void _handleAreaToggle(String id) {
+    setState(() => _pressedId = id);
+    widget.onToggle(id);
+    Future<void>.delayed(const Duration(milliseconds: 160), () {
+      if (!mounted || _pressedId != id) return;
+      setState(() => _pressedId = null);
+    });
+  }
+}
+
+enum _BodyDiagramDensity { compact, comfortable, roomy }
+
+class _BodyDiagramTokens {
+  const _BodyDiagramTokens({
+    required this.density,
+    required this.labelScale,
+    required this.connectorStroke,
+    required this.selectedConnectorStroke,
+    required this.hitRadius,
+    required this.outerMarkerRadius,
+    required this.middleMarkerRadius,
+    required this.innerMarkerRadius,
+    required this.markerPulseRadius,
+  });
+
+  final _BodyDiagramDensity density;
+  final double labelScale;
+  final double connectorStroke;
+  final double selectedConnectorStroke;
+  final double hitRadius;
+  final double outerMarkerRadius;
+  final double middleMarkerRadius;
+  final double innerMarkerRadius;
+  final double markerPulseRadius;
+
+  static _BodyDiagramTokens resolve(Size available, double canvasScale) {
+    final shortestSide = available.shortestSide;
+    final windowClass = SacaWindowSizeClasses.fromWidth(available.width);
+    final roomy = windowClass.isExpandedOrLarger && available.height >= 680;
+    final compact = shortestSide <= 520 || available.height <= 560;
+    final density = roomy
+        ? _BodyDiagramDensity.roomy
+        : compact
+            ? _BodyDiagramDensity.compact
+            : _BodyDiagramDensity.comfortable;
+    final maxLabelScale = switch (density) {
+      _BodyDiagramDensity.compact => 2.35,
+      _BodyDiagramDensity.comfortable => 1.55,
+      _BodyDiagramDensity.roomy => 1.35,
+    };
+    final minLabelScale = switch (density) {
+      _BodyDiagramDensity.compact => 1.18,
+      _BodyDiagramDensity.comfortable => 1.12,
+      _BodyDiagramDensity.roomy => 1.08,
+    };
+    final labelScale =
+        (1 / canvasScale).clamp(minLabelScale, maxLabelScale).toDouble();
+    return switch (density) {
+      _BodyDiagramDensity.compact => _BodyDiagramTokens(
+          density: density,
+          labelScale: labelScale,
+          connectorStroke: 1.35,
+          selectedConnectorStroke: 2.5,
+          hitRadius: 72,
+          outerMarkerRadius: 26,
+          middleMarkerRadius: 15,
+          innerMarkerRadius: 7,
+          markerPulseRadius: 8,
+        ),
+      _BodyDiagramDensity.comfortable => _BodyDiagramTokens(
+          density: density,
+          labelScale: labelScale,
+          connectorStroke: 1.65,
+          selectedConnectorStroke: 2.35,
+          hitRadius: 62,
+          outerMarkerRadius: 27,
+          middleMarkerRadius: 15.5,
+          innerMarkerRadius: 7.5,
+          markerPulseRadius: 8.5,
+        ),
+      _BodyDiagramDensity.roomy => _BodyDiagramTokens(
+          density: density,
+          labelScale: labelScale,
+          connectorStroke: 1.9,
+          selectedConnectorStroke: 2.6,
+          hitRadius: 58,
+          outerMarkerRadius: 29,
+          middleMarkerRadius: 16.5,
+          innerMarkerRadius: 8,
+          markerPulseRadius: 9,
+        ),
+    };
   }
 }
 
@@ -123,6 +287,7 @@ class _PositionedAreaChip extends StatelessWidget {
     required this.semanticsPrefix,
     required this.selected,
     required this.size,
+    required this.tokens,
     required this.onPressed,
   });
 
@@ -131,11 +296,11 @@ class _PositionedAreaChip extends StatelessWidget {
   final String semanticsPrefix;
   final bool selected;
   final Size size;
+  final _BodyDiagramTokens tokens;
   final VoidCallback onPressed;
 
   static const double chipWidth = 150;
   static const double chipHeight = 60;
-
   @override
   Widget build(BuildContext context) {
     final y = _BodyDiagramLayout.verticalPositionFor(area.id);
@@ -145,24 +310,23 @@ class _PositionedAreaChip extends StatelessWidget {
         ? size.width - sidePadding - chipWidth
         : sidePadding;
 
+    final readableScale = tokens.labelScale;
+
     return Positioned(
       left: left,
       top: y * size.height,
-      child: Semantics(
-        button: true,
-        selected: selected,
-        label: '$semanticsPrefix ${label.replaceAll('\n', ' ')}',
+      child: ExcludeSemantics(
         child: SizedBox(
           width: chipWidth,
           height: chipHeight,
           child: AnimatedScale(
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOutCubic,
-            scale: selected ? 1.03 : 1,
+            scale: readableScale * (selected ? 1.06 : 1),
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 160),
               curve: Curves.easeOutCubic,
-              opacity: selected ? 1 : 0.94,
+              opacity: 1,
               child: SacaChipButton(
                 label: label,
                 selected: selected,
@@ -176,20 +340,103 @@ class _PositionedAreaChip extends StatelessWidget {
   }
 }
 
+class _BodyTapLayer extends StatelessWidget {
+  const _BodyTapLayer({
+    required this.areas,
+    required this.size,
+    required this.selectedIds,
+    required this.semanticsPrefix,
+    required this.labelForArea,
+    required this.tokens,
+    required this.onToggle,
+  });
+
+  final List<BodyArea> areas;
+  final Size size;
+  final Set<String> selectedIds;
+  final String semanticsPrefix;
+  final String Function(BodyArea area) labelForArea;
+  final _BodyDiagramTokens tokens;
+  final ValueChanged<String> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      key: const ValueKey('bodyTapLayer'),
+      children: [
+        Positioned.fill(
+          child: ExcludeSemantics(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTapDown: (details) {
+                final id = _nearestAreaId(details.localPosition);
+                if (id == null) return;
+                onToggle(id);
+              },
+            ),
+          ),
+        ),
+        for (final area in areas)
+          if (_BodyTargetPoints.positionFor(area.id, size) case final target?)
+            Positioned(
+              left: target.dx - _activeRadius,
+              top: target.dy - _activeRadius,
+              width: _activeRadius * 2,
+              height: _activeRadius * 2,
+              child: Semantics(
+                container: true,
+                button: true,
+                selected: selectedIds.contains(area.id),
+                label:
+                    '$semanticsPrefix ${labelForArea(area).replaceAll('\n', ' ')}',
+                onTap: () => onToggle(area.id),
+                child: const SizedBox.expand(),
+              ),
+            ),
+      ],
+    );
+  }
+
+  double get _activeRadius => tokens.hitRadius;
+
+  String? _nearestAreaId(Offset tapPosition) {
+    String? nearestId;
+    var nearestDistance = double.infinity;
+
+    for (final area in areas) {
+      final target = _BodyTargetPoints.positionFor(area.id, size);
+      if (target == null) continue;
+      final distance = (tapPosition - target).distance;
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestId = area.id;
+      }
+    }
+
+    return nearestDistance <= _activeRadius ? nearestId : null;
+  }
+}
+
 class _BodyHighlightPainter extends CustomPainter {
   const _BodyHighlightPainter({
     required this.selectedIds,
     required this.visibleIds,
+    required this.pressedId,
+    required this.tokens,
+    required this.pulse,
   });
 
   final Set<String> selectedIds;
   final Set<String> visibleIds;
+  final String? pressedId;
+  final _BodyDiagramTokens tokens;
+  final double pulse;
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (selectedIds.isEmpty) return;
+    if (selectedIds.isEmpty && pressedId == null) return;
 
-    for (final id in selectedIds) {
+    for (final id in {...selectedIds, if (pressedId != null) pressedId!}) {
       // Only draw highlight points for body parts visible
       // in the current Front or Back view.
       if (!visibleIds.contains(id)) continue;
@@ -197,28 +444,48 @@ class _BodyHighlightPainter extends CustomPainter {
       final center = _BodyTargetPoints.positionFor(id, size);
       if (center == null) continue;
 
+      final isPressed = id == pressedId;
       final outerPaint = Paint()
-        ..color = const Color(0x44E85B5B)
+        ..color = Color.lerp(
+          isPressed ? const Color(0x2287C6D4) : const Color(0x22E85B5B),
+          isPressed ? const Color(0x6687C6D4) : const Color(0x66E85B5B),
+          pulse,
+        )!
         ..style = PaintingStyle.fill;
 
       final middlePaint = Paint()
-        ..color = const Color(0x77E85B5B)
+        ..color = isPressed ? const Color(0x8887C6D4) : const Color(0x88E85B5B)
         ..style = PaintingStyle.fill;
 
       final innerPaint = Paint()
-        ..color = const Color(0xFFE85B5B)
+        ..color = isPressed ? const Color(0xFF2C8EA2) : const Color(0xFFE85B5B)
         ..style = PaintingStyle.fill;
 
-      canvas.drawCircle(center, 24, outerPaint);
-      canvas.drawCircle(center, 14, middlePaint);
-      canvas.drawCircle(center, 6, innerPaint);
+      canvas.drawCircle(
+        center,
+        tokens.outerMarkerRadius + (pulse * tokens.markerPulseRadius),
+        outerPaint,
+      );
+      canvas.drawCircle(
+        center,
+        isPressed ? tokens.middleMarkerRadius + 3 : tokens.middleMarkerRadius,
+        middlePaint,
+      );
+      canvas.drawCircle(
+        center,
+        isPressed ? tokens.innerMarkerRadius + 1 : tokens.innerMarkerRadius,
+        innerPaint,
+      );
     }
   }
 
   @override
   bool shouldRepaint(covariant _BodyHighlightPainter oldDelegate) {
     return oldDelegate.selectedIds != selectedIds ||
-        oldDelegate.visibleIds != visibleIds;
+        oldDelegate.visibleIds != visibleIds ||
+        oldDelegate.pressedId != pressedId ||
+        oldDelegate.tokens != tokens ||
+        oldDelegate.pulse != pulse;
   }
 }
 
@@ -226,26 +493,36 @@ class _BodyConnectorPainter extends CustomPainter {
   const _BodyConnectorPainter({
     required this.areas,
     required this.view,
+    required this.tokens,
+    required this.selectedIds,
   });
 
   final List<BodyArea> areas;
   final BodyView view;
+  final _BodyDiagramTokens tokens;
+  final Set<String> selectedIds;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF5F7F91)
-      ..strokeWidth = 1.4
+      ..color = const Color(0xAA5F7F91)
+      ..strokeWidth = tokens.connectorStroke
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final selectedPaint = Paint()
+      ..color = const Color(0xFFE85B5B)
+      ..strokeWidth = tokens.selectedConnectorStroke
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     for (final area in areas) {
+      final selected = selectedIds.contains(area.id);
       final start = _labelAnchorFor(area.id, size);
       final end = _BodyTargetPoints.positionFor(area.id, size);
 
       if (start == null || end == null) continue;
 
-      canvas.drawLine(start, end, paint);
+      canvas.drawLine(start, end, selected ? selectedPaint : paint);
     }
   }
 
@@ -271,7 +548,10 @@ class _BodyConnectorPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _BodyConnectorPainter oldDelegate) {
-    return oldDelegate.areas != areas || oldDelegate.view != view;
+    return oldDelegate.areas != areas ||
+        oldDelegate.view != view ||
+        oldDelegate.tokens != tokens ||
+        oldDelegate.selectedIds != selectedIds;
   }
 }
 

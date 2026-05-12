@@ -23,7 +23,10 @@ class SacaChipButton extends StatelessWidget {
       minimumSize: const Size(0, 42),
       padding: EdgeInsets.zero,
       pressedOpacity: 1,
-      onPressed: onPressed,
+      onPressed: () {
+        unawaited(SacaHaptics.selection());
+        onPressed();
+      },
       child: _SacaInteractiveSurface(
         surfaceKey: _controlSurfaceKey(key),
         enabled: true,

@@ -37,6 +37,15 @@ class _ResultPanel extends StatelessWidget {
             Text(
               localizer.t(language, 'possiblePattern'),
               textAlign: TextAlign.center,
+              style: SacaTheme.body.copyWith(
+                color: colors.text,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              localizer.t(language, 'possiblePatternHelper'),
+              textAlign: TextAlign.center,
               style: SacaTheme.small.copyWith(color: colors.mutedText),
             ),
             const SizedBox(height: 12),
@@ -58,6 +67,12 @@ class _ResultPanel extends StatelessWidget {
               localizer: localizer,
             ),
             const SizedBox(height: 18),
+            Text(
+              localizer.t(language, 'resultNextStepNote'),
+              textAlign: TextAlign.center,
+              style: SacaTheme.small.copyWith(color: colors.mutedText),
+            ),
+            const SizedBox(height: 12),
             Text(
               localizer.t(language, 'recommendations'),
               style: SacaTheme.body.copyWith(
@@ -114,14 +129,35 @@ class _PredictionList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        for (final prediction in predictions) ...[
+        if (predictions.isNotEmpty)
           _PredictionCard(
-            prediction: prediction,
-            primary: prediction.rank == 1,
+            prediction: predictions.first,
+            primary: true,
             language: language,
             localizer: localizer,
           ),
-          if (prediction != predictions.last) const SizedBox(height: 10),
+        if (predictions.length > 1) ...[
+          const SizedBox(height: 14),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              localizer.t(language, 'otherPossibilities'),
+              style: SacaTheme.small.copyWith(
+                color: SacaThemeColors.of(context).mutedText,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          for (final prediction in predictions.skip(1)) ...[
+            _PredictionCard(
+              prediction: prediction,
+              primary: false,
+              language: language,
+              localizer: localizer,
+            ),
+            if (prediction != predictions.last) const SizedBox(height: 10),
+          ],
         ],
       ],
     );
@@ -199,6 +235,7 @@ class _PredictionCard extends StatelessWidget {
             const SizedBox(width: 10),
             _ConfidenceChip(
               prediction: prediction,
+              primary: primary,
               language: language,
               localizer: localizer,
             ),
@@ -213,27 +250,29 @@ class _PredictionCard extends StatelessWidget {
 class _ConfidenceChip extends StatelessWidget {
   const _ConfidenceChip({
     required this.prediction,
+    required this.primary,
     required this.language,
     required this.localizer,
   });
 
   final ConditionPrediction prediction;
+  final bool primary;
   final SacaLanguage? language;
   final SacaLocalizer localizer;
 
   @override
   Widget build(BuildContext context) {
-    final level = prediction.confidenceLevel;
-    final percent = prediction.confidencePercent;
-    final label = switch (level) {
-      ConfidenceLevel.high => localizer.t(language, 'confidenceHigh'),
-      ConfidenceLevel.medium => localizer.t(language, 'confidenceMedium'),
-      ConfidenceLevel.low => localizer.t(language, 'confidenceLow'),
+    final label = switch (prediction.rank) {
+      1 => primary
+          ? localizer.t(language, 'bestMatchFromAnswers')
+          : localizer.t(language, 'bestMatch'),
+      2 => localizer.t(language, 'alsoPossible'),
+      _ => localizer.t(language, 'lessLikely'),
     };
-    final color = switch (level) {
-      ConfidenceLevel.high => SacaTheme.safe,
-      ConfidenceLevel.medium => const Color(0xFFB87000),
-      ConfidenceLevel.low => SacaThemeColors.of(context).accent,
+    final color = switch (prediction.rank) {
+      1 => SacaTheme.safe,
+      2 => const Color(0xFFB87000),
+      _ => SacaThemeColors.of(context).accent,
     };
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -244,7 +283,7 @@ class _ConfidenceChip extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         child: Text(
-          percent == null ? label : '$percent%\n$label',
+          label,
           textAlign: TextAlign.center,
           style: SacaTheme.small.copyWith(
             color: color == SacaTheme.safe ? const Color(0xFF2F6D1E) : color,

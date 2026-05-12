@@ -12,6 +12,9 @@ on:
     branches:
       - main
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   analyze-and-test:
     runs-on: ubuntu-latest
@@ -35,7 +38,7 @@ jobs:
         run: flutter test
 
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
 
     steps:
       - name: Checkout
@@ -78,4 +81,50 @@ jobs:
       - name: Runtime asset note
         run: |
           echo "Android build succeeded. Voice runtime still depends on local or bundled model assets at runtime."
+          echo "See docs/MODEL_ASSETS.md for model asset expectations."
+
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS without codesign
+        run: flutter build ios --no-codesign
+
+      - name: Runtime asset note
+        run: |
+          echo "iOS build succeeded without codesigning. No build artifacts are uploaded."
+          echo "See docs/MODEL_ASSETS.md for model asset expectations."
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build macOS
+        run: flutter build macos
+
+      - name: Runtime asset note
+        run: |
+          echo "macOS build succeeded. No build artifacts are uploaded."
           echo "See docs/MODEL_ASSETS.md for model asset expectations."

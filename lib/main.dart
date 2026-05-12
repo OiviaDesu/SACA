@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 
 import 'core/theme/saca_theme.dart';
@@ -17,26 +19,44 @@ import 'presentation/settings/saca_settings_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await configureSacaDesktopWindow();
+  await _configureWindow();
   final vocabulary = await _loadVocabulary();
   final speechInput = WhisperSpeechInputService();
   final settings = SacaSettingsController();
-  await settings.load();
-  final readiness = await SacaReadinessController().check();
+  unawaited(_loadSettings(settings));
   runApp(SacaApp(
     vocabulary: vocabulary,
     speechInput: speechInput,
     settings: settings,
-    readiness: readiness,
   ));
   WidgetsBinding.instance.addPostFrameCallback((_) {
     VoicePrewarmService(speechInput: speechInput).prewarm();
   });
 }
 
+Future<void> _configureWindow() async {
+  try {
+    await configureSacaDesktopWindow();
+  } catch (error, stackTrace) {
+    debugPrint('[SACA] Window setup unavailable: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
+}
+
+Future<void> _loadSettings(SacaSettingsController settings) async {
+  try {
+    await settings.load();
+  } catch (error, stackTrace) {
+    debugPrint('[SACA] Settings unavailable: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
+}
+
 Future<ClinicalVocabularyService> _loadVocabulary() async {
   try {
-    final entries = await const AssetLexiconRepository().loadEntries();
+    final entries = await const AssetLexiconRepository()
+        .loadEntries()
+        .timeout(const Duration(seconds: 3));
     return ClinicalVocabularyService.fromEntries(entries);
   } catch (error, stackTrace) {
     debugPrint('[SACA] Gurindji lexicon unavailable: $error');

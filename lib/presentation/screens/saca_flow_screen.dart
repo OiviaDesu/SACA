@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' show LinearProgressIndicator;
 import 'package:flutter/services.dart';
 
 import '../../core/theme/saca_theme.dart';
+import '../../core/layout/saca_window_size_class.dart';
 import '../../domain/models/saca_models.dart';
 import '../../domain/services/duration_interpreter.dart';
 import '../../infrastructure/platform/desktop_shell_policy.dart';
@@ -105,8 +106,9 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                         widget.styleOverride ==
                             SacaPlatformStyle.windowsDesktop ||
                         (widget.styleOverride == null &&
-                            DesktopShellPolicy.supportsDesktopShell(
-                              defaultTargetPlatform,
+                            DesktopShellPolicy.usesDesktopLayout(
+                              platform: defaultTargetPlatform,
+                              width: constraints.maxWidth,
                             ));
                     final content = AnimatedSwitcher(
                       duration: const Duration(milliseconds: 240),

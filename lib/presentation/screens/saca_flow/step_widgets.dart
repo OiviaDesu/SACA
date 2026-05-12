@@ -132,7 +132,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         _RecordingButton(
           isRecording: state.isRecording,
           label: state.isRecording
-              ? _localizer.t(state.language, 'stopRecording')
+              ? _localizer.t(state.language, 'stop')
               : _localizer.t(state.language, 'record'),
           onPressed: state.isBusy
               ? null
@@ -143,6 +143,17 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
                 },
         ),
         const SizedBox(height: 18),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            _localizer.t(state.language, 'transcriptPreview'),
+            style: SacaTheme.small.copyWith(
+              color: SacaThemeColors.of(context).mutedText,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
         _SacaTextField(
           key: const ValueKey('voiceTranscriptField'),
           value: state.transcript,
@@ -153,6 +164,12 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         ),
         const SizedBox(height: 12),
         _Footnote(text: _localizer.t(state.language, 'offlineSpeechNotice')),
+        if (state.voiceDraftNotice != null) ...[
+          const SizedBox(height: 8),
+          _VoiceDraftNotice(
+            message: _localizer.t(state.language, state.voiceDraftNotice!),
+          ),
+        ],
         if (voiceNotice != null) ...[
           const SizedBox(height: 8),
           _Footnote(text: voiceNotice),
@@ -318,48 +335,19 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
               _localizer.t(state.language, 'visualFrontTitle'),
               _localizer.t(state.language, 'visualFrontSubtitle'),
             ),
-            const SizedBox(height: 18),
-            BodyDiagram(
+            SizedBox(height: _visualBodySpacing(context)),
+            _visualBodySelectionLayout(
+              state: state,
               view: BodyView.front,
-              selectedIds: state.selectedBodyAreaIds,
-              onToggle: _controller.toggleBodyArea,
-              labelForArea: (area) => _localizer.bodyAreaLabel(
-                state.language,
-                area,
-              ),
-              semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
-            ),
-            const SizedBox(height: 16),
-            _SelectedSummary(
-              title: _localizer.t(state.language, 'selected'),
-              emptyText: _localizer.t(state.language, 'selectedEmpty'),
-              values: selectedLabels,
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: SacaPrimaryButton(
-                    key: const ValueKey('visualFrontBackButton'),
-                    label: _localizer.t(state.language, 'back'),
-                    icon: CupertinoIcons.arrow_left_circle,
-                    onPressed: () =>
-                        _setVisualStage(_VisualInputStage.symptoms),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SacaPrimaryButton(
-                    key: const ValueKey('visualFrontContinueButton'),
-                    label: _visualStageHasSelection(state, BodyView.front)
-                        ? _localizer.t(state.language, 'continue')
-                        : _localizer.t(state.language, 'skip'),
-                    icon: CupertinoIcons.arrow_right_circle,
-                    filled: true,
-                    onPressed: () => _setVisualStage(_VisualInputStage.back),
-                  ),
-                ),
-              ],
+              selectedLabels: selectedLabels,
+              backButtonKey: const ValueKey('visualFrontBackButton'),
+              continueButtonKey: const ValueKey('visualFrontContinueButton'),
+              backLabel: _localizer.t(state.language, 'back'),
+              continueLabel: _visualStageHasSelection(state, BodyView.front)
+                  ? _localizer.t(state.language, 'continue')
+                  : _localizer.t(state.language, 'skip'),
+              onBack: () => _setVisualStage(_VisualInputStage.symptoms),
+              onContinue: () => _setVisualStage(_VisualInputStage.back),
             ),
           ],
         ),
@@ -376,52 +364,135 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
               _localizer.t(state.language, 'visualBackTitle'),
               _localizer.t(state.language, 'visualBackSubtitle'),
             ),
-            const SizedBox(height: 18),
-            BodyDiagram(
+            SizedBox(height: _visualBodySpacing(context)),
+            _visualBodySelectionLayout(
+              state: state,
               view: BodyView.back,
-              selectedIds: state.selectedBodyAreaIds,
-              onToggle: _controller.toggleBodyArea,
-              labelForArea: (area) => _localizer.bodyAreaLabel(
-                state.language,
-                area,
-              ),
-              semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
-            ),
-            const SizedBox(height: 16),
-            _SelectedSummary(
-              title: _localizer.t(state.language, 'selected'),
-              emptyText: _localizer.t(state.language, 'selectedEmpty'),
-              values: selectedLabels,
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: SacaPrimaryButton(
-                    key: const ValueKey('visualBackBackButton'),
-                    label: _localizer.t(state.language, 'back'),
-                    icon: CupertinoIcons.arrow_left_circle,
-                    onPressed: () => _setVisualStage(_VisualInputStage.front),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SacaPrimaryButton(
-                    key: const ValueKey('visualBackContinueButton'),
-                    label: _visualStageHasSelection(state, BodyView.back)
-                        ? _localizer.t(state.language, 'continue')
-                        : _localizer.t(state.language, 'skip'),
-                    icon: CupertinoIcons.arrow_right_circle,
-                    filled: true,
-                    onPressed:
-                        hasSelection ? _controller.continueFromInput : null,
-                  ),
-                ),
-              ],
+              selectedLabels: selectedLabels,
+              backButtonKey: const ValueKey('visualBackBackButton'),
+              continueButtonKey: const ValueKey('visualBackContinueButton'),
+              backLabel: _localizer.t(state.language, 'back'),
+              continueLabel: _visualStageHasSelection(state, BodyView.back)
+                  ? _localizer.t(state.language, 'continue')
+                  : _localizer.t(state.language, 'skip'),
+              onBack: () => _setVisualStage(_VisualInputStage.front),
+              onContinue: hasSelection ? _controller.continueFromInput : null,
             ),
           ],
         ),
     };
+  }
+
+  Widget _visualBodySelectionLayout({
+    required SacaFlowState state,
+    required BodyView view,
+    required List<String> selectedLabels,
+    required Key backButtonKey,
+    required Key continueButtonKey,
+    required String backLabel,
+    required String continueLabel,
+    required VoidCallback onBack,
+    required VoidCallback? onContinue,
+  }) {
+    Widget diagram({required double maxWidth, required double maxHeight}) {
+      const diagramAspectRatio = 0.92;
+      final fittedWidth = maxWidth
+          .clamp(0.0, maxHeight * diagramAspectRatio)
+          .toDouble();
+      final fittedHeight = maxHeight
+          .clamp(0.0, fittedWidth / diagramAspectRatio)
+          .toDouble();
+      return Center(
+        child: SizedBox(
+          key: const ValueKey('visualBodyDiagramFrame'),
+          width: fittedWidth,
+          height: fittedHeight,
+          child: BodyDiagram(
+            view: view,
+            selectedIds: state.selectedBodyAreaIds,
+            onToggle: _controller.toggleBodyArea,
+            labelForArea: (area) => _localizer.bodyAreaLabel(
+              state.language,
+              area,
+            ),
+            semanticsPrefix: _localizer.t(state.language, 'bodyAreaSemantic'),
+          ),
+        ),
+      );
+    }
+
+    final sidePanel = _visualBodySidePanel(
+      state: state,
+      selectedLabels: selectedLabels,
+      backButtonKey: backButtonKey,
+      continueButtonKey: continueButtonKey,
+      backLabel: backLabel,
+      continueLabel: continueLabel,
+      onBack: onBack,
+      onContinue: onContinue,
+    );
+
+    return _ResponsiveVisualBodySelectionLayout(
+      diagramBuilder: diagram,
+      sidePanel: sidePanel,
+    );
+  }
+
+  double _visualBodySpacing(BuildContext context) {
+    return MediaQuery.sizeOf(context).height < 820 ? 8 : 18;
+  }
+
+  Widget _visualBodySidePanel({
+    required SacaFlowState state,
+    required List<String> selectedLabels,
+    required Key backButtonKey,
+    required Key continueButtonKey,
+    required String backLabel,
+    required String continueLabel,
+    required VoidCallback onBack,
+    required VoidCallback? onContinue,
+  }) {
+    final compact = MediaQuery.sizeOf(context).height < 820;
+    return Column(
+      key: const ValueKey('visualBodySidePanel'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        compact
+            ? _CompactSelectedSummary(
+                title: _localizer.t(state.language, 'selected'),
+                emptyText: _localizer.t(state.language, 'selectedEmpty'),
+                values: selectedLabels,
+              )
+            : _SelectedSummary(
+                title: _localizer.t(state.language, 'selected'),
+                emptyText: _localizer.t(state.language, 'selectedEmpty'),
+                values: selectedLabels,
+              ),
+        SizedBox(height: compact ? 6 : 22),
+        Row(
+          children: [
+            Expanded(
+              child: SacaPrimaryButton(
+                key: backButtonKey,
+                label: backLabel,
+                icon: CupertinoIcons.arrow_left_circle,
+                onPressed: onBack,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SacaPrimaryButton(
+                key: continueButtonKey,
+                label: continueLabel,
+                icon: CupertinoIcons.arrow_right_circle,
+                filled: true,
+                onPressed: onContinue,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _severityStep(
@@ -1181,6 +1252,331 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       }
     }
     return _localizer.choiceLabel(state.language, value, value);
+  }
+}
+
+class _VoiceDraftNotice extends StatelessWidget {
+  const _VoiceDraftNotice({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    return Semantics(
+      label: message,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: SacaTheme.small.copyWith(color: colors.mutedText),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ResponsiveVisualBodySelectionLayout extends StatefulWidget {
+  const _ResponsiveVisualBodySelectionLayout({
+    required this.diagramBuilder,
+    required this.sidePanel,
+  });
+
+  final Widget Function({required double maxWidth, required double maxHeight})
+      diagramBuilder;
+  final Widget sidePanel;
+
+  @override
+  State<_ResponsiveVisualBodySelectionLayout> createState() =>
+      _ResponsiveVisualBodySelectionLayoutState();
+}
+
+class _CompactSelectedSummary extends StatelessWidget {
+  const _CompactSelectedSummary({
+    required this.title,
+    required this.emptyText,
+    required this.values,
+  });
+
+  final String title;
+  final String emptyText;
+  final List<String> values;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    final text = values.isEmpty ? emptyText : values.join(', ');
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: colors.surfaceGradient,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(title, style: SacaTheme.small.copyWith(color: colors.text)),
+            const SizedBox(height: 3),
+            Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SacaTheme.body.copyWith(color: colors.text),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ResponsiveVisualBodySelectionLayoutState
+    extends State<_ResponsiveVisualBodySelectionLayout> {
+  static const double _wideGap = 28;
+  static const double _narrowGap = 12;
+  static const double _sidePanelWidth = 320;
+  static const double _diagramComfortMaxWidth = 840;
+  static const double _diagramRoomyMaxWidth = 920;
+  static const double _diagramAspectRatio = 0.92;
+  static const double _minimumUsableDiagramHeight = 300;
+
+  double? _remainingViewportHeight;
+  double _sidePanelHeight = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return _RemainingViewportHeight(
+      onChanged: _setRemainingViewportHeight,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final windowClass =
+              SacaWindowSizeClasses.fromWidth(constraints.maxWidth);
+          final isWide = windowClass.isExpandedOrLarger &&
+              (_remainingViewportHeight ?? double.infinity) >= 620;
+          return isWide
+              ? _wideLayout(constraints.maxWidth)
+              : _narrowLayout(constraints.maxWidth);
+        },
+      ),
+    );
+  }
+
+  Widget _wideLayout(double availableWidth) {
+    final sidePanelWidth = _adaptiveSidePanelWidth(availableWidth);
+    final diagramMaxWidth = _adaptiveDiagramMaxWidth(availableWidth);
+    final diagramColumnWidth = (availableWidth - _wideGap - sidePanelWidth)
+        .clamp(0.0, diagramMaxWidth);
+    final widthLimitedHeight = diagramColumnWidth / _diagramAspectRatio;
+    final diagramHeight = _boundedDiagramHeight(
+      widthLimitedHeight: widthLimitedHeight,
+      availableHeight: _remainingViewportHeight,
+    );
+
+    return Row(
+      key: const ValueKey('visualBodyWideLayout'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: widget.diagramBuilder(
+            maxWidth: diagramColumnWidth,
+            maxHeight: diagramHeight,
+          ),
+        ),
+        const SizedBox(width: _wideGap),
+        SizedBox(
+          width: sidePanelWidth,
+          child: _MeasureSize(
+            onChanged: _setSidePanelHeight,
+            child: widget.sidePanel,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _narrowLayout(double availableWidth) {
+    final diagramMaxWidth = _adaptiveDiagramMaxWidth(availableWidth);
+    final widthLimitedHeight =
+        availableWidth.clamp(0.0, diagramMaxWidth) / _diagramAspectRatio;
+    final remaining = _remainingViewportHeight;
+    final heightForDiagram = remaining == null || _sidePanelHeight == 0
+        ? widthLimitedHeight
+        : remaining - _sidePanelHeight - _narrowGap;
+    final diagramHeight = _boundedDiagramHeight(
+      widthLimitedHeight: widthLimitedHeight,
+      availableHeight: heightForDiagram > 0 ? heightForDiagram : null,
+    );
+
+    return Column(
+      key: const ValueKey('visualBodyNarrowLayout'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        widget.diagramBuilder(
+          maxWidth: availableWidth.clamp(0.0, diagramMaxWidth).toDouble(),
+          maxHeight: diagramHeight,
+        ),
+        const SizedBox(height: _narrowGap),
+        _MeasureSize(
+          onChanged: _setSidePanelHeight,
+          child: widget.sidePanel,
+        ),
+      ],
+    );
+  }
+
+  double _boundedDiagramHeight({
+    required double widthLimitedHeight,
+    required double? availableHeight,
+  }) {
+    final preferredHeight = widthLimitedHeight > 0
+        ? widthLimitedHeight
+        : _minimumUsableDiagramHeight;
+    if (availableHeight == null ||
+        !availableHeight.isFinite ||
+        availableHeight <= 0) {
+      return preferredHeight;
+    }
+    final upperBound = availableHeight < _minimumUsableDiagramHeight
+        ? _minimumUsableDiagramHeight
+        : availableHeight;
+    return preferredHeight
+        .clamp(_minimumUsableDiagramHeight, upperBound)
+        .toDouble();
+  }
+
+  double _adaptiveDiagramMaxWidth(double availableWidth) {
+    final height = _remainingViewportHeight ?? 0;
+    final windowClass = SacaWindowSizeClasses.fromWidth(availableWidth);
+    if (windowClass.isExtraLarge && height >= 920) {
+      return _diagramRoomyMaxWidth;
+    }
+    if (windowClass.isLargeOrLarger && height >= 720) {
+      return _diagramComfortMaxWidth;
+    }
+    return 760;
+  }
+
+  double _adaptiveSidePanelWidth(double availableWidth) {
+    final windowClass = SacaWindowSizeClasses.fromWidth(availableWidth);
+    if (windowClass.isLargeOrLarger) return 340;
+    if (windowClass == SacaWindowSizeClass.expanded) return 300;
+    return _sidePanelWidth;
+  }
+
+  void _setRemainingViewportHeight(double value) {
+    if ((_remainingViewportHeight ?? -1) == value) return;
+    setState(() => _remainingViewportHeight = value);
+  }
+
+  void _setSidePanelHeight(Size value) {
+    if (_sidePanelHeight == value.height) return;
+    setState(() => _sidePanelHeight = value.height);
+  }
+}
+
+class _RemainingViewportHeight extends StatefulWidget {
+  const _RemainingViewportHeight({
+    required this.child,
+    required this.onChanged,
+  });
+
+  final Widget child;
+  final ValueChanged<double> onChanged;
+
+  @override
+  State<_RemainingViewportHeight> createState() =>
+      _RemainingViewportHeightState();
+}
+
+class _RemainingViewportHeightState extends State<_RemainingViewportHeight> {
+  static const double _roundingGuard = 96;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleMeasure();
+  }
+
+  @override
+  void didUpdateWidget(covariant _RemainingViewportHeight oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _scheduleMeasure();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _scheduleMeasure();
+    return widget.child;
+  }
+
+  void _scheduleMeasure() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final renderObject = context.findRenderObject();
+      if (renderObject is! RenderBox || !renderObject.hasSize) return;
+      final top = renderObject.localToGlobal(Offset.zero).dy;
+      final mediaQuery = MediaQuery.of(context);
+      final remainingHeight = mediaQuery.size.height -
+          mediaQuery.viewInsets.bottom -
+          top -
+          _roundingGuard;
+      if (remainingHeight.isFinite && remainingHeight > 0) {
+        widget.onChanged(remainingHeight);
+      }
+    });
+  }
+}
+
+class _MeasureSize extends StatefulWidget {
+  const _MeasureSize({
+    required this.child,
+    required this.onChanged,
+  });
+
+  final Widget child;
+  final ValueChanged<Size> onChanged;
+
+  @override
+  State<_MeasureSize> createState() => _MeasureSizeState();
+}
+
+class _MeasureSizeState extends State<_MeasureSize> {
+  @override
+  void initState() {
+    super.initState();
+    _scheduleMeasure();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MeasureSize oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _scheduleMeasure();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _scheduleMeasure();
+    return widget.child;
+  }
+
+  void _scheduleMeasure() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final renderObject = context.findRenderObject();
+      if (renderObject is RenderBox && renderObject.hasSize) {
+        widget.onChanged(renderObject.size);
+      }
+    });
   }
 }
 

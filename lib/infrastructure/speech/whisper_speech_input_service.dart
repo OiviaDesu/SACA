@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../core/errors/app_error.dart';
@@ -5,6 +7,7 @@ import '../../domain/models/saca_models.dart' as domain;
 import '../../domain/services/speech_input_service.dart';
 import '../../domain/services/transcript_sanitizer.dart';
 import 'audio_recorder_service.dart';
+import 'partial_transcript_policy.dart';
 import 'speech_input_mode_policy.dart';
 import 'whisper_service.dart' as whisper;
 
@@ -13,17 +16,34 @@ class WhisperSpeechInputService implements SpeechInputService {
     AudioRecorderService? recorder,
     whisper.WhisperService? whisperService,
     TranscriptSanitizer? transcriptSanitizer,
-  }) : _recorder = recorder ?? AudioRecorderService(),
-       _whisper = whisperService ?? whisper.WhisperService(),
-       _transcriptSanitizer =
-           transcriptSanitizer ?? const TranscriptSanitizer();
+    PartialTranscriptPolicy partialTranscriptPolicy =
+        const PartialTranscriptPolicy(),
+  })  : _recorder = recorder ??
+            AudioRecorderService(
+                partialTranscriptPolicy: partialTranscriptPolicy),
+        _whisper = whisperService ?? whisper.WhisperService(),
+        _transcriptSanitizer =
+            transcriptSanitizer ?? const TranscriptSanitizer(),
+        _partialTranscriptPolicy = partialTranscriptPolicy;
 
   final AudioRecorderService _recorder;
   final whisper.WhisperService _whisper;
   final TranscriptSanitizer _transcriptSanitizer;
+  final PartialTranscriptPolicy _partialTranscriptPolicy;
+  final StreamController<String> _partialTranscriptController =
+      StreamController<String>.broadcast();
+  Timer? _partialTranscriptTimer;
+  bool _partialDecodeInFlight = false;
+  bool _partialsDisabledForRecording = false;
+  int _slowPartialDecodeCount = 0;
+  String _lastPartialTranscript = '';
 
   @override
   bool get supportsOnDeviceStt => _whisper.supportsOnDeviceStt;
+
+  @override
+  Stream<String> get partialTranscriptStream =>
+      _partialTranscriptController.stream;
 
   @override
   Future<AppResult<void>> prepare(domain.SacaLanguage language) async {
@@ -70,6 +90,7 @@ class WhisperSpeechInputService implements SpeechInputService {
         maxDuration: SpeechInputModePolicy.maxDurationFor(mode),
         silenceDelay: SpeechInputModePolicy.silenceDelayFor(mode),
       );
+      _startPartialTranscriptPolling(mode);
       return const AppResult.success(null);
     } catch (error, stackTrace) {
       debugPrint('[SACA] Recording failed: $error\n$stackTrace');
@@ -88,6 +109,7 @@ class WhisperSpeechInputService implements SpeechInputService {
     SpeechInputMode mode = SpeechInputMode.dictation,
   }) async {
     final audioPath = await _recorder.waitForAutoStop();
+    _stopPartialTranscriptPolling();
     if (audioPath == null || audioPath.isEmpty) {
       return const AppResult.failure(
         AppFailure(
@@ -105,6 +127,7 @@ class WhisperSpeechInputService implements SpeechInputService {
     SpeechInputMode mode = SpeechInputMode.dictation,
   }) async {
     try {
+      _stopPartialTranscriptPolling();
       final audioPath = await _recorder.stopRecording();
       if (audioPath == null || audioPath.isEmpty) {
         return const AppResult.failure(
@@ -169,13 +192,112 @@ class WhisperSpeechInputService implements SpeechInputService {
 
   @override
   Future<void> cancel() {
+    _stopPartialTranscriptPolling();
     return _recorder.cancelRecording();
   }
 
   @override
   void dispose() {
+    _stopPartialTranscriptPolling();
+    unawaited(_partialTranscriptController.close());
     _recorder.dispose();
     _whisper.dispose();
+  }
+
+  void _startPartialTranscriptPolling(SpeechInputMode mode) {
+    _stopPartialTranscriptPolling();
+    if (mode != SpeechInputMode.dictation || !_recorder.isStreamRecording) {
+      return;
+    }
+    _lastPartialTranscript = '';
+    _partialsDisabledForRecording = false;
+    _slowPartialDecodeCount = 0;
+    _partialTranscriptTimer = Timer.periodic(
+      _partialTranscriptPolicy.pollingInterval,
+      (_) => unawaited(_decodePartialTranscript()),
+    );
+  }
+
+  void _stopPartialTranscriptPolling() {
+    _partialTranscriptTimer?.cancel();
+    _partialTranscriptTimer = null;
+    _partialDecodeInFlight = false;
+  }
+
+  Future<void> _decodePartialTranscript() async {
+    if (_partialsDisabledForRecording) return;
+    if (_partialDecodeInFlight || !_recorder.isStreamRecording) {
+      debugPrint(
+        '[SACA] Partial transcript skipped platform=${defaultTargetPlatform.name} '
+        'reason=${_partialDecodeInFlight ? 'decode_in_flight' : 'not_streaming'}',
+      );
+      return;
+    }
+    _partialDecodeInFlight = true;
+    final stopwatch = Stopwatch()..start();
+    try {
+      final audioPath = await _recorder.writePartialWav(
+        window: _partialTranscriptPolicy.rollingWindow,
+      );
+      if (audioPath == null || audioPath.isEmpty) {
+        debugPrint(
+          '[SACA] Partial transcript skipped platform=${defaultTargetPlatform.name} '
+          'reason=audio_not_ready',
+        );
+        return;
+      }
+      final segments = await _whisper.transcribe(
+        audioPath,
+        options: whisper.WhisperTranscriptionOptions.command,
+      );
+      final rawText = segments.map((segment) => segment.text).join(' ').trim();
+      final text = _transcriptSanitizer.clean(rawText);
+      stopwatch.stop();
+      _updatePartialPerformance(stopwatch.elapsed);
+      if (!_transcriptSanitizer.isUsable(text)) return;
+      if (text == _lastPartialTranscript) return;
+      _lastPartialTranscript = text;
+      _partialTranscriptController.add(text);
+      debugPrint(
+        '[SACA] Voice partial transcript platform=${defaultTargetPlatform.name} '
+        'latency=${stopwatch.elapsedMilliseconds}ms',
+      );
+    } catch (error, stackTrace) {
+      debugPrint('[SACA] Partial transcription skipped: $error\n$stackTrace');
+      if (_partialTranscriptPolicy.isMobile) {
+        _disablePartialsForRecording('mobile_decode_error');
+      }
+    } finally {
+      _partialDecodeInFlight = false;
+    }
+  }
+
+  void _updatePartialPerformance(Duration elapsed) {
+    if (!_partialTranscriptPolicy.isMobile) return;
+    if (elapsed <= _partialTranscriptPolicy.slowDecodeThreshold) {
+      _slowPartialDecodeCount = 0;
+      return;
+    }
+    _slowPartialDecodeCount += 1;
+    debugPrint(
+      '[SACA] Partial transcript slow platform=${defaultTargetPlatform.name} '
+      'latency=${elapsed.inMilliseconds}ms '
+      'threshold=${_partialTranscriptPolicy.slowDecodeThreshold.inMilliseconds}ms '
+      'count=$_slowPartialDecodeCount',
+    );
+    if (_slowPartialDecodeCount >= 2) {
+      _disablePartialsForRecording('mobile_decode_slow');
+    }
+  }
+
+  void _disablePartialsForRecording(String reason) {
+    _partialsDisabledForRecording = true;
+    _partialTranscriptTimer?.cancel();
+    _partialTranscriptTimer = null;
+    debugPrint(
+      '[SACA] Partial transcript disabled platform=${defaultTargetPlatform.name} '
+      'reason=$reason',
+    );
   }
 
   whisper.SacaLanguage _mapLanguage(domain.SacaLanguage language) {

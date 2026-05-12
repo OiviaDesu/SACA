@@ -61,6 +61,9 @@ class _FakeSpeechInputService implements SpeechInputService {
   bool get supportsOnDeviceStt => supportsStt;
 
   @override
+  Stream<String> get partialTranscriptStream => const Stream<String>.empty();
+
+  @override
   Future<AppResult<void>> prepare(SacaLanguage language) async {
     prepareCalls += 1;
     lastLanguage = language;

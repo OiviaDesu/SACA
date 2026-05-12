@@ -23,7 +23,6 @@ class SacaSeveritySlider extends StatelessWidget {
     final clampedValue = value.clamp(1, 10);
     final colors = SacaThemeColors.of(context);
     final color = _colorFor(clampedValue);
-    const labelWidth = 74.0;
     const sliderHorizontalPadding = 28.0;
 
     return Semantics(
@@ -35,19 +34,6 @@ class SacaSeveritySlider extends StatelessWidget {
         key: const ValueKey('severitySliderInlineControl'),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final availableWidth = constraints.maxWidth;
-            final trackWidth =
-                (availableWidth - sliderHorizontalPadding * 2).clamp(
-              1.0,
-              double.infinity,
-            );
-            final progress = (clampedValue - 1) / 9;
-            final thumbCenter = sliderHorizontalPadding + trackWidth * progress;
-            final labelLeft = (thumbCenter - labelWidth / 2).clamp(
-              0.0,
-              (availableWidth - labelWidth).clamp(0.0, double.infinity),
-            );
-
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: DecoratedBox(
@@ -72,24 +58,25 @@ class SacaSeveritySlider extends StatelessWidget {
                         height: 142,
                         child: Stack(
                           children: [
-                            Positioned(
-                              left: labelLeft,
+                            Positioned.fill(
                               top: 0,
-                              width: labelWidth,
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 140),
-                                child: Text(
-                                  '$clampedValue',
-                                  key: ValueKey<String>(
-                                    'severityValue-$clampedValue',
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 52,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0,
-                                    height: 1,
-                                    color: colors.text,
+                              bottom: 88,
+                              child: Center(
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 140),
+                                  child: Text(
+                                    '$clampedValue',
+                                    key: ValueKey<String>(
+                                      'severityValue-$clampedValue',
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 52,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0,
+                                      height: 1,
+                                      color: colors.text,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -118,6 +105,7 @@ class SacaSeveritySlider extends StatelessWidget {
                               right: sliderHorizontalPadding,
                               top: 108,
                               child: DecoratedBox(
+                                key: const ValueKey('severityGradientTrack'),
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
                                     colors: [
@@ -129,31 +117,18 @@ class SacaSeveritySlider extends StatelessWidget {
                                   ),
                                   borderRadius: BorderRadius.circular(999),
                                 ),
-                                child: const SizedBox(height: 10),
+                                child: const SizedBox(height: 8),
                               ),
                             ),
                             Positioned(
-                              left: 0,
-                              right: 0,
-                              top: 84,
-                              child: SizedBox(
-                                height: 58,
-                                child: CupertinoSlider(
-                                  key: const ValueKey('severitySlider'),
-                                  value: clampedValue.toDouble(),
-                                  min: 1,
-                                  max: 10,
-                                  divisions: 9,
-                                  activeColor: color,
-                                  thumbColor: colors.text,
-                                  onChanged: (nextValue) {
-                                    final next = nextValue.round();
-                                    if (next != clampedValue) {
-                                      HapticFeedback.selectionClick();
-                                    }
-                                    onChanged(next);
-                                  },
-                                ),
+                              left: sliderHorizontalPadding,
+                              right: sliderHorizontalPadding,
+                              top: 82,
+                              height: 58,
+                              child: _SeverityDragTrack(
+                                value: clampedValue,
+                                color: color,
+                                onChanged: onChanged,
                               ),
                             ),
                           ],
@@ -197,5 +172,73 @@ class SacaSeveritySlider extends StatelessWidget {
     if (value <= 6) return SacaTheme.warning;
     if (value <= 8) return const Color(0xFFFF8A3D);
     return SacaTheme.emergency;
+  }
+}
+
+class _SeverityDragTrack extends StatelessWidget {
+  const _SeverityDragTrack({
+    required this.value,
+    required this.color,
+    required this.onChanged,
+  });
+
+  final int value;
+  final Color color;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final progress = (value - 1) / 9;
+        final thumbX = constraints.maxWidth * progress;
+
+        return GestureDetector(
+          key: const ValueKey('severitySlider'),
+          behavior: HitTestBehavior.translucent,
+          onTapDown: (details) =>
+              _updateValue(details.localPosition.dx, constraints.maxWidth),
+          onHorizontalDragUpdate: (details) =>
+              _updateValue(details.localPosition.dx, constraints.maxWidth),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                left: thumbX - 14,
+                top: 15,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 120),
+                  curve: Curves.easeOutCubic,
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: colors.text,
+                    shape: BoxShape.circle,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x33000000),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(color: color.withValues(alpha: 0.18)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _updateValue(double dx, double width) {
+    final next = ((dx / width).clamp(0.0, 1.0) * 9).round() + 1;
+    if (next != value) {
+      unawaited(SacaHaptics.selection());
+    }
+    onChanged(next);
   }
 }
