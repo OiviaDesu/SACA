@@ -10,6 +10,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
 import 'package:whisper_kit/whisper_kit.dart';
 
+import '../../core/runtime/runtime_acceleration_policy.dart';
+
 part 'whisper_service_parts/mobile_runtime.dart';
 part 'whisper_service_parts/windows_runtime.dart';
 part 'whisper_service_parts/whisper_asset_bundle.dart';
