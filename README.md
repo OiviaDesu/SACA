@@ -54,7 +54,8 @@ path for your machine.
 - Windows: desktop UI, local audio recording, `sherpa_onnx` offline Whisper
   runtime with local ONNX assets.
 - Android: mobile UI, local audio recording, `whisper_kit` path.
-- Web: fallback/stub behavior for speech services.
+- macOS: desktop UI and Flutter desktop runtime support.
+- iOS: mobile UI and Flutter iOS runtime support.
 
 ## Platform Setup Notes
 
@@ -63,7 +64,8 @@ path for your machine.
   `docs/MODEL_ASSETS.md`.
 - **Android:** the app builds with the normal Flutter Android toolchain. Voice
   runtime behavior still depends on local/bundled model assets at runtime.
-- **Web:** speech services use stub/fallback behavior only.
+- **macOS/iOS:** build with the normal Flutter Apple toolchains. Voice runtime
+  behavior still depends on local/bundled model assets at runtime.
 
 ## Model Assets
 
@@ -184,6 +186,14 @@ local model files are available:
 flutter build windows
 flutter build apk
 ```
+
+## Renderer Policy
+
+SACA uses Flutter's default renderer behavior per platform. Impeller is used
+where Flutter supports it, but Skia fallback is not universal. In particular,
+iOS does not support switching back to Skia, Android fallback is handled by
+Flutter when Impeller is unsupported, and Windows/macOS keep Flutter defaults.
+SACA does not support Web. See [Renderer policy](docs/RENDERER_POLICY.md).
 
 ## CI
 
