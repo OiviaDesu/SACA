@@ -15,20 +15,7 @@ class _ResultPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
     return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: colors.surfaceGradient,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: result.isEmergency ? SacaTheme.emergency : colors.border,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 24,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
+      decoration: _sacaPanelDecoration(context, baseRadius: 24),
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -181,12 +168,10 @@ class _PredictionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
     return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: primary ? colors.selectedGradient : colors.surfaceGradient,
-        borderRadius: BorderRadius.circular(primary ? 20 : 16),
-        border: Border.all(
-          color: primary ? colors.selectedBorder : colors.border,
-        ),
+      decoration: _sacaPanelDecoration(
+        context,
+        selected: primary,
+        baseRadius: primary ? 20 : 16,
       ),
       child: Padding(
         padding: EdgeInsets.all(primary ? 16 : 13),

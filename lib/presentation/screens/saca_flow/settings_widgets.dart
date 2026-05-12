@@ -74,31 +74,11 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                       style: SacaTheme.small.copyWith(color: colors.mutedText),
                     ),
                     const SizedBox(height: 12),
-                    CupertinoSlidingSegmentedControl<SacaVisualThemeStyle>(
-                      key: const ValueKey('settingsThemeStyleControl'),
-                      groupValue: settingsState.visualThemeStyle,
-                      children: <SacaVisualThemeStyle, Widget>{
-                        SacaVisualThemeStyle.modern: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(_localizer.t(
-                              state.language, 'settingsThemeModern')),
-                        ),
-                        SacaVisualThemeStyle.glass: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(_localizer.t(
-                              state.language, 'settingsThemeGlass')),
-                        ),
-                        SacaVisualThemeStyle.classic: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(_localizer.t(
-                              state.language, 'settingsThemeClassic')),
-                        ),
-                      },
-                      onValueChanged: (value) {
-                        if (value != null) {
-                          _settings.setVisualThemeStyle(value);
-                        }
-                      },
+                    _ThemePreviewRow(
+                      selected: settingsState.visualThemeStyle,
+                      language: state.language,
+                      localizer: _localizer,
+                      onSelected: _settings.setVisualThemeStyle,
                     ),
                     if (themeContext.glassUnavailable) ...[
                       const SizedBox(height: 10),
@@ -114,29 +94,18 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
               ),
               _SettingsPanel(
                 title: _localizer.t(state.language, 'settingsAppearanceTitle'),
-                child: CupertinoSlidingSegmentedControl<SacaThemePreference>(
-                  groupValue: settingsState.themePreference,
-                  children: <SacaThemePreference, Widget>{
-                    SacaThemePreference.light: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child:
-                          Text(_localizer.t(state.language, 'settingsLight')),
-                    ),
-                    SacaThemePreference.dark: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(_localizer.t(state.language, 'settingsDark')),
-                    ),
-                    SacaThemePreference.system: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child:
-                          Text(_localizer.t(state.language, 'settingsSystem')),
-                    ),
+                child: _SettingsChoiceRow<SacaThemePreference>(
+                  selected: settingsState.themePreference,
+                  values: SacaThemePreference.values,
+                  labelFor: (value) => switch (value) {
+                    SacaThemePreference.light =>
+                      _localizer.t(state.language, 'settingsLight'),
+                    SacaThemePreference.dark =>
+                      _localizer.t(state.language, 'settingsDark'),
+                    SacaThemePreference.system =>
+                      _localizer.t(state.language, 'settingsSystem'),
                   },
-                  onValueChanged: (value) {
-                    if (value != null) {
-                      _settings.setThemePreference(value);
-                    }
-                  },
+                  onSelected: _settings.setThemePreference,
                 ),
               ),
               _SettingsPanel(
@@ -198,6 +167,168 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
   }
 }
 
+class _ThemePreviewRow extends StatelessWidget {
+  const _ThemePreviewRow({
+    required this.selected,
+    required this.language,
+    required this.localizer,
+    required this.onSelected,
+  });
+
+  final SacaVisualThemeStyle selected;
+  final SacaLanguage? language;
+  final SacaLocalizer localizer;
+  final ValueChanged<SacaVisualThemeStyle> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (final style in SacaVisualThemeStyle.values)
+          _ThemePreviewChip(
+            style: style,
+            label: switch (style) {
+              SacaVisualThemeStyle.modern =>
+                localizer.t(language, 'settingsThemeModern'),
+              SacaVisualThemeStyle.glass =>
+                localizer.t(language, 'settingsThemeGlass'),
+              SacaVisualThemeStyle.classic =>
+                localizer.t(language, 'settingsThemeClassic'),
+            },
+            selected: selected == style,
+            onPressed: () => onSelected(style),
+          ),
+      ],
+    );
+  }
+}
+
+class _ThemePreviewChip extends StatelessWidget {
+  const _ThemePreviewChip({
+    required this.style,
+    required this.label,
+    required this.selected,
+    required this.onPressed,
+  });
+
+  final SacaVisualThemeStyle style;
+  final String label;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    final previewColors = switch (style) {
+      SacaVisualThemeStyle.modern => <Color>[
+          colors.surface,
+          colors.selected,
+        ],
+      SacaVisualThemeStyle.glass => <Color>[
+          colors.surface.withValues(alpha: 0.72),
+          colors.accent.withValues(alpha: 0.28),
+        ],
+      SacaVisualThemeStyle.classic => <Color>[
+          colors.surfaceAlt,
+          colors.border.withValues(alpha: 0.72),
+        ],
+    };
+    final radius = switch (style) {
+      SacaVisualThemeStyle.modern => SacaTheme.radius,
+      SacaVisualThemeStyle.glass => 28.0,
+      SacaVisualThemeStyle.classic => 16.0,
+    };
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      minimumSize: Size.zero,
+      onPressed: onPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        width: 154,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: previewColors),
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(
+            color: selected ? colors.selectedBorder : colors.border,
+            width: selected ? 2 : 1,
+          ),
+          boxShadow: style == SacaVisualThemeStyle.glass
+              ? [
+                  BoxShadow(
+                    color: colors.accent.withValues(alpha: 0.24),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
+                  ),
+                ]
+              : const [],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: SacaTheme.small.copyWith(color: colors.text),
+                  ),
+                ),
+                if (selected)
+                  Icon(CupertinoIcons.check_mark_circled_solid,
+                      color: colors.selectedBorder, size: 18),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              height: style == SacaVisualThemeStyle.classic ? 6 : 8,
+              width: style == SacaVisualThemeStyle.glass ? 82 : 64,
+              decoration: BoxDecoration(
+                color: colors.accent.withValues(
+                    alpha: style == SacaVisualThemeStyle.glass ? 0.78 : 1),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsChoiceRow<T> extends StatelessWidget {
+  const _SettingsChoiceRow({
+    required this.selected,
+    required this.values,
+    required this.labelFor,
+    required this.onSelected,
+  });
+
+  final T selected;
+  final List<T> values;
+  final String Function(T value) labelFor;
+  final ValueChanged<T> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final value in values)
+          SacaChipButton(
+            label: labelFor(value),
+            selected: value == selected,
+            onPressed: () => onSelected(value),
+          ),
+      ],
+    );
+  }
+}
+
 class _ResponsivePanelGrid extends StatelessWidget {
   const _ResponsivePanelGrid({required this.children});
 
@@ -244,9 +375,17 @@ class _SettingsPanel extends StatelessWidget {
     final theme = SacaThemeContext.of(context);
     final panel = DecoratedBox(
       decoration: BoxDecoration(
-        gradient: colors.surfaceGradient,
-        borderRadius: BorderRadius.circular(SacaTheme.radius),
-        border: Border.all(color: colors.border),
+        gradient: theme.surfaceGradient(),
+        color: theme.useGlass
+            ? colors.surface.withValues(alpha: theme.surfaceOpacity)
+            : null,
+        borderRadius: BorderRadius.circular(theme.radius(SacaTheme.radius)),
+        border: Border.all(
+          color: theme.useGlass
+              ? colors.border.withValues(alpha: 0.42)
+              : colors.border,
+        ),
+        boxShadow: theme.surfaceShadow(),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -263,7 +402,7 @@ class _SettingsPanel extends StatelessWidget {
     if (!theme.useGlass) return panel;
     return GlassCard(
       padding: EdgeInsets.zero,
-      quality: GlassQuality.minimal,
+      quality: GlassQuality.standard,
       child: panel,
     );
   }

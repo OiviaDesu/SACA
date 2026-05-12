@@ -72,6 +72,29 @@ void main() {
       expect(theme.useMaterial3, isTrue);
       expect(theme.scaffoldBackgroundColor, SacaTheme.lightColors.background);
     });
+
+    test('visual styles resolve distinct theme tokens', () {
+      const modern = SacaThemeContext(
+        colors: SacaTheme.lightColors,
+        surfaceStyle: SacaThemeSurfaceStyle.modern,
+        glassUnavailable: false,
+      );
+      const glass = SacaThemeContext(
+        colors: SacaTheme.lightColors,
+        surfaceStyle: SacaThemeSurfaceStyle.glass,
+        glassUnavailable: false,
+      );
+      const classic = SacaThemeContext(
+        colors: SacaTheme.lightColors,
+        surfaceStyle: SacaThemeSurfaceStyle.classic,
+        glassUnavailable: false,
+      );
+
+      expect(glass.surfaceOpacity, lessThan(modern.surfaceOpacity));
+      expect(glass.radiusScale, greaterThan(modern.radiusScale));
+      expect(classic.flattenGradients, isTrue);
+      expect(classic.radiusScale, isNot(modern.radiusScale));
+    });
   });
 }
 

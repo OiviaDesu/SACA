@@ -45,18 +45,7 @@ class _SelectedSummary extends StatelessWidget {
     final colors = SacaThemeColors.of(context);
     final text = values.isEmpty ? emptyText : values.join(', ');
     return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: colors.surfaceGradient,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
+      decoration: _sacaPanelDecoration(context),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -92,18 +81,7 @@ class _ReviewSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
     return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: colors.surfaceGradient,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
+      decoration: _sacaPanelDecoration(context),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -204,18 +182,7 @@ class _SacaTextFieldState extends State<_SacaTextField> {
       onChanged: widget.onChanged,
       style: SacaTheme.body.copyWith(color: colors.text),
       placeholderStyle: SacaTheme.body.copyWith(color: colors.mutedText),
-      decoration: BoxDecoration(
-        gradient: colors.surfaceGradient,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
+      decoration: _sacaPanelDecoration(context),
     );
   }
 }

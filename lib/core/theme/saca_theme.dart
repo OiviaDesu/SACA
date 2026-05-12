@@ -37,6 +37,75 @@ class SacaThemeContext {
   bool get useGlass =>
       surfaceStyle == SacaThemeSurfaceStyle.glass && !glassUnavailable;
   bool get useClassic => surfaceStyle == SacaThemeSurfaceStyle.classic;
+  double get surfaceOpacity => switch (surfaceStyle) {
+        SacaThemeSurfaceStyle.modern => 1.0,
+        SacaThemeSurfaceStyle.glass => glassUnavailable ? 1.0 : 0.30,
+        SacaThemeSurfaceStyle.classic => 1.0,
+      };
+  double get radiusScale => switch (surfaceStyle) {
+        SacaThemeSurfaceStyle.modern => 1.0,
+        SacaThemeSurfaceStyle.glass => 2.4,
+        SacaThemeSurfaceStyle.classic => 1.6,
+      };
+  double get elevation => switch (surfaceStyle) {
+        SacaThemeSurfaceStyle.modern => 1.0,
+        SacaThemeSurfaceStyle.glass => glassUnavailable ? 1.0 : 2.8,
+        SacaThemeSurfaceStyle.classic => 0.25,
+      };
+  bool get flattenGradients => useClassic;
+
+  double radius(double base) => base * radiusScale;
+
+  LinearGradient surfaceGradient({bool selected = false}) {
+    if (useGlass) {
+      final base = selected ? colors.selected : colors.surface;
+      return LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          base.withValues(alpha: 0.78),
+          colors.backgroundAlt.withValues(alpha: 0.22),
+        ],
+      );
+    }
+    if (useClassic) {
+      final base = selected ? colors.selected : colors.surfaceAlt;
+      return LinearGradient(colors: [base, base]);
+    }
+    return selected ? colors.selectedGradient : colors.surfaceGradient;
+  }
+
+  List<BoxShadow> surfaceShadow({bool highlighted = false}) {
+    if (useGlass) {
+      return <BoxShadow>[
+        BoxShadow(
+          color: colors.accent.withValues(alpha: highlighted ? 0.30 : 0.18),
+          blurRadius: highlighted ? 34 : 26,
+          spreadRadius: highlighted ? 2 : 0,
+          offset: const Offset(0, 16),
+        ),
+      ];
+    }
+    if (useClassic) {
+      return <BoxShadow>[
+        BoxShadow(
+          color: colors.shadow.withValues(alpha: 0.35),
+          blurRadius: 8,
+          offset: const Offset(0, 3),
+        ),
+      ];
+    }
+    return <BoxShadow>[
+      BoxShadow(
+        color: highlighted
+            ? colors.selectedBorder.withValues(alpha: 0.18)
+            : colors.shadow,
+        blurRadius: highlighted ? 14 : 16,
+        spreadRadius: highlighted ? 1 : 0,
+        offset: highlighted ? Offset.zero : const Offset(0, 6),
+      ),
+    ];
+  }
 
   static SacaThemeContext of(BuildContext context) {
     final scope =

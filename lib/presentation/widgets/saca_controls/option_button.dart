@@ -23,7 +23,46 @@ class SacaOptionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
     final enabled = onPressed != null;
+    if (theme.useClassic) {
+      final content = SizedBox(
+        width: double.infinity,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: SacaTheme.body),
+                    if (description != null) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        description!,
+                        style: SacaTheme.small.copyWith(color: colors.mutedText),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (selected) const Icon(Icons.check_circle, size: 22),
+              if (!selected && icon != null) Icon(icon, size: 22),
+            ],
+          ),
+        ),
+      );
+      final callback = enabled
+          ? () {
+              unawaited(SacaHaptics.selection());
+              onPressed?.call();
+            }
+          : null;
+      return selected
+          ? FilledButton(onPressed: callback, child: content)
+          : OutlinedButton(onPressed: callback, child: content);
+    }
     return CupertinoButton(
       minimumSize: const Size(0, SacaTheme.minTapTarget),
       padding: EdgeInsets.zero,

@@ -21,6 +21,21 @@ class SacaChipButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
+    if (theme.useClassic) {
+      void callback() {
+        unawaited(SacaHaptics.selection());
+        onPressed();
+      }
+      final child = Text(
+        label,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      );
+      return selected
+          ? FilledButton(onPressed: callback, child: child)
+          : OutlinedButton(onPressed: callback, child: child);
+    }
     return CupertinoButton(
       minimumSize: const Size(0, 42),
       padding: EdgeInsets.zero,
@@ -42,13 +57,7 @@ class SacaChipButton extends StatelessWidget {
         autofocus: autofocus,
         focusNode: focusNode,
         baseShadow: highlighted
-            ? [
-                BoxShadow(
-                  color: colors.selectedBorder.withValues(alpha: 0.18),
-                  blurRadius: 14,
-                  spreadRadius: 1,
-                ),
-              ]
+            ? SacaThemeContext.of(context).surfaceShadow(highlighted: true)
             : const [],
         hoverShadow: const [
           BoxShadow(

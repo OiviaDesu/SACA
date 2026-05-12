@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show FilledButton, OutlinedButton, Slider;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:saca_demo/core/errors/app_error.dart';
@@ -285,6 +286,45 @@ void main() {
 
     expect(find.byType(GlassContainer), findsOneWidget);
     expect(find.text('Continue'), findsOneWidget);
+  });
+
+  testWidgets('classic style uses Material-style shared controls',
+      (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          surfaceStyle: SacaThemeSurfaceStyle.classic,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SacaPrimaryButton(
+                  label: 'Continue',
+                  filled: true,
+                  onPressed: () {},
+                ),
+                SacaOptionButton(
+                  label: 'Choice',
+                  selected: false,
+                  onPressed: () {},
+                ),
+                SacaSeveritySlider(
+                  value: 5,
+                  onChanged: (_) {},
+                  semanticLabel: 'Severity',
+                  descriptor: 'Moderate',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(FilledButton), findsOneWidget);
+    expect(find.byType(OutlinedButton), findsOneWidget);
+    expect(find.byType(Slider), findsOneWidget);
   });
 
   testWidgets('settings page can switch app language to Gurindji',

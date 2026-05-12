@@ -101,6 +101,12 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
         widget.selected ? widget.selectedGradient : widget.baseGradient;
     final baseBorder =
         widget.selected ? widget.selectedBorderColor : widget.baseBorderColor;
+    final theme = SacaThemeContext.of(context);
+    final themedGradient = theme.surfaceGradient(selected: widget.selected);
+    final effectiveBaseGradient = theme.useGlass || theme.useClassic
+        ? themedGradient
+        : baseGradient;
+    final effectiveRadius = theme.radius(SacaTheme.radius);
     final hoverTint =
         widget.selected ? SacaTheme.accent : SacaTheme.selectedBorder;
     final pressedTint = widget.selected ? SacaTheme.text : SacaTheme.accent;
@@ -122,23 +128,29 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
         : hovered
             ? widget.hoverShadow
             : widget.baseShadow;
+    final effectiveShadow = theme.useGlass || theme.useClassic
+        ? theme.surfaceShadow(highlighted: widget.selected)
+        : boxShadow;
     final effectiveDuration = Duration(
       milliseconds: pressed ? 90 : 150,
     );
-    final theme = SacaThemeContext.of(context);
     final decoratedChild = AnimatedContainer(
       key: widget.surfaceKey,
       duration: effectiveDuration,
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
         gradient: _tintGradient(
-          baseGradient,
+          effectiveBaseGradient,
           brightenTint: hoverTint,
           brightenAmount: brightenAmount,
           darkenTint: pressedTint,
           darkenAmount: darkenAmount,
         ),
-        borderRadius: BorderRadius.circular(SacaTheme.radius),
+        color: theme.useGlass
+            ? (widget.selected ? theme.colors.selected : theme.colors.surface)
+                .withValues(alpha: theme.surfaceOpacity)
+            : null,
+        borderRadius: BorderRadius.circular(effectiveRadius),
         border: Border.all(
           color: _mixBorder(
             baseColor: baseBorder,
@@ -149,7 +161,7 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
           ),
         ),
         boxShadow: [
-          ...boxShadow,
+          ...effectiveShadow,
           if (focused)
             const BoxShadow(
               color: Color(0x335FADC8),
@@ -186,7 +198,7 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
     final surface = theme.useGlass
         ? GlassContainer(
             padding: EdgeInsets.zero,
-            quality: GlassQuality.minimal,
+            quality: GlassQuality.standard,
             child: decoratedChild,
           )
         : decoratedChild;

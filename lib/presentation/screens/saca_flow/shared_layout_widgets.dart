@@ -6,8 +6,22 @@ class _ShellBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
+    final gradient = theme.useGlass
+        ? LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              colors.background,
+              colors.accent.withValues(alpha: 0.16),
+              colors.backgroundAlt,
+            ],
+          )
+        : theme.useClassic
+            ? LinearGradient(colors: [colors.backgroundAlt, colors.backgroundAlt])
+            : colors.shellGradient;
     return DecoratedBox(
-      decoration: BoxDecoration(gradient: colors.shellGradient),
+      decoration: BoxDecoration(gradient: gradient),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -304,4 +318,29 @@ class _StatusPill extends StatelessWidget {
       ),
     );
   }
+}
+
+BoxDecoration _sacaPanelDecoration(
+  BuildContext context, {
+  bool selected = false,
+  double baseRadius = 18,
+}) {
+  final theme = SacaThemeContext.of(context);
+  final colors = theme.colors;
+  return BoxDecoration(
+    gradient: theme.surfaceGradient(selected: selected),
+    color: theme.useGlass
+        ? (selected ? colors.selected : colors.surface)
+            .withValues(alpha: theme.surfaceOpacity)
+        : null,
+    borderRadius: BorderRadius.circular(theme.radius(baseRadius)),
+    border: Border.all(
+      color: theme.useGlass
+          ? colors.border.withValues(alpha: 0.42)
+          : selected
+              ? colors.selectedBorder
+              : colors.border,
+    ),
+    boxShadow: theme.surfaceShadow(highlighted: selected),
+  );
 }
