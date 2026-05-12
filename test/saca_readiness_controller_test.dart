@@ -9,8 +9,9 @@ void main() {
     final controller = SacaReadinessController(
       bundle: _FakeAssetBundle(
         bytes: <String, ByteData>{
-          SacaSttModelAssets.rc1MobileAssetPath:
-              ByteData.sublistView(Uint8List.fromList(<int>[1])),
+          SacaSttModelAssets.rc1MobileAssetPath: ByteData.sublistView(
+            Uint8List.fromList(<int>[1]),
+          ),
           '${SacaSttModelAssets.rc1WindowsAssetBase}/encoder.onnx':
               ByteData.sublistView(Uint8List.fromList(<int>[1])),
           '${SacaSttModelAssets.rc1WindowsAssetBase}/decoder.onnx':
@@ -27,13 +28,14 @@ void main() {
                 <String>[],
             '${SacaSttModelAssets.rc1WindowsAssetBase}/tokens.txt': <String>[],
           }),
-          'assets/models/classifier-xgb-best/bundle.json':
-              jsonEncode(<String, Object>{
-            'classes': <String>['a', 'b'],
-            'model': <String, Object>{
-              'trees': <Object>[<String, Object>{}],
+          'assets/models/classifier-xgb-best/bundle.json': jsonEncode(
+            <String, Object>{
+              'classes': <String>['a', 'b'],
+              'model': <String, Object>{
+                'trees': <Object>[<String, Object>{}],
+              },
             },
-          }),
+          ),
         },
       ),
     );
@@ -48,13 +50,14 @@ void main() {
       bundle: _FakeAssetBundle(
         bytes: <String, ByteData>{},
         strings: <String, String>{
-          'assets/models/classifier-xgb-best/bundle.json':
-              jsonEncode(<String, Object>{
-            'classes': <String>['a', 'b'],
-            'model': <String, Object>{
-              'trees': <Object>[<String, Object>{}],
+          'assets/models/classifier-xgb-best/bundle.json': jsonEncode(
+            <String, Object>{
+              'classes': <String>['a', 'b'],
+              'model': <String, Object>{
+                'trees': <Object>[<String, Object>{}],
+              },
             },
-          }),
+          ),
         },
       ),
     );
@@ -66,17 +69,15 @@ void main() {
       state.messages,
       containsAll(<String>[
         'RC1 mobile STT model is missing.',
-        'RC1 Windows STT encoder.onnx is missing.',
-        'RC1 Windows STT decoder.onnx is missing.',
-        'RC1 Windows STT tokens.txt is missing.',
+        'RC1 desktop STT encoder.onnx is missing.',
+        'RC1 desktop STT decoder.onnx is missing.',
+        'RC1 desktop STT tokens.txt is missing.',
       ]),
     );
   });
 
   test('not ready when active assets missing', () async {
-    final controller = SacaReadinessController(
-      bundle: _FakeAssetBundle(),
-    );
+    final controller = SacaReadinessController(bundle: _FakeAssetBundle());
 
     final state = await controller.check();
 

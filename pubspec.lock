@@ -688,10 +688,9 @@ packages:
   whisper_kit:
     dependency: "direct main"
     description:
-      name: whisper_kit
-      sha256: "73d451a1fa1f3212ffb7359675ad30b8b5db9e615049b069d8ae1a7bc34ab972"
-      url: "https://pub.dev"
-    source: hosted
+      path: "third_party/whisper_kit"
+      relative: true
+    source: path
     version: "0.3.0"
   window_manager:
     dependency: "direct main"

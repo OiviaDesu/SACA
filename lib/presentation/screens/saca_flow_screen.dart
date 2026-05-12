@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../core/theme/saca_theme.dart';
 import '../../domain/models/saca_models.dart';
 import '../../domain/services/duration_interpreter.dart';
+import '../../infrastructure/platform/desktop_shell_policy.dart';
 import '../adaptive/saca_platform_style.dart';
 import '../controllers/saca_flow_controller.dart';
 import '../localization/saca_localizer.dart';
@@ -94,15 +95,19 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                 final state = _controller.state;
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    final contentStyle = widget.styleOverride ??
+                    final contentStyle =
+                        widget.styleOverride ??
                         SacaPlatformStyleResolver.resolve(
                           platform: defaultTargetPlatform,
                           width: constraints.maxWidth,
                         );
-                    final usesWindowsShell = widget.styleOverride ==
+                    final usesDesktopShell =
+                        widget.styleOverride ==
                             SacaPlatformStyle.windowsDesktop ||
                         (widget.styleOverride == null &&
-                            defaultTargetPlatform == TargetPlatform.windows);
+                            DesktopShellPolicy.supportsDesktopShell(
+                              defaultTargetPlatform,
+                            ));
                     final content = AnimatedSwitcher(
                       duration: const Duration(milliseconds: 240),
                       switchInCurve: Curves.easeOutCubic,
@@ -124,7 +129,7 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                         child: _contentFor(context, state, contentStyle),
                       ),
                     );
-                    final shellChild = usesWindowsShell
+                    final shellChild = usesDesktopShell
                         ? _DesktopShell(
                             state: state,
                             localizer: _localizer,
@@ -132,8 +137,8 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                             onBack: state.step == SacaStep.settings
                                 ? _controller.goBack
                                 : _canGoBack(state.step)
-                                    ? _controller.goBack
-                                    : null,
+                                ? _controller.goBack
+                                : null,
                             onInfo: () => _showPrototypeInfo(context),
                             onSettings: _showSettings,
                             child: content,
@@ -144,8 +149,8 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                             onBack: state.step == SacaStep.settings
                                 ? _controller.goBack
                                 : _canGoBack(state.step)
-                                    ? _controller.goBack
-                                    : null,
+                                ? _controller.goBack
+                                : null,
                             onInfo: () => _showPrototypeInfo(context),
                             onSettings: _showSettings,
                             child: content,

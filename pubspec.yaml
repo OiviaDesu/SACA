@@ -10,7 +10,8 @@ dependencies:
     sdk: flutter
 
   # Offline Whisper STT via whisper.cpp (Android + iOS)
-  whisper_kit: ^0.3.0
+  whisper_kit:
+    path: third_party/whisper_kit
 
   # Sherpa-ONNX: used when deploying fine-tuned ONNX model later
   sherpa_onnx: ^1.13.0

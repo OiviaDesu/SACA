@@ -2,7 +2,7 @@ part of '../whisper_service_io.dart';
 
 extension _WhisperMobileRuntime on WhisperService {
   Future<void> _initMobileRecognizer() async {
-    if (!_isWhisperKitPlatform) {
+    if (!_usesWhisperKit) {
       _whisper = null;
       return;
     }
@@ -12,10 +12,7 @@ extension _WhisperMobileRuntime on WhisperService {
       debugPrint(
         '[SACA] Mobile English/Gurindji STT: using ${SacaSttModelAssets.rc1Label}.',
       );
-      _whisper = Whisper(
-        model: WhisperModel.base,
-        modelDir: rc1ModelDir.path,
-      );
+      _whisper = Whisper(model: WhisperModel.base, modelDir: rc1ModelDir.path);
       return;
     }
 
@@ -35,7 +32,7 @@ extension _WhisperMobileRuntime on WhisperService {
   }
 
   Future<Directory?> _prepareBundledRc1MobileModel() async {
-    if (!_isWhisperKitPlatform) {
+    if (!_usesWhisperKit) {
       return null;
     }
 
@@ -77,7 +74,7 @@ extension _WhisperMobileRuntime on WhisperService {
     String audioPath, {
     required WhisperTranscriptionOptions options,
   }) async {
-    if (!_isWhisperKitPlatform) {
+    if (!_usesWhisperKit) {
       return const [];
     }
 

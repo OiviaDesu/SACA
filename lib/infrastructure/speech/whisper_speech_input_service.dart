@@ -5,6 +5,7 @@ import '../../domain/models/saca_models.dart' as domain;
 import '../../domain/services/speech_input_service.dart';
 import '../../domain/services/transcript_sanitizer.dart';
 import 'audio_recorder_service.dart';
+import 'speech_input_mode_policy.dart';
 import 'whisper_service.dart' as whisper;
 
 class WhisperSpeechInputService implements SpeechInputService {
@@ -12,10 +13,10 @@ class WhisperSpeechInputService implements SpeechInputService {
     AudioRecorderService? recorder,
     whisper.WhisperService? whisperService,
     TranscriptSanitizer? transcriptSanitizer,
-  })  : _recorder = recorder ?? AudioRecorderService(),
-        _whisper = whisperService ?? whisper.WhisperService(),
-        _transcriptSanitizer =
-            transcriptSanitizer ?? const TranscriptSanitizer();
+  }) : _recorder = recorder ?? AudioRecorderService(),
+       _whisper = whisperService ?? whisper.WhisperService(),
+       _transcriptSanitizer =
+           transcriptSanitizer ?? const TranscriptSanitizer();
 
   final AudioRecorderService _recorder;
   final whisper.WhisperService _whisper;
@@ -66,8 +67,8 @@ class WhisperSpeechInputService implements SpeechInputService {
       }
 
       await _recorder.startRecording(
-        maxDuration: _maxDurationFor(mode),
-        silenceDelay: _silenceDelayFor(mode),
+        maxDuration: SpeechInputModePolicy.maxDurationFor(mode),
+        silenceDelay: SpeechInputModePolicy.silenceDelayFor(mode),
       );
       return const AppResult.success(null);
     } catch (error, stackTrace) {
@@ -134,7 +135,7 @@ class WhisperSpeechInputService implements SpeechInputService {
       final stopwatch = Stopwatch()..start();
       final segments = await _whisper.transcribe(
         audioPath,
-        options: _transcriptionOptionsFor(mode),
+        options: SpeechInputModePolicy.transcriptionOptionsFor(mode),
       );
       final rawText = segments.map((segment) => segment.text).join(' ').trim();
       final text = _transcriptSanitizer.clean(rawText);
@@ -184,29 +185,5 @@ class WhisperSpeechInputService implements SpeechInputService {
       case domain.SacaLanguage.gurindji:
         return whisper.SacaLanguage.gurindji;
     }
-  }
-
-  Duration _maxDurationFor(SpeechInputMode mode) {
-    return switch (mode) {
-      SpeechInputMode.dictation => AudioRecorderService.maxRecordingDuration,
-      SpeechInputMode.command => const Duration(seconds: 3),
-    };
-  }
-
-  Duration _silenceDelayFor(SpeechInputMode mode) {
-    return switch (mode) {
-      SpeechInputMode.dictation => AudioRecorderService.silenceAutoStopDelay,
-      SpeechInputMode.command => const Duration(milliseconds: 900),
-    };
-  }
-
-  whisper.WhisperTranscriptionOptions _transcriptionOptionsFor(
-    SpeechInputMode mode,
-  ) {
-    return switch (mode) {
-      SpeechInputMode.dictation =>
-        whisper.WhisperTranscriptionOptions.dictation,
-      SpeechInputMode.command => whisper.WhisperTranscriptionOptions.command,
-    };
   }
 }

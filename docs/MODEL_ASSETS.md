@@ -74,9 +74,9 @@ multilingual `whisper-small` path.
 
 Gurindji mobile STT remains a separate placeholder/custom-model path.
 
-## Windows Offline STT
+## Windows / macOS Offline STT
 
-Windows uses `sherpa_onnx`.
+Windows and macOS use `sherpa_onnx`.
 
 Default local bundle:
 
@@ -96,11 +96,11 @@ assets/models/sherpa-onnx-whisper-base-en/
   tokens.txt
 ```
 
-If the `-en` bundle exists, the app prefers it for English STT on Windows.
+If the `-en` bundle exists, the app prefers it for English STT on desktop.
 Otherwise it keeps using the current `sherpa-onnx-whisper-base` bundle with
 `language: 'en'`.
 
-The app copies the selected Windows bundle into the application support
+The app copies the selected desktop bundle into the application support
 directory on first runtime initialization.
 
 ## Git Policy
