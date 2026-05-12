@@ -33,6 +33,8 @@ const _english = <String, String>{
   'transcriptPlaceholder': 'Transcript will appear here.',
   'offlineSpeechNotice':
       'Offline speech recognition can make mistakes. Please check it.',
+  'voiceDraftFallbackNotice':
+      'Final transcription could not be confirmed. Please review the draft before continuing.',
   'voiceAccuracyNotice':
       'Gurindji speech recognition is placeholder only. Please review the transcript or use text/visual input.',
   'useTranscript': 'Use transcript',
@@ -195,6 +197,7 @@ const _gurindji = <String, String>{
   'recordingNow': 'Ngayirrp jala',
   'transcriptPlaceholder': 'Yawu jala karrinyana.',
   'offlineSpeechNotice': 'Ngayirrp yawu mayi. Yawu nyawa.',
+  'voiceDraftFallbackNotice': 'Yawu nyawa. Ngumpit mayi yawu ngantipkarra.',
   'voiceAccuracyNotice': 'Gurindji ngayirrp mayi. Yawu nyawa.',
   'useTranscript': 'Yawu nyawa',
   'answerByVoice': 'Ngayirrp jangat',

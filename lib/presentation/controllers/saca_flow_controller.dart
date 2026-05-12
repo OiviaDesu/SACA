@@ -26,6 +26,7 @@ class SacaFlowController extends ChangeNotifier {
   final SymptomSuggestionService _symptomSuggestionService;
   final VoiceCommandMatcher _voiceCommandMatcher;
   StreamSubscription<String>? _partialTranscriptSubscription;
+  static const String _voiceDraftFallbackNoticeKey = 'voiceDraftFallbackNotice';
 
   SacaFlowState _state = const SacaFlowState();
   SacaStep? _settingsReturnStep;
@@ -109,6 +110,7 @@ class SacaFlowController extends ChangeNotifier {
       _state.copyWith(
         isBusy: true,
         voiceBusyPhase: VoiceBusyPhase.none,
+        clearVoiceDraftNotice: true,
         clearError: true,
       ),
     );
@@ -130,6 +132,7 @@ class SacaFlowController extends ChangeNotifier {
         isBusy: false,
         isRecording: true,
         voiceBusyPhase: VoiceBusyPhase.none,
+        clearVoiceDraftNotice: true,
         clearError: true,
       ),
     );
@@ -181,12 +184,18 @@ class SacaFlowController extends ChangeNotifier {
   ) async {
     if (!result.isSuccess) {
       _stopPartialTranscript();
+      final hasUsableDraft = _state.step == SacaStep.voiceInput &&
+          _state.transcript.trim().isNotEmpty;
       _setState(
         _state.copyWith(
           isBusy: false,
           isRecording: false,
           voiceBusyPhase: VoiceBusyPhase.none,
-          errorMessage: result.failure?.message,
+          errorMessage: hasUsableDraft ? null : result.failure?.message,
+          voiceDraftNotice:
+              hasUsableDraft ? _voiceDraftFallbackNoticeKey : null,
+          clearError: hasUsableDraft,
+          clearVoiceDraftNotice: !hasUsableDraft,
         ),
       );
       return;
@@ -231,13 +240,18 @@ class SacaFlowController extends ChangeNotifier {
         transcript: transcript,
         voiceAnswerTranscript: '',
         voiceAnswerMatched: true,
+        clearVoiceDraftNotice: true,
         clearError: true,
       ),
     );
   }
 
   void updateTranscript(String value) {
-    _setState(_state.copyWith(transcript: value, clearError: true));
+    _setState(_state.copyWith(
+      transcript: value,
+      clearError: true,
+      clearVoiceDraftNotice: true,
+    ));
   }
 
   void updateTextInput(String value) {

@@ -299,6 +299,105 @@ void main() {
       expect(controller.state.transcript, 'headache and sore throat');
     });
 
+    test('partial draft hides final transcription failure as soft notice',
+        () async {
+      final partials = StreamController<String>();
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          partialTranscriptStream: partials.stream,
+          transcribeFuture: Future.value(
+            const AppResult.failure(
+              AppFailure(
+                kind: AppFailureKind.transcriptionFailed,
+                message: 'Could not transcribe the recording. Try text input.',
+              ),
+            ),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(() async {
+        await partials.close();
+        controller.dispose();
+      });
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      await controller.startRecording();
+
+      partials.add('draft chest pain');
+      await Future<void>.delayed(Duration.zero);
+      await controller.stopRecording();
+
+      expect(controller.state.transcript, 'draft chest pain');
+      expect(controller.state.errorMessage, isNull);
+      expect(controller.state.voiceDraftNotice, isNotNull);
+      expect(controller.state.combinedInput, contains('draft chest pain'));
+    });
+
+    test('empty transcript keeps final transcription failure as hard error',
+        () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          transcribeFuture: Future.value(
+            const AppResult.failure(
+              AppFailure(
+                kind: AppFailureKind.transcriptionFailed,
+                message: 'Could not transcribe the recording. Try text input.',
+              ),
+            ),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      await controller.startRecording();
+      await controller.stopRecording();
+
+      expect(controller.state.transcript, isEmpty);
+      expect(
+        controller.state.errorMessage,
+        'Could not transcribe the recording. Try text input.',
+      );
+      expect(controller.state.voiceDraftNotice, isNull);
+    });
+
+    test('editing draft fallback clears soft notice', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          transcribeFuture: Future.value(
+            const AppResult.failure(
+              AppFailure(
+                kind: AppFailureKind.transcriptionFailed,
+                message: 'Could not transcribe the recording. Try text input.',
+              ),
+            ),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      controller.updateTranscript('draft pain');
+      await controller.startRecording();
+      await controller.stopRecording();
+
+      expect(controller.state.voiceDraftNotice, isNotNull);
+
+      controller.updateTranscript('edited draft pain');
+
+      expect(controller.state.transcript, 'edited draft pain');
+      expect(controller.state.voiceDraftNotice, isNull);
+    });
+
     test('voice maps severity transcripts to structured answer', () async {
       final controller = SacaFlowController(
         speechInput: _FakeSpeechInputService(),

@@ -1230,13 +1230,43 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
   }
 }
 
+class _VoiceDraftNotice extends StatelessWidget {
+  const _VoiceDraftNotice({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    return Semantics(
+      label: message,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: SacaTheme.small.copyWith(color: colors.mutedText),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ResponsiveVisualBodySelectionLayout extends StatefulWidget {
   const _ResponsiveVisualBodySelectionLayout({
     required this.diagramBuilder,
     required this.sidePanel,
   });
 
-  final Widget Function({required double maxHeight}) diagramBuilder;
+  final Widget Function({required double maxWidth, required double maxHeight})
+      diagramBuilder;
   final Widget sidePanel;
 
   @override
