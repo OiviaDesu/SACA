@@ -54,6 +54,7 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
   late final SacaLocalizer _localizer;
   late final SacaSettingsController _settings;
   _VisualInputStage _visualStage = _VisualInputStage.symptoms;
+  SacaConfirmationType? _shownConfirmation;
 
   @override
   void initState() {
@@ -94,16 +95,15 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
               animation: _controller,
               builder: (context, _) {
                 final state = _controller.state;
+                _scheduleConfirmationDialog(context, state);
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    final contentStyle =
-                        widget.styleOverride ??
+                    final contentStyle = widget.styleOverride ??
                         SacaPlatformStyleResolver.resolve(
                           platform: defaultTargetPlatform,
                           width: constraints.maxWidth,
                         );
-                    final usesDesktopShell =
-                        widget.styleOverride ==
+                    final usesDesktopShell = widget.styleOverride ==
                             SacaPlatformStyle.windowsDesktop ||
                         (widget.styleOverride == null &&
                             DesktopShellPolicy.usesDesktopLayout(
@@ -139,8 +139,8 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                             onBack: state.step == SacaStep.settings
                                 ? _controller.goBack
                                 : _canGoBack(state.step)
-                                ? _controller.goBack
-                                : null,
+                                    ? _controller.goBack
+                                    : null,
                             onInfo: () => _showPrototypeInfo(context),
                             onSettings: _showSettings,
                             child: content,
@@ -151,8 +151,8 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
                             onBack: state.step == SacaStep.settings
                                 ? _controller.goBack
                                 : _canGoBack(state.step)
-                                ? _controller.goBack
-                                : null,
+                                    ? _controller.goBack
+                                    : null,
                             onInfo: () => _showPrototypeInfo(context),
                             onSettings: _showSettings,
                             child: content,
@@ -182,6 +182,61 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _scheduleConfirmationDialog(BuildContext context, SacaFlowState state) {
+    final pending = state.pendingConfirmation;
+    if (pending == null || pending == _shownConfirmation) return;
+    _shownConfirmation = pending;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _controller.state.pendingConfirmation != pending) {
+        return;
+      }
+      _showConfirmationDialog(context, pending);
+    });
+  }
+
+  void _showConfirmationDialog(
+    BuildContext context,
+    SacaConfirmationType type,
+  ) {
+    final language = _controller.state.language;
+    final titleKey = switch (type) {
+      SacaConfirmationType.emptyInput => 'emptyInputConfirmTitle',
+      SacaConfirmationType.noClearIllness => 'noClearIllnessConfirmTitle',
+    };
+    final messageKey = switch (type) {
+      SacaConfirmationType.emptyInput => 'emptyInputConfirmMessage',
+      SacaConfirmationType.noClearIllness => 'noClearIllnessConfirmMessage',
+    };
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return CupertinoAlertDialog(
+          title: Text(_localizer.t(language, titleKey)),
+          content: Text(_localizer.t(language, messageKey)),
+          actions: [
+            CupertinoDialogAction(
+              child: Text(_localizer.t(language, 'reviewAnswers')),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _controller.dismissPendingConfirmation();
+                _shownConfirmation = null;
+              },
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              child: Text(_localizer.t(language, 'continueAnyway')),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _controller.confirmPendingAction();
+                _shownConfirmation = null;
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

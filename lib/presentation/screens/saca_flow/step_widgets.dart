@@ -116,7 +116,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     SacaFlowState state,
     SacaPlatformStyle style,
   ) {
-    final canContinue = state.transcript.trim().isNotEmpty && !state.isBusy;
+    final canContinue = !state.isBusy;
     final voiceNotice = _localizer.voiceAccuracyNotice(state.language);
 
     return _wrapStep(
@@ -190,7 +190,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     SacaFlowState state,
     SacaPlatformStyle style,
   ) {
-    final canContinue = state.textInput.trim().isNotEmpty && !state.isBusy;
+    final canContinue = !state.isBusy;
 
     return _wrapStep(
       style: style,
@@ -396,12 +396,10 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
   }) {
     Widget diagram({required double maxWidth, required double maxHeight}) {
       const diagramAspectRatio = 0.92;
-      final fittedWidth = maxWidth
-          .clamp(0.0, maxHeight * diagramAspectRatio)
-          .toDouble();
-      final fittedHeight = maxHeight
-          .clamp(0.0, fittedWidth / diagramAspectRatio)
-          .toDouble();
+      final fittedWidth =
+          maxWidth.clamp(0.0, maxHeight * diagramAspectRatio).toDouble();
+      final fittedHeight =
+          maxHeight.clamp(0.0, fittedWidth / diagramAspectRatio).toDouble();
       return Center(
         child: SizedBox(
           key: const ValueKey('visualBodyDiagramFrame'),
@@ -599,16 +597,16 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         (state.questionAnswers['related_symptoms'] ?? '').isNotEmpty ||
             otherText.trim().isNotEmpty;
     final suggestedIds = state.suggestedRelatedSymptomIds.toSet();
+    final voiceCueIds = state.voiceCueSuggestedSymptomIds.toSet();
+    final relatedById = {
+      for (final symptom in SacaFlowState.relatedSymptoms) symptom.id: symptom,
+    };
 
     final orderedSymptoms = <Symptom>[
+      if (relatedById['none'] != null) relatedById['none']!,
       for (final id in state.suggestedRelatedSymptomIds)
-        if (SacaFlowState.relatedSymptoms.any((symptom) => symptom.id == id))
-          SacaFlowState.relatedSymptoms
-              .firstWhere((symptom) => symptom.id == id),
-      for (final symptom in SacaFlowState.relatedSymptoms)
-        if (!suggestedIds.contains(symptom.id)) symptom,
+        if (id != 'none' && relatedById[id] != null) relatedById[id]!,
     ];
-    final compactSymptoms = orderedSymptoms.take(8).toList();
 
     return _wrapStep(
       style: style,
@@ -621,7 +619,12 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         ),
         if (suggestedIds.isNotEmpty) ...[
           Text(
-            _localizer.t(state.language, 'suggestedFromFirstSymptom'),
+            _localizer.t(
+              state.language,
+              voiceCueIds.isNotEmpty
+                  ? 'suggestedFromVoiceCues'
+                  : 'suggestedFromFirstSymptom',
+            ),
             style: SacaTheme.small.copyWith(
               color: SacaThemeColors.of(context).mutedText,
               fontWeight: FontWeight.w600,
@@ -634,9 +637,10 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           spacing: 10,
           runSpacing: 10,
           children: [
-            for (final symptom in compactSymptoms)
+            for (final symptom in orderedSymptoms)
               SacaChipButton(
                 label: _localizer.symptomLabel(state.language, symptom),
+                highlighted: voiceCueIds.contains(symptom.id),
                 selected: _controller.hasQuestionAnswer(
                   'related_symptoms',
                   symptom.id,

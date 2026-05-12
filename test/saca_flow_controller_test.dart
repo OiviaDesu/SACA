@@ -160,6 +160,33 @@ void main() {
           containsAll(<String>['cough', 'sore_throat', 'headache']));
     });
 
+    test('initial text symptoms are not suggested again', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+        symptomSuggestionService: const _FixedSymptomSuggestionService(
+          initial: <String>[
+            'cough',
+            'fever',
+            'headache',
+            'breathing_trouble',
+            'sore_throat',
+          ],
+        ),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.updateTextInput(
+          'I have cough, fever, headache and breathing trouble');
+      controller.continueFromInput();
+
+      expect(
+          controller.state.suggestedRelatedSymptomIds, <String>['sore_throat']);
+    });
+
     test('entering related symptom step refines suggestions', () async {
       final controller = SacaFlowController(
         speechInput: _FakeSpeechInputService(),
@@ -181,6 +208,33 @@ void main() {
 
       expect(controller.state.step, SacaStep.questionRelatedSymptoms);
       expect(controller.state.suggestedRelatedSymptomIds, <String>['cough']);
+    });
+
+    test('selected and initial symptoms are filtered during related refinement',
+        () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+        symptomSuggestionService: const _FixedSymptomSuggestionService(
+          initial: <String>['cough'],
+          refined: <String>['cough', 'fever', 'headache', 'sore_throat'],
+        ),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.updateTextInput('fever and headache');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'one to three days');
+      controller.nextQuestion();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.state.suggestedRelatedSymptomIds,
+          <String>['sore_throat', 'cough']);
     });
 
     test('voice prepare failure is exposed as plain recovery text', () async {
@@ -593,6 +647,64 @@ void main() {
       expect(controller.state.voiceAnswerMatched, isFalse);
     });
 
+    test('follow-up voice state is scoped to current question', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          transcribeFuture: Future.value(
+            const AppResult.success(SpeechInputResult(text: 'I have a fever')),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      controller.updateTranscript('headache');
+      controller.continueFromInput();
+      await controller.startRecording();
+      await controller.stopRecording();
+
+      expect(controller.state.step, SacaStep.questionSeverity);
+      expect(controller.state.voiceAnswerTranscript, 'I have a fever');
+      expect(controller.state.voiceAnswerMatched, isFalse);
+
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+
+      expect(controller.state.step, SacaStep.questionDuration);
+      expect(controller.state.voiceAnswerTranscript, isEmpty);
+      expect(controller.state.voiceAnswerMatched, isTrue);
+    });
+
+    test('starting follow-up recording clears stale heard text immediately',
+        () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          transcribeFuture: Future.value(
+            const AppResult.success(SpeechInputResult(text: 'I have a fever')),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      controller.updateTranscript('headache');
+      controller.continueFromInput();
+      await controller.startRecording();
+      await controller.stopRecording();
+
+      expect(controller.state.voiceAnswerTranscript, 'I have a fever');
+      await controller.startRecording();
+
+      expect(controller.state.voiceAnswerTranscript, isEmpty);
+      expect(controller.state.voiceAnswerMatched, isTrue);
+    });
+
     test('auto-stop transcription clears recording state', () async {
       final controller = SacaFlowController(
         speechInput: _FakeSpeechInputService(
@@ -615,6 +727,368 @@ void main() {
       expect(controller.state.isBusy, isFalse);
       expect(controller.state.voiceBusyPhase, VoiceBusyPhase.none);
       expect(controller.state.transcript, 'throat pain');
+    });
+
+    test('voice cough cue suggests cough without selecting it', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          transcribeFuture: Future.value(
+            const AppResult.success(
+              SpeechInputResult(
+                text: 'throat pain',
+                signalFeatures: SpeechSignalFeatures(
+                  transcript: 'throat pain',
+                  confidence: 0.8,
+                  cues: <NonSpeechCue>[
+                    NonSpeechCue(
+                      kind: 'cough',
+                      confidence: 0.8,
+                      evidence: 'bracket_token',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      await controller.startRecording();
+      await controller.stopRecording();
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'less than one day');
+      controller.nextQuestion();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.state.step, SacaStep.questionRelatedSymptoms);
+      expect(controller.state.voiceCueSuggestedSymptomIds, contains('cough'));
+      expect(
+          controller.hasQuestionAnswer('related_symptoms', 'cough'), isFalse);
+    });
+
+    test('voice cue does not suggest symptom already in transcript', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          transcribeFuture: Future.value(
+            const AppResult.success(
+              SpeechInputResult(
+                text: 'cough and fever',
+                signalFeatures: SpeechSignalFeatures(
+                  transcript: 'cough and fever',
+                  confidence: 0.8,
+                  cues: <NonSpeechCue>[
+                    NonSpeechCue(
+                      kind: 'cough',
+                      confidence: 0.8,
+                      evidence: 'bracket_token',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      await controller.startRecording();
+      await controller.stopRecording();
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'less than one day');
+      controller.nextQuestion();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.state.step, SacaStep.questionRelatedSymptoms);
+      expect(controller.state.suggestedRelatedSymptomIds,
+          isNot(contains('cough')));
+      expect(controller.state.voiceCueSuggestedSymptomIds, isEmpty);
+    });
+
+    test('voice cue on related step appends suggestion without selecting it',
+        () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          transcribeFuture: Future.value(
+            const AppResult.success(
+              SpeechInputResult(
+                text: '',
+                signalFeatures: SpeechSignalFeatures(
+                  transcript: '',
+                  confidence: 0.8,
+                  cues: <NonSpeechCue>[
+                    NonSpeechCue(
+                      kind: 'cough',
+                      confidence: 0.8,
+                      evidence: 'bracket_token',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.updateTextInput('headache');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'less than one day');
+      controller.nextQuestion();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.state.step, SacaStep.questionRelatedSymptoms);
+      expect(controller.state.suggestedRelatedSymptomIds,
+          contains('nausea_vomiting'));
+      expect(controller.state.suggestedRelatedSymptomIds,
+          isNot(contains('cough')));
+
+      await controller.startRecording();
+      await controller.stopRecording();
+
+      expect(controller.state.step, SacaStep.questionRelatedSymptoms);
+      expect(controller.state.suggestedRelatedSymptomIds,
+          containsAll(<String>['nausea_vomiting', 'cough']));
+      expect(controller.state.voiceCueSuggestedSymptomIds, <String>['cough']);
+      expect(
+          controller.hasQuestionAnswer('related_symptoms', 'cough'), isFalse);
+    });
+
+    test('live voice cue on related step respects known symptom filter',
+        () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          transcribeFuture: Future.value(
+            const AppResult.success(
+              SpeechInputResult(
+                text: '',
+                signalFeatures: SpeechSignalFeatures(
+                  transcript: '',
+                  confidence: 0.8,
+                  cues: <NonSpeechCue>[
+                    NonSpeechCue(
+                      kind: 'cough',
+                      confidence: 0.8,
+                      evidence: 'bracket_token',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.updateTextInput('cough and fever');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'less than one day');
+      controller.nextQuestion();
+      await Future<void>.delayed(Duration.zero);
+
+      await controller.startRecording();
+      await controller.stopRecording();
+
+      expect(controller.state.step, SacaStep.questionRelatedSymptoms);
+      expect(controller.state.voiceCueSuggestedSymptomIds, isEmpty);
+      expect(controller.state.suggestedRelatedSymptomIds,
+          isNot(contains('cough')));
+    });
+
+    test('voice breathing cue needs airway context before suggestion',
+        () async {
+      final features = const SpeechSignalFeatures(
+        transcript: 'chest pain',
+        confidence: 0.8,
+        cues: <NonSpeechCue>[
+          NonSpeechCue(
+            kind: 'choke',
+            confidence: 0.8,
+            evidence: 'bracket_token',
+          ),
+        ],
+      );
+      final service = const SafeNonSpeechSuggestionService();
+
+      expect(
+        service.reviewOnlySuggestions(
+          AnalysisRequest(
+            language: SacaLanguage.english,
+            inputMethod: InputMethod.voice,
+            transcript: 'leg pain',
+            textInput: '',
+            selectedSymptomIds: const <String>{},
+            selectedBodyAreaIds: const <String>{},
+            answers: const <String, String>{},
+            speechSignalFeatures: features,
+          ),
+        ),
+        isEmpty,
+      );
+      expect(
+        service.reviewOnlySuggestions(
+          AnalysisRequest(
+            language: SacaLanguage.english,
+            inputMethod: InputMethod.voice,
+            transcript: 'chest pain',
+            textInput: '',
+            selectedSymptomIds: const <String>{},
+            selectedBodyAreaIds: const <String>{'chest'},
+            answers: const <String, String>{},
+            speechSignalFeatures: features,
+          ),
+        ),
+        contains('breathing_trouble'),
+      );
+    });
+
+    test('unknown or low confidence cues do not create suggestions', () {
+      const service = SafeNonSpeechSuggestionService();
+      const request = AnalysisRequest(
+        language: SacaLanguage.english,
+        inputMethod: InputMethod.voice,
+        transcript: 'chest pain',
+        textInput: '',
+        selectedSymptomIds: <String>{},
+        selectedBodyAreaIds: <String>{'chest'},
+        answers: <String, String>{},
+        speechSignalFeatures: SpeechSignalFeatures(
+          transcript: 'chest pain',
+          confidence: 0.8,
+          cues: <NonSpeechCue>[
+            NonSpeechCue(
+              kind: 'possible_fever',
+              confidence: 0.9,
+              evidence: 'bracket_token',
+            ),
+            NonSpeechCue(
+              kind: 'gasp',
+              confidence: 0.4,
+              evidence: 'bracket_token',
+            ),
+          ],
+        ),
+      );
+
+      expect(service.reviewOnlySuggestions(request), isEmpty);
+    });
+
+    test('manual transcript edit clears stale voice cue features', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(
+          transcribeFuture: Future.value(
+            const AppResult.success(
+              SpeechInputResult(
+                text: 'throat pain',
+                signalFeatures: SpeechSignalFeatures(
+                  transcript: 'throat pain',
+                  cues: <NonSpeechCue>[
+                    NonSpeechCue(
+                      kind: 'cough',
+                      confidence: 0.8,
+                      evidence: 'bracket_token',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.voice);
+      await controller.startRecording();
+      await controller.stopRecording();
+      expect(controller.state.speechSignalFeatures, isNotNull);
+
+      controller.updateTranscript('headache');
+
+      expect(controller.state.speechSignalFeatures, isNull);
+    });
+
+    test('empty input creates confirmation instead of red error', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.continueFromInput();
+
+      expect(controller.state.pendingConfirmation,
+          SacaConfirmationType.emptyInput);
+      expect(controller.state.errorMessage, isNull);
+    });
+
+    test('no clear illness waits for confirmation before result', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(
+          result: const AnalysisResult(
+            disease: 'No clear illness detected',
+            severity: SeverityLevel.mild,
+            guidance: <String>['Review symptoms.'],
+            isEmergency: false,
+            disclaimer: 'Prototype guidance only.',
+          ),
+        ),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.updateTextInput('nothing clear');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '5');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'less than one day');
+      controller.nextQuestion();
+      controller.nextQuestion();
+      controller.nextQuestion();
+      controller.nextQuestion();
+      controller.nextQuestion();
+      controller.nextQuestion();
+      await controller.analyse();
+
+      expect(controller.state.pendingConfirmation,
+          SacaConfirmationType.noClearIllness);
+      expect(controller.state.step, SacaStep.analysing);
+
+      controller.confirmPendingAction();
+
+      expect(controller.state.step, SacaStep.result);
     });
   });
 }
@@ -688,16 +1162,21 @@ class _FakeSpeechInputService implements SpeechInputService {
 }
 
 class _FakeAnalysisService implements AnalysisService {
+  _FakeAnalysisService({this.result});
+
+  final AnalysisResult? result;
+
   @override
   Future<AppResult<AnalysisResult>> analyse(AnalysisRequest request) async {
-    return const AppResult.success(
-      AnalysisResult(
-        disease: 'Influenza',
-        severity: SeverityLevel.mild,
-        guidance: <String>['Rest and drink fluids.'],
-        isEmergency: false,
-        disclaimer: 'Prototype guidance only.',
-      ),
+    return AppResult.success(
+      result ??
+          const AnalysisResult(
+            disease: 'Influenza',
+            severity: SeverityLevel.mild,
+            guidance: <String>['Rest and drink fluids.'],
+            isEmergency: false,
+            disclaimer: 'Prototype guidance only.',
+          ),
     );
   }
 }
@@ -712,4 +1191,21 @@ class _FakeSymptomSuggestionService implements SymptomSuggestionService {
   Future<List<String>> refineRelatedSymptoms(AnalysisRequest request) async {
     return const <String>['cough'];
   }
+}
+
+class _FixedSymptomSuggestionService implements SymptomSuggestionService {
+  const _FixedSymptomSuggestionService({
+    this.initial = const <String>[],
+    this.refined = const <String>[],
+  });
+
+  final List<String> initial;
+  final List<String> refined;
+
+  @override
+  List<String> suggestRelatedSymptoms(AnalysisRequest request) => initial;
+
+  @override
+  Future<List<String>> refineRelatedSymptoms(AnalysisRequest request) async =>
+      refined;
 }

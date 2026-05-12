@@ -15,17 +15,23 @@ class SacaFlowController extends ChangeNotifier {
     required AnalysisService analysisService,
     SymptomSuggestionService symptomSuggestionService =
         const RuleBasedSymptomSuggestionService(),
+    NonSpeechSuggestionService nonSpeechSuggestionService =
+        const SafeNonSpeechSuggestionService(),
     VoiceCommandMatcher voiceCommandMatcher = const VoiceCommandMatcher(),
   })  : _speechInput = speechInput,
         _analysisService = analysisService,
         _symptomSuggestionService = symptomSuggestionService,
+        _nonSpeechSuggestionService = nonSpeechSuggestionService,
         _voiceCommandMatcher = voiceCommandMatcher;
 
   final SpeechInputService _speechInput;
   final AnalysisService _analysisService;
   final SymptomSuggestionService _symptomSuggestionService;
+  final NonSpeechSuggestionService _nonSpeechSuggestionService;
   final VoiceCommandMatcher _voiceCommandMatcher;
   StreamSubscription<String>? _partialTranscriptSubscription;
+  int? _activeRecordingId;
+  int _recordingSequence = 0;
   static const String _voiceDraftFallbackNoticeKey = 'voiceDraftFallbackNotice';
 
   SacaFlowState _state = const SacaFlowState();
@@ -106,16 +112,23 @@ class SacaFlowController extends ChangeNotifier {
     final mode = _isFollowUpQuestion(_state.step)
         ? SpeechInputMode.command
         : SpeechInputMode.dictation;
+    final recordingId = ++_recordingSequence;
+    _activeRecordingId = recordingId;
     _setState(
       _state.copyWith(
         isBusy: true,
         voiceBusyPhase: VoiceBusyPhase.none,
+        voiceAnswerTranscript: '',
+        voiceAnswerMatched: true,
         clearVoiceDraftNotice: true,
         clearError: true,
       ),
     );
     final result = await _speechInput.startRecording(mode: mode);
     if (!result.isSuccess) {
+      if (_activeRecordingId == recordingId) {
+        _activeRecordingId = null;
+      }
       _setState(
         _state.copyWith(
           isBusy: false,
@@ -137,7 +150,7 @@ class SacaFlowController extends ChangeNotifier {
       ),
     );
     _listenForPartialTranscript(mode);
-    _waitForAutoStop(mode);
+    _waitForAutoStop(mode, recordingId);
   }
 
   void _listenForPartialTranscript(SpeechInputMode mode) {
@@ -157,13 +170,15 @@ class SacaFlowController extends ChangeNotifier {
     _partialTranscriptSubscription = null;
   }
 
-  Future<void> _waitForAutoStop(SpeechInputMode mode) async {
+  Future<void> _waitForAutoStop(SpeechInputMode mode, int recordingId) async {
     final result = await _speechInput.waitForAutoStopAndTranscribe(mode: mode);
-    if (!_state.isRecording) return;
+    if (_activeRecordingId != recordingId || !_state.isRecording) return;
+    _activeRecordingId = null;
     await _handleTranscriptionResult(result);
   }
 
   Future<void> stopRecording() async {
+    _activeRecordingId = null;
     _setState(
       _state.copyWith(
         isBusy: true,
@@ -202,6 +217,7 @@ class SacaFlowController extends ChangeNotifier {
     }
 
     final transcript = result.value?.text ?? '';
+    final signalFeatures = result.value?.signalFeatures;
     _stopPartialTranscript();
     if (_isFollowUpQuestion(_state.step)) {
       final stopwatch = Stopwatch()..start();
@@ -211,6 +227,13 @@ class SacaFlowController extends ChangeNotifier {
         '[SACA] Voice command parser match=${answer != null} '
         'latency=${stopwatch.elapsedMilliseconds}ms',
       );
+      if (_state.step == SacaStep.questionRelatedSymptoms && answer == null) {
+        final mergedCueSuggestions = _mergeVoiceCueRelatedSuggestions(
+          signalFeatures,
+          transcript,
+        );
+        if (mergedCueSuggestions) return;
+      }
       final nextAnswers = Map<String, String>.from(_state.questionAnswers);
       if (answer != null) {
         nextAnswers[answer.questionId] = answer.value;
@@ -238,6 +261,7 @@ class SacaFlowController extends ChangeNotifier {
         isRecording: false,
         voiceBusyPhase: VoiceBusyPhase.none,
         transcript: transcript,
+        speechSignalFeatures: signalFeatures,
         voiceAnswerTranscript: '',
         voiceAnswerMatched: true,
         clearVoiceDraftNotice: true,
@@ -249,6 +273,7 @@ class SacaFlowController extends ChangeNotifier {
   void updateTranscript(String value) {
     _setState(_state.copyWith(
       transcript: value,
+      clearSpeechSignalFeatures: true,
       clearError: true,
       clearVoiceDraftNotice: true,
     ));
@@ -350,7 +375,8 @@ class SacaFlowController extends ChangeNotifier {
       if (_state.combinedInput.trim().isEmpty) {
         _setState(
           _state.copyWith(
-            errorMessage: 'Please add a symptom before continuing.',
+            pendingConfirmation: SacaConfirmationType.emptyInput,
+            clearError: true,
           ),
         );
         return;
@@ -362,7 +388,12 @@ class SacaFlowController extends ChangeNotifier {
       _setState(
         _state.copyWith(
           step: SacaStep.questionSeverity,
-          suggestedRelatedSymptomIds: suggestions,
+          suggestedRelatedSymptomIds: _filterKnownRelatedSymptoms(
+            suggestions,
+            _state.analysisRequest,
+          ),
+          voiceAnswerTranscript: '',
+          voiceAnswerMatched: true,
           clearError: true,
         ),
       );
@@ -441,10 +472,77 @@ class SacaFlowController extends ChangeNotifier {
 
   Future<void> _refineRelatedSymptomSuggestions() async {
     final request = _state.analysisRequest;
-    final suggestions =
-        await _symptomSuggestionService.refineRelatedSymptoms(request);
+    final suggestions = <String>{
+      ...await _symptomSuggestionService.refineRelatedSymptoms(request),
+    };
+    final voiceCueSuggestions = _filterKnownRelatedSymptoms(
+      _nonSpeechSuggestionService.reviewOnlySuggestions(request),
+      request,
+    );
+    suggestions.addAll(voiceCueSuggestions);
     if (_state.step != SacaStep.questionRelatedSymptoms) return;
-    _setState(_state.copyWith(suggestedRelatedSymptomIds: suggestions));
+    _setState(
+      _state.copyWith(
+        suggestedRelatedSymptomIds: _filterKnownRelatedSymptoms(
+          suggestions,
+          request,
+        ),
+        voiceCueSuggestedSymptomIds: voiceCueSuggestions,
+      ),
+    );
+  }
+
+  List<String> _filterKnownRelatedSymptoms(
+    Iterable<String> ids,
+    AnalysisRequest request,
+  ) {
+    final known = RuleBasedSymptomSuggestionService.knownSymptomIds(request);
+    return RuleBasedSymptomSuggestionService.orderedRelatedSymptoms(
+      ids.where((id) => !known.contains(id)),
+    );
+  }
+
+  bool _mergeVoiceCueRelatedSuggestions(
+    SpeechSignalFeatures? signalFeatures,
+    String transcript,
+  ) {
+    if (signalFeatures == null || !signalFeatures.hasUsableSignals) {
+      return false;
+    }
+    final request = _state.analysisRequest.copyWith(
+      transcript: transcript.isNotEmpty ? transcript : _state.transcript,
+      speechSignalFeatures: signalFeatures,
+    );
+    final voiceCueSuggestions = _filterKnownRelatedSymptoms(
+      _nonSpeechSuggestionService.reviewOnlySuggestions(request),
+      request,
+    );
+    if (voiceCueSuggestions.isEmpty) return false;
+
+    final mergedSuggestions =
+        RuleBasedSymptomSuggestionService.orderedRelatedSymptoms(<String>{
+      ..._state.suggestedRelatedSymptomIds,
+      ...voiceCueSuggestions,
+    });
+    final mergedVoiceCueSuggestions =
+        RuleBasedSymptomSuggestionService.orderedRelatedSymptoms(<String>{
+      ..._state.voiceCueSuggestedSymptomIds,
+      ...voiceCueSuggestions,
+    });
+    _setState(
+      _state.copyWith(
+        isBusy: false,
+        isRecording: false,
+        voiceBusyPhase: VoiceBusyPhase.none,
+        suggestedRelatedSymptomIds: mergedSuggestions,
+        voiceCueSuggestedSymptomIds: mergedVoiceCueSuggestions,
+        speechSignalFeatures: signalFeatures,
+        voiceAnswerTranscript: transcript,
+        voiceAnswerMatched: true,
+        clearError: true,
+      ),
+    );
+    return true;
   }
 
   Future<void> analyse() async {
@@ -469,12 +567,58 @@ class SacaFlowController extends ChangeNotifier {
       return;
     }
 
+    final value = result.value;
+    if (value != null &&
+        !value.isEmergency &&
+        value.disease == 'No clear illness detected') {
+      _setState(
+        _state.copyWith(
+          isBusy: false,
+          pendingConfirmation: SacaConfirmationType.noClearIllness,
+          analysisResult: value,
+          clearError: true,
+        ),
+      );
+      return;
+    }
+
     _setState(
       _state.copyWith(
         step: SacaStep.result,
         isBusy: false,
         analysisResult: result.value,
         clearError: true,
+      ),
+    );
+  }
+
+  void confirmPendingAction() {
+    final pending = _state.pendingConfirmation;
+    if (pending == null) return;
+    if (pending == SacaConfirmationType.emptyInput) {
+      _setState(_state.copyWith(clearPendingConfirmation: true));
+      return;
+    }
+    if (pending == SacaConfirmationType.noClearIllness &&
+        _state.analysisResult != null) {
+      _setState(
+        _state.copyWith(
+          step: SacaStep.result,
+          clearPendingConfirmation: true,
+          clearError: true,
+        ),
+      );
+    }
+  }
+
+  void dismissPendingConfirmation() {
+    _setState(
+      _state.copyWith(
+        step: _state.pendingConfirmation == SacaConfirmationType.noClearIllness
+            ? SacaStep.questionHealthChanges
+            : _state.step,
+        isBusy: false,
+        clearPendingConfirmation: true,
       ),
     );
   }

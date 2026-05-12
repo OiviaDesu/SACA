@@ -664,7 +664,7 @@ void main() {
     await _answerQuestionnaire(tester, stopAtReview: true);
 
     expect(controller.state.step, SacaStep.reviewInformation);
-    expect(find.textContaining('Sore throat'), findsOneWidget);
+    expect(find.textContaining('None'), findsOneWidget);
     expect(find.textContaining('sore_throat'), findsNothing);
     await _tapVisible(tester, find.text('Add more information'));
     expect(controller.state.step, SacaStep.inputMethod);
@@ -794,6 +794,88 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(const ValueKey('relatedOtherField')), findsOneWidget);
+  });
+
+  testWidgets('related symptoms shows None first and only suggested chips',
+      (tester) async {
+    await _pumpFlow(tester);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Text input'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'fever',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Continue'));
+    await _setSeveritySlider(tester, 5);
+    await _tapVisible(tester, find.text('Continue'));
+    await _tapVisible(tester, find.text('1-3 days'));
+    await _tapVisible(tester, find.text('Continue'));
+
+    expect(find.text('Any related symptoms?'), findsOneWidget);
+    expect(find.text('None'), findsOneWidget);
+    expect(find.text('Cough'), findsOneWidget);
+    expect(find.text('Other symptom'), findsOneWidget);
+    expect(find.text('Rash'), findsNothing);
+    expect(tester.getTopLeft(find.text('None')).dy,
+        lessThan(tester.getTopLeft(find.text('Cough')).dy + 1));
+  });
+
+  testWidgets('related voice cue live-adds glowing suggestion', (tester) async {
+    final speechInput = _ControllableSpeechInputService(
+      transcribeResults: const <AppResult<SpeechInputResult>>[
+        AppResult.success(SpeechInputResult(text: 'headache')),
+        AppResult.success(
+          SpeechInputResult(
+            text: '',
+            signalFeatures: SpeechSignalFeatures(
+              transcript: '',
+              confidence: 0.8,
+              cues: <NonSpeechCue>[
+                NonSpeechCue(
+                  kind: 'cough',
+                  confidence: 0.8,
+                  evidence: 'bracket_token',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+    final controller = await _pumpFlow(tester, speechInput: speechInput);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    await tester.tap(find.text('Record'));
+    await tester.pump();
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    await _tapVisible(tester, find.text('Use transcript'));
+    await _setSeveritySlider(tester, 5);
+    await _tapVisible(tester, find.text('Continue'));
+    await _tapVisible(tester, find.text('<1 day'));
+    await _tapVisible(tester, find.text('Continue'));
+
+    expect(find.text('Any related symptoms?'), findsOneWidget);
+    expect(find.text('Cough'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('voiceQuestionRecordButton')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('voiceQuestionRecordButton')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(
+        find.text('Suggested from voice cues. Please review.'), findsOneWidget);
+    expect(find.text('Cough'), findsOneWidget);
+    expect(controller.state.voiceCueSuggestedSymptomIds, <String>['cough']);
+    expect(controller.hasQuestionAnswer('related_symptoms', 'cough'), isFalse);
   });
 
   testWidgets('red flag text shows emergency advice', (tester) async {
@@ -1025,7 +1107,8 @@ void main() {
     expect(find.text('headache and sore throat'), findsOneWidget);
   });
 
-  testWidgets('voice draft fallback shows soft notice and keeps continue enabled',
+  testWidgets(
+      'voice draft fallback shows soft notice and keeps continue enabled',
       (tester) async {
     final partials = StreamController<String>();
     final speechInput = _ControllableSpeechInputService(
@@ -1075,7 +1158,8 @@ void main() {
     expect(useTranscript.onPressed, isNotNull);
   });
 
-  testWidgets('voice empty final failure still shows hard error', (tester) async {
+  testWidgets('voice empty final failure still shows hard error',
+      (tester) async {
     final speechInput = _ControllableSpeechInputService(
       transcribeFuture: Future.value(
         const AppResult.failure(
@@ -1109,6 +1193,148 @@ void main() {
       ),
       findsNothing,
     );
+  });
+
+  testWidgets(
+      'voice cue suggests glowing related symptom without transcript noise',
+      (tester) async {
+    final speechInput = _ControllableSpeechInputService(
+      transcribeFuture: Future.value(
+        const AppResult.success(
+          SpeechInputResult(
+            text: 'throat pain',
+            signalFeatures: SpeechSignalFeatures(
+              transcript: 'throat pain',
+              confidence: 0.8,
+              cues: <NonSpeechCue>[
+                NonSpeechCue(
+                  kind: 'cough',
+                  confidence: 0.8,
+                  evidence: 'bracket_token',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await _pumpFlow(tester, speechInput: speechInput);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    await tester.tap(find.text('Record'));
+    await tester.pump();
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(find.text('throat pain'), findsOneWidget);
+    expect(find.textContaining('[cough'), findsNothing);
+    await _tapVisible(tester, find.text('Use transcript'));
+    await _setSeveritySlider(tester, 5);
+    await _tapVisible(tester, find.text('Continue'));
+    await _tapVisible(tester, find.text('<1 day'));
+    await _tapVisible(tester, find.text('Continue'));
+
+    expect(find.text('Any related symptoms?'), findsOneWidget);
+    expect(
+        find.text('Suggested from voice cues. Please review.'), findsOneWidget);
+    expect(find.text('Cough'), findsOneWidget);
+    await _tapVisible(tester, find.text('Cough'));
+    final continueButton = tester.widget<SacaPrimaryButton>(
+      find.widgetWithText(SacaPrimaryButton, 'Continue').last,
+    );
+    expect(continueButton.onPressed, isNotNull);
+  });
+
+  testWidgets(
+      'voice cue section hides when cue symptom is already in transcript',
+      (tester) async {
+    final speechInput = _ControllableSpeechInputService(
+      transcribeFuture: Future.value(
+        const AppResult.success(
+          SpeechInputResult(
+            text: 'cough and fever',
+            signalFeatures: SpeechSignalFeatures(
+              transcript: 'cough and fever',
+              confidence: 0.8,
+              cues: <NonSpeechCue>[
+                NonSpeechCue(
+                  kind: 'cough',
+                  confidence: 0.8,
+                  evidence: 'bracket_token',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    final controller = await _pumpFlow(tester, speechInput: speechInput);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    await tester.tap(find.text('Record'));
+    await tester.pump();
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    await _tapVisible(tester, find.text('Use transcript'));
+    await _setSeveritySlider(tester, 5);
+    await _tapVisible(tester, find.text('Continue'));
+    await _tapVisible(tester, find.text('<1 day'));
+    await _tapVisible(tester, find.text('Continue'));
+
+    expect(find.text('Any related symptoms?'), findsOneWidget);
+    expect(
+        find.text('Suggested from voice cues. Please review.'), findsNothing);
+    expect(find.text('Cough'), findsNothing);
+    expect(find.text('Other symptom'), findsOneWidget);
+    expect(controller.hasQuestionAnswer('related_symptoms', 'cough'), isFalse);
+  });
+
+  testWidgets('empty input confirmation dialog replaces red error',
+      (tester) async {
+    await _pumpFlow(tester);
+    await _reachInputMethod(tester);
+
+    await _tapVisible(tester, find.text('Text input'));
+    await _tapVisible(tester, find.text('Continue'));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('No clear symptom heard'), findsOneWidget);
+    expect(find.text('Please add a symptom before continuing.'), findsNothing);
+  });
+
+  testWidgets('no clear illness confirmation appears before result',
+      (tester) async {
+    final controller = await _pumpFlow(
+      tester,
+      analysisService: const _NoClearAnalysisService(),
+    );
+    await _reachTextSeverityStep(tester);
+    await _answerQuestionnaire(tester, stopAtReview: true);
+    await _tapVisible(tester, find.text('Analyse'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(find.text('No clear illness found'), findsOneWidget);
+    expect(find.text('No clear illness detected'), findsNothing);
+    await _tapVisible(tester, find.text('Continue anyway'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(controller.state.step, SacaStep.result);
+    expect(controller.state.pendingConfirmation, isNull);
+    expect(
+        controller.state.analysisResult?.disease, 'No clear illness detected');
   });
 
   testWidgets('voice input shows mic controls on severity follow-up',
@@ -1570,13 +1796,14 @@ class _TestThemeTween extends Tween<SacaThemeColors> {
 Future<void> _answerQuestionnaire(
   WidgetTester tester, {
   String severity = '4',
-  String related = 'Sore throat',
+  String related = 'None',
   bool gurindji = false,
   bool stopAtReview = false,
 }) async {
   final continueLabel = gurindji ? 'Kawayi' : 'Continue';
   final durationLabel = gurindji ? '1-3 tirrip' : '1-3 days';
   final noLabel = gurindji ? 'Karrwarn' : 'No';
+  final relatedNoneLabel = gurindji ? 'Karrwarn' : 'None';
   final noChangeLabel = gurindji ? 'Karrwarn' : 'No change';
   final noAllergyLabel = gurindji ? 'Karrwarn' : 'No known allergies';
   final analyseLabel = gurindji ? 'Nyawa' : 'Analyse';
@@ -1585,7 +1812,10 @@ Future<void> _answerQuestionnaire(
   await _tapVisible(tester, find.text(continueLabel));
   await _tapVisible(tester, find.text(durationLabel));
   await _tapVisible(tester, find.text(continueLabel));
-  await _tapVisible(tester, find.text(related));
+  final relatedFinder = find.text(related).evaluate().isNotEmpty
+      ? find.text(related)
+      : find.text(relatedNoneLabel);
+  await _tapVisible(tester, relatedFinder);
   await _tapVisible(tester, find.text(continueLabel));
   await _tapVisible(tester, find.text(noLabel));
   await _tapVisible(tester, find.text(continueLabel));
@@ -1706,16 +1936,38 @@ class _RankedAnalysisService implements AnalysisService {
   }
 }
 
+class _NoClearAnalysisService implements AnalysisService {
+  const _NoClearAnalysisService();
+
+  @override
+  Future<AppResult<AnalysisResult>> analyse(AnalysisRequest request) async {
+    return const AppResult.success(
+      AnalysisResult(
+        disease: 'No clear illness detected',
+        severity: SeverityLevel.mild,
+        guidance: <String>['Review symptoms.'],
+        isEmergency: false,
+        disclaimer: 'Prototype guidance only.',
+      ),
+    );
+  }
+}
+
 class _ControllableSpeechInputService implements SpeechInputService {
   _ControllableSpeechInputService({
     this.prepareFuture,
     this.transcribeFuture,
+    List<AppResult<SpeechInputResult>>? transcribeResults,
     Stream<String>? partialTranscriptStream,
-  }) : partialTranscriptStream =
+  })  : _transcribeResults = List<AppResult<SpeechInputResult>>.from(
+          transcribeResults ?? const <AppResult<SpeechInputResult>>[],
+        ),
+        partialTranscriptStream =
             partialTranscriptStream ?? const Stream<String>.empty();
 
   final Future<AppResult<void>>? prepareFuture;
   final Future<AppResult<SpeechInputResult>>? transcribeFuture;
+  final List<AppResult<SpeechInputResult>> _transcribeResults;
   @override
   final Stream<String> partialTranscriptStream;
 
@@ -1748,6 +2000,9 @@ class _ControllableSpeechInputService implements SpeechInputService {
   Future<AppResult<SpeechInputResult>> stopAndTranscribe({
     SpeechInputMode mode = SpeechInputMode.dictation,
   }) async {
+    if (_transcribeResults.isNotEmpty) {
+      return _transcribeResults.removeAt(0);
+    }
     if (transcribeFuture != null) {
       return await transcribeFuture!;
     }

@@ -2,9 +2,10 @@ import '../../core/errors/app_error.dart';
 import '../models/saca_models.dart';
 
 class SpeechInputResult {
-  const SpeechInputResult({required this.text});
+  const SpeechInputResult({required this.text, this.signalFeatures});
 
   final String text;
+  final SpeechSignalFeatures? signalFeatures;
 }
 
 enum SpeechInputMode { dictation, command }

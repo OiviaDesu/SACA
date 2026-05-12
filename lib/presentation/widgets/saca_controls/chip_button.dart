@@ -8,6 +8,7 @@ class SacaChipButton extends StatelessWidget {
     required this.onPressed,
     this.autofocus = false,
     this.focusNode,
+    this.highlighted = false,
   });
 
   final String label;
@@ -15,6 +16,7 @@ class SacaChipButton extends StatelessWidget {
   final VoidCallback onPressed;
   final bool autofocus;
   final FocusNode? focusNode;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
@@ -33,11 +35,21 @@ class SacaChipButton extends StatelessWidget {
         selected: selected,
         baseGradient: colors.surfaceGradient,
         selectedGradient: colors.selectedGradient,
-        baseBorderColor: colors.border,
+        baseBorderColor: highlighted
+            ? colors.selectedBorder.withValues(alpha: 0.55)
+            : colors.border,
         selectedBorderColor: colors.selectedBorder,
         autofocus: autofocus,
         focusNode: focusNode,
-        baseShadow: const [],
+        baseShadow: highlighted
+            ? [
+                BoxShadow(
+                  color: colors.selectedBorder.withValues(alpha: 0.18),
+                  blurRadius: 14,
+                  spreadRadius: 1,
+                ),
+              ]
+            : const [],
         hoverShadow: const [
           BoxShadow(
             color: Color(0x12000000),

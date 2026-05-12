@@ -1,8 +1,8 @@
 class TranscriptSanitizer {
   const TranscriptSanitizer();
 
-  static final RegExp _bracketNoise = RegExp(
-    r'\[(?:music|singing|blank[_\s-]*audio|laughter|applause|silence|noise)\]',
+  static final RegExp _wrappedNoise = RegExp(
+    r'[\[\(<]\s*(?:music|singing|blank[_\s-]*audio|laughter|applause|silence|noise|cough(?:ing|s)?|chok(?:e|ing|ed)|gasp(?:ing|ed)?|breath(?:ing|e)?|wheez(?:e|ing|ed))\s*[\]\)>]',
     caseSensitive: false,
   );
 
@@ -13,7 +13,7 @@ class TranscriptSanitizer {
 
   String clean(String value) {
     return value
-        .replaceAll(_bracketNoise, ' ')
+        .replaceAll(_wrappedNoise, ' ')
         .replaceAll(_plainNoise, ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
