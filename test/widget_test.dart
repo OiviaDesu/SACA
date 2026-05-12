@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:saca_demo/core/errors/app_error.dart';
+import 'package:saca_demo/core/layout/saca_adaptive_policy.dart';
+import 'package:saca_demo/core/layout/saca_window_size_class.dart';
 import 'package:saca_demo/core/theme/saca_theme.dart';
 import 'package:saca_demo/domain/models/lexicon_entry.dart';
 import 'package:saca_demo/domain/models/saca_models.dart';
@@ -62,6 +64,67 @@ void main() {
     );
   });
 
+  test('window size classes follow Flutter logical width breakpoints', () {
+    expect(
+      SacaWindowSizeClasses.fromWidth(599),
+      SacaWindowSizeClass.compact,
+    );
+    expect(
+      SacaWindowSizeClasses.fromWidth(600),
+      SacaWindowSizeClass.medium,
+    );
+    expect(
+      SacaWindowSizeClasses.fromWidth(839),
+      SacaWindowSizeClass.medium,
+    );
+    expect(
+      SacaWindowSizeClasses.fromWidth(840),
+      SacaWindowSizeClass.expanded,
+    );
+    expect(
+      SacaWindowSizeClasses.fromWidth(1199),
+      SacaWindowSizeClass.expanded,
+    );
+    expect(
+      SacaWindowSizeClasses.fromWidth(1200),
+      SacaWindowSizeClass.large,
+    );
+    expect(
+      SacaWindowSizeClasses.fromWidth(1599),
+      SacaWindowSizeClass.large,
+    );
+    expect(
+      SacaWindowSizeClasses.fromWidth(1600),
+      SacaWindowSizeClass.extraLarge,
+    );
+  });
+
+  test('adaptive policy exposes platform capabilities', () {
+    for (final platform in <TargetPlatform>[
+      TargetPlatform.windows,
+      TargetPlatform.macOS,
+    ]) {
+      expect(SacaAdaptivePolicy.isDesktopInput(platform), isTrue);
+      expect(SacaAdaptivePolicy.supportsManagedWindow(platform), isTrue);
+      expect(SacaAdaptivePolicy.supportsHover(platform), isTrue);
+      expect(SacaAdaptivePolicy.supportsKeyboardShortcuts(platform), isTrue);
+    }
+
+    for (final platform in <TargetPlatform>[
+      TargetPlatform.android,
+      TargetPlatform.iOS,
+    ]) {
+      expect(SacaAdaptivePolicy.isDesktopInput(platform), isFalse);
+      expect(SacaAdaptivePolicy.supportsManagedWindow(platform), isFalse);
+      expect(SacaAdaptivePolicy.supportsHover(platform), isFalse);
+      expect(SacaAdaptivePolicy.supportsKeyboardShortcuts(platform), isFalse);
+    }
+
+    expect(SacaAdaptivePolicy.usesCompactFlow(839), isTrue);
+    expect(SacaAdaptivePolicy.usesCompactFlow(840), isFalse);
+    expect(SacaAdaptivePolicy.usesExpandedFlow(840), isTrue);
+  });
+
   testWidgets('windows shell renders centered content without progress rail',
       (tester) async {
     final controller = await _pumpFlow(
@@ -98,7 +161,7 @@ void main() {
     expect(find.byType(SacaLogoHeader), findsWidgets);
   });
 
-  testWidgets('windows narrow preview keeps toolbar and resize overlay',
+  testWidgets('windows narrow preview uses compact mobile shell',
       (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.windows;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
@@ -107,10 +170,11 @@ void main() {
 
     await _pumpFlow(tester, style: null);
 
-    expect(find.byKey(const ValueKey('windowsCustomTitleBar')), findsOneWidget);
-    expect(find.byKey(const ValueKey('windowsResizeOverlay')), findsOneWidget);
-    expect(find.byKey(const ValueKey('windowsWindowControls')), findsOneWidget);
-    expect(find.byKey(const ValueKey('windowsContentColumn')), findsOneWidget);
+    expect(find.byKey(const ValueKey('windowsCustomTitleBar')), findsNothing);
+    expect(find.byKey(const ValueKey('windowsResizeOverlay')), findsNothing);
+    expect(find.byKey(const ValueKey('windowsWindowControls')), findsNothing);
+    expect(find.byKey(const ValueKey('windowsContentColumn')), findsNothing);
+    expect(find.textContaining('English'), findsWidgets);
     debugDefaultTargetPlatformOverride = null;
   });
 
@@ -355,7 +419,30 @@ void main() {
     final shortFrameSize = tester.getSize(
       find.byKey(const ValueKey('visualBodyDiagramFrame')),
     );
-    expect(shortFrameSize.width, lessThanOrEqualTo(760));
+    expect(shortFrameSize.width, lessThanOrEqualTo(840));
+  });
+
+  testWidgets(
+      'roomy desktop body map uses extra viewport space when height allows',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(3840, 2160));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(
+      tester,
+      style: SacaPlatformStyle.windowsDesktop,
+      mediaSize: const Size(3840, 2160),
+    );
+    await _openVisualFrontStage(tester);
+    await tester.pump();
+    await tester.pump();
+
+    final frameSize = tester.getSize(
+      find.byKey(const ValueKey('visualBodyDiagramFrame')),
+    );
+
+    expect(frameSize.width, greaterThan(760));
+    expect(frameSize.width, lessThanOrEqualTo(920));
   });
 
   testWidgets('tablet-wide visual body layout uses two columns',
@@ -936,6 +1023,92 @@ void main() {
 
     expect(find.byKey(const ValueKey('voiceLoadingOverlay')), findsNothing);
     expect(find.text('headache and sore throat'), findsOneWidget);
+  });
+
+  testWidgets('voice draft fallback shows soft notice and keeps continue enabled',
+      (tester) async {
+    final partials = StreamController<String>();
+    final speechInput = _ControllableSpeechInputService(
+      partialTranscriptStream: partials.stream,
+      transcribeFuture: Future.value(
+        const AppResult.failure(
+          AppFailure(
+            kind: AppFailureKind.transcriptionFailed,
+            message: 'Could not transcribe the recording. Try text input.',
+          ),
+        ),
+      ),
+    );
+    addTearDown(partials.close);
+
+    await _pumpFlow(tester, speechInput: speechInput);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    await tester.tap(find.text('Record'));
+    await tester.pump();
+    partials.add('draft sore throat');
+    await tester.pump();
+
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(find.text('draft sore throat'), findsOneWidget);
+    expect(
+      find.text('Could not transcribe the recording. Try text input.'),
+      findsNothing,
+    );
+    expect(
+      find.text(
+        'Final transcription could not be confirmed. Please review the draft before continuing.',
+      ),
+      findsOneWidget,
+    );
+
+    final useTranscript = tester.widget<SacaPrimaryButton>(
+      find.widgetWithText(SacaPrimaryButton, 'Use transcript'),
+    );
+    expect(useTranscript.onPressed, isNotNull);
+  });
+
+  testWidgets('voice empty final failure still shows hard error', (tester) async {
+    final speechInput = _ControllableSpeechInputService(
+      transcribeFuture: Future.value(
+        const AppResult.failure(
+          AppFailure(
+            kind: AppFailureKind.transcriptionFailed,
+            message: 'Could not transcribe the recording. Try text input.',
+          ),
+        ),
+      ),
+    );
+
+    await _pumpFlow(tester, speechInput: speechInput);
+    await _reachInputMethod(tester);
+
+    await tester.tap(find.text('Voice input'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+    await tester.tap(find.text('Record'));
+    await tester.pump();
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(
+      find.text('Could not transcribe the recording. Try text input.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'Final transcription could not be confirmed. Please review the draft before continuing.',
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('voice input shows mic controls on severity follow-up',
@@ -1537,16 +1710,17 @@ class _ControllableSpeechInputService implements SpeechInputService {
   _ControllableSpeechInputService({
     this.prepareFuture,
     this.transcribeFuture,
-  });
+    Stream<String>? partialTranscriptStream,
+  }) : partialTranscriptStream =
+            partialTranscriptStream ?? const Stream<String>.empty();
 
   final Future<AppResult<void>>? prepareFuture;
   final Future<AppResult<SpeechInputResult>>? transcribeFuture;
+  @override
+  final Stream<String> partialTranscriptStream;
 
   @override
   bool get supportsOnDeviceStt => true;
-
-  @override
-  Stream<String> get partialTranscriptStream => const Stream<String>.empty();
 
   @override
   Future<AppResult<void>> prepare(SacaLanguage language) async {

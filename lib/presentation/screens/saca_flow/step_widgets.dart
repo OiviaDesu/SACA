@@ -164,6 +164,12 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         ),
         const SizedBox(height: 12),
         _Footnote(text: _localizer.t(state.language, 'offlineSpeechNotice')),
+        if (state.voiceDraftNotice != null) ...[
+          const SizedBox(height: 8),
+          _VoiceDraftNotice(
+            message: _localizer.t(state.language, state.voiceDraftNotice!),
+          ),
+        ],
         if (voiceNotice != null) ...[
           const SizedBox(height: 8),
           _Footnote(text: voiceNotice),
@@ -329,7 +335,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
               _localizer.t(state.language, 'visualFrontTitle'),
               _localizer.t(state.language, 'visualFrontSubtitle'),
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: _visualBodySpacing(context)),
             _visualBodySelectionLayout(
               state: state,
               view: BodyView.front,
@@ -358,7 +364,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
               _localizer.t(state.language, 'visualBackTitle'),
               _localizer.t(state.language, 'visualBackSubtitle'),
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: _visualBodySpacing(context)),
             _visualBodySelectionLayout(
               state: state,
               view: BodyView.back,
@@ -388,11 +394,19 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     required VoidCallback onBack,
     required VoidCallback? onContinue,
   }) {
-    Widget diagram({required double maxHeight}) {
+    Widget diagram({required double maxWidth, required double maxHeight}) {
+      const diagramAspectRatio = 0.92;
+      final fittedWidth = maxWidth
+          .clamp(0.0, maxHeight * diagramAspectRatio)
+          .toDouble();
+      final fittedHeight = maxHeight
+          .clamp(0.0, fittedWidth / diagramAspectRatio)
+          .toDouble();
       return Center(
-        child: ConstrainedBox(
+        child: SizedBox(
           key: const ValueKey('visualBodyDiagramFrame'),
-          constraints: BoxConstraints(maxWidth: 760, maxHeight: maxHeight),
+          width: fittedWidth,
+          height: fittedHeight,
           child: BodyDiagram(
             view: view,
             selectedIds: state.selectedBodyAreaIds,
@@ -424,6 +438,10 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     );
   }
 
+  double _visualBodySpacing(BuildContext context) {
+    return MediaQuery.sizeOf(context).height < 820 ? 8 : 18;
+  }
+
   Widget _visualBodySidePanel({
     required SacaFlowState state,
     required List<String> selectedLabels,
@@ -434,16 +452,23 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     required VoidCallback onBack,
     required VoidCallback? onContinue,
   }) {
+    final compact = MediaQuery.sizeOf(context).height < 820;
     return Column(
       key: const ValueKey('visualBodySidePanel'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SelectedSummary(
-          title: _localizer.t(state.language, 'selected'),
-          emptyText: _localizer.t(state.language, 'selectedEmpty'),
-          values: selectedLabels,
-        ),
-        const SizedBox(height: 22),
+        compact
+            ? _CompactSelectedSummary(
+                title: _localizer.t(state.language, 'selected'),
+                emptyText: _localizer.t(state.language, 'selectedEmpty'),
+                values: selectedLabels,
+              )
+            : _SelectedSummary(
+                title: _localizer.t(state.language, 'selected'),
+                emptyText: _localizer.t(state.language, 'selectedEmpty'),
+                values: selectedLabels,
+              ),
+        SizedBox(height: compact ? 6 : 22),
         Row(
           children: [
             Expanded(
@@ -1274,13 +1299,54 @@ class _ResponsiveVisualBodySelectionLayout extends StatefulWidget {
       _ResponsiveVisualBodySelectionLayoutState();
 }
 
+class _CompactSelectedSummary extends StatelessWidget {
+  const _CompactSelectedSummary({
+    required this.title,
+    required this.emptyText,
+    required this.values,
+  });
+
+  final String title;
+  final String emptyText;
+  final List<String> values;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    final text = values.isEmpty ? emptyText : values.join(', ');
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: colors.surfaceGradient,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(title, style: SacaTheme.small.copyWith(color: colors.text)),
+            const SizedBox(height: 3),
+            Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: SacaTheme.body.copyWith(color: colors.text),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ResponsiveVisualBodySelectionLayoutState
     extends State<_ResponsiveVisualBodySelectionLayout> {
-  static const double _wideBreakpoint = 700;
   static const double _wideGap = 28;
   static const double _narrowGap = 12;
   static const double _sidePanelWidth = 320;
-  static const double _diagramMaxWidth = 760;
+  static const double _diagramComfortMaxWidth = 840;
+  static const double _diagramRoomyMaxWidth = 920;
   static const double _diagramAspectRatio = 0.92;
   static const double _minimumUsableDiagramHeight = 300;
 
@@ -1293,7 +1359,10 @@ class _ResponsiveVisualBodySelectionLayoutState
       onChanged: _setRemainingViewportHeight,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= _wideBreakpoint;
+          final windowClass =
+              SacaWindowSizeClasses.fromWidth(constraints.maxWidth);
+          final isWide = windowClass.isExpandedOrLarger &&
+              (_remainingViewportHeight ?? double.infinity) >= 620;
           return isWide
               ? _wideLayout(constraints.maxWidth)
               : _narrowLayout(constraints.maxWidth);
@@ -1303,8 +1372,10 @@ class _ResponsiveVisualBodySelectionLayoutState
   }
 
   Widget _wideLayout(double availableWidth) {
-    final diagramColumnWidth = (availableWidth - _wideGap - _sidePanelWidth)
-        .clamp(0.0, _diagramMaxWidth);
+    final sidePanelWidth = _adaptiveSidePanelWidth(availableWidth);
+    final diagramMaxWidth = _adaptiveDiagramMaxWidth(availableWidth);
+    final diagramColumnWidth = (availableWidth - _wideGap - sidePanelWidth)
+        .clamp(0.0, diagramMaxWidth);
     final widthLimitedHeight = diagramColumnWidth / _diagramAspectRatio;
     final diagramHeight = _boundedDiagramHeight(
       widthLimitedHeight: widthLimitedHeight,
@@ -1315,10 +1386,15 @@ class _ResponsiveVisualBodySelectionLayoutState
       key: const ValueKey('visualBodyWideLayout'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: widget.diagramBuilder(maxHeight: diagramHeight)),
+        Expanded(
+          child: widget.diagramBuilder(
+            maxWidth: diagramColumnWidth,
+            maxHeight: diagramHeight,
+          ),
+        ),
         const SizedBox(width: _wideGap),
         SizedBox(
-          width: _sidePanelWidth,
+          width: sidePanelWidth,
           child: _MeasureSize(
             onChanged: _setSidePanelHeight,
             child: widget.sidePanel,
@@ -1329,8 +1405,9 @@ class _ResponsiveVisualBodySelectionLayoutState
   }
 
   Widget _narrowLayout(double availableWidth) {
+    final diagramMaxWidth = _adaptiveDiagramMaxWidth(availableWidth);
     final widthLimitedHeight =
-        availableWidth.clamp(0.0, _diagramMaxWidth) / _diagramAspectRatio;
+        availableWidth.clamp(0.0, diagramMaxWidth) / _diagramAspectRatio;
     final remaining = _remainingViewportHeight;
     final heightForDiagram = remaining == null || _sidePanelHeight == 0
         ? widthLimitedHeight
@@ -1344,7 +1421,10 @@ class _ResponsiveVisualBodySelectionLayoutState
       key: const ValueKey('visualBodyNarrowLayout'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        widget.diagramBuilder(maxHeight: diagramHeight),
+        widget.diagramBuilder(
+          maxWidth: availableWidth.clamp(0.0, diagramMaxWidth).toDouble(),
+          maxHeight: diagramHeight,
+        ),
         const SizedBox(height: _narrowGap),
         _MeasureSize(
           onChanged: _setSidePanelHeight,
@@ -1374,6 +1454,25 @@ class _ResponsiveVisualBodySelectionLayoutState
         .toDouble();
   }
 
+  double _adaptiveDiagramMaxWidth(double availableWidth) {
+    final height = _remainingViewportHeight ?? 0;
+    final windowClass = SacaWindowSizeClasses.fromWidth(availableWidth);
+    if (windowClass.isExtraLarge && height >= 920) {
+      return _diagramRoomyMaxWidth;
+    }
+    if (windowClass.isLargeOrLarger && height >= 720) {
+      return _diagramComfortMaxWidth;
+    }
+    return 760;
+  }
+
+  double _adaptiveSidePanelWidth(double availableWidth) {
+    final windowClass = SacaWindowSizeClasses.fromWidth(availableWidth);
+    if (windowClass.isLargeOrLarger) return 340;
+    if (windowClass == SacaWindowSizeClass.expanded) return 300;
+    return _sidePanelWidth;
+  }
+
   void _setRemainingViewportHeight(double value) {
     if ((_remainingViewportHeight ?? -1) == value) return;
     setState(() => _remainingViewportHeight = value);
@@ -1400,7 +1499,7 @@ class _RemainingViewportHeight extends StatefulWidget {
 }
 
 class _RemainingViewportHeightState extends State<_RemainingViewportHeight> {
-  static const double _roundingGuard = 44;
+  static const double _roundingGuard = 96;
 
   @override
   void initState() {
