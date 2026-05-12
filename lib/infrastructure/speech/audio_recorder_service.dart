@@ -22,15 +22,15 @@ class AudioRecorderService {
   final AudioRecorder _recorder = AudioRecorder();
   final PartialTranscriptPolicy _partialTranscriptPolicy;
   String? _currentPath;
-  String? _currentPcmPath;
-  IOSink? _pcmSink;
   StreamSubscription<Uint8List>? _pcmSubscription;
+  final List<Uint8List> _pcmChunks = <Uint8List>[];
+  int _pcmBufferedBytes = 0;
   Timer? _autoStopTimer;
   DateTime? _recordingStartedAt;
   DateTime? _lastSpeechAt;
   Duration _maxRecordingDuration = maxRecordingDuration;
   Duration _silenceAutoStopDelay = silenceAutoStopDelay;
-  Duration _macosNoSpeechFallbackDelay = macosNoSpeechFallbackDelay;
+  Duration _noSpeechAutoStopDelay = noSpeechAutoStopDelay;
   bool _heardSpeech = false;
   Completer<String?>? _autoStopCompleter;
   bool _isStreamRecording = false;
@@ -41,7 +41,7 @@ class AudioRecorderService {
 
   static const Duration silenceAutoStopDelay = Duration(milliseconds: 2500);
   static const Duration maxRecordingDuration = Duration(seconds: 30);
-  static const Duration macosNoSpeechFallbackDelay = Duration(seconds: 6);
+  static const Duration noSpeechAutoStopDelay = Duration(seconds: 6);
   static const double speechAmplitudeDb = -38;
 
   Future<bool> hasPermission() async {
@@ -59,6 +59,10 @@ class AudioRecorderService {
         '${dir.path}/saca_input_${DateTime.now().millisecondsSinceEpoch}.wav';
 
     _currentPath = outputPath;
+    _maxRecordingDuration = maxDuration;
+    _silenceAutoStopDelay = silenceDelay;
+    _noSpeechAutoStopDelay = _fallbackDelayFor(maxDuration);
+    _clearPcmBuffer();
 
     const config = RecordConfig(
       encoder: AudioEncoder.wav,
@@ -77,12 +81,9 @@ class AudioRecorderService {
           numChannels: 1,
           bitRate: 256000,
         );
-        final pcmPath = outputPath.replaceAll(RegExp(r'\.wav$'), '.pcm');
-        _currentPcmPath = pcmPath;
-        _pcmSink = File(pcmPath).openWrite();
         final stream = await _recorder.startStream(streamConfig);
         _pcmSubscription = stream.listen(
-          (chunk) => _pcmSink?.add(chunk),
+          _appendPcmChunk,
           onError: (Object error, StackTrace stackTrace) {
             debugPrint('[SACA] PCM stream failed: $error\n$stackTrace');
           },
@@ -104,9 +105,6 @@ class AudioRecorderService {
     _isRecording = true;
     _recordingStartedAt = DateTime.now();
     _lastSpeechAt = null;
-    _maxRecordingDuration = maxDuration;
-    _silenceAutoStopDelay = silenceDelay;
-    _macosNoSpeechFallbackDelay = _fallbackDelayFor(maxDuration);
     _heardSpeech = false;
     _autoStopCompleter = Completer<String?>();
     _startAutoStopPolling();
@@ -114,7 +112,7 @@ class AudioRecorderService {
       '[SACA] Recording started path=$_currentPath '
       'platform=${defaultTargetPlatform.name} max=${maxDuration.inMilliseconds}ms '
       'silence=${silenceDelay.inMilliseconds}ms stream=$_isStreamRecording '
-      'fallback=${_macosNoSpeechFallbackDelay.inMilliseconds}ms',
+      'noSpeech=${_noSpeechAutoStopDelay.inMilliseconds}ms',
     );
   }
 
@@ -135,9 +133,10 @@ class AudioRecorderService {
     await _closePcmStream();
     _isRecording = false;
     final resolvedPath = _isStreamRecording
-        ? await _writeWavFromPcm(_currentPcmPath, _currentPath)
+        ? await _writeWavFromPcmBuffer(_currentPath)
         : path ?? _currentPath;
     _isStreamRecording = false;
+    _clearPcmBuffer();
     final size = await _fileSize(resolvedPath);
     debugPrint(
       '[SACA] Recording stopped reason=$reason path=$resolvedPath size=$size',
@@ -155,6 +154,9 @@ class AudioRecorderService {
     }
     await _closePcmStream();
     _isStreamRecording = false;
+    _clearPcmBuffer();
+    await deleteTempPath(_currentPath);
+    _currentPath = null;
     _autoStopTimer?.cancel();
     _autoStopTimer = null;
     if (!(_autoStopCompleter?.isCompleted ?? true)) {
@@ -165,6 +167,8 @@ class AudioRecorderService {
   void dispose() {
     _autoStopTimer?.cancel();
     unawaited(_closePcmStream());
+    _clearPcmBuffer();
+    unawaited(deleteTempPath(_currentPath));
     _recorder.dispose();
   }
 
@@ -174,13 +178,8 @@ class AudioRecorderService {
     Duration window = partialTranscriptWindow,
   }) async {
     if (!_isStreamRecording) return null;
-    final pcmPath = _currentPcmPath;
-    if (pcmPath == null || pcmPath.isEmpty) return null;
     try {
-      await _pcmSink?.flush();
-      final source = File(pcmPath);
-      if (!await source.exists()) return null;
-      final bytes = await source.readAsBytes();
+      final bytes = _pcmSnapshotBytes();
       if (bytes.isEmpty) return null;
       const bytesPerSecond = 16000 * 2;
       final maxBytes = window.inSeconds * bytesPerSecond;
@@ -205,17 +204,13 @@ class AudioRecorderService {
   Future<void> _closePcmStream() async {
     await _pcmSubscription?.cancel();
     _pcmSubscription = null;
-    await _pcmSink?.flush();
-    await _pcmSink?.close();
-    _pcmSink = null;
   }
 
-  Future<String?> _writeWavFromPcm(String? pcmPath, String? outputPath) async {
-    if (pcmPath == null || outputPath == null) return outputPath;
+  Future<String?> _writeWavFromPcmBuffer(String? outputPath) async {
+    if (outputPath == null) return outputPath;
     try {
-      final pcmFile = File(pcmPath);
-      if (!await pcmFile.exists()) return outputPath;
-      final pcmBytes = await pcmFile.readAsBytes();
+      final pcmBytes = _pcmSnapshotBytes();
+      if (pcmBytes.isEmpty) return outputPath;
       await File(outputPath).writeAsBytes(
         _wavBytesFromPcm(pcmBytes),
         flush: true,
@@ -224,6 +219,55 @@ class AudioRecorderService {
     } catch (error, stackTrace) {
       debugPrint('[SACA] WAV finalization failed: $error\n$stackTrace');
       return outputPath;
+    }
+  }
+
+  void _appendPcmChunk(Uint8List chunk) {
+    final copy = Uint8List.fromList(chunk);
+    _pcmChunks.add(copy);
+    _pcmBufferedBytes += copy.length;
+
+    final maxBytes =
+        (_maxRecordingDuration.inMilliseconds / 1000 * 16000 * 2).ceil();
+    while (_pcmBufferedBytes > maxBytes && _pcmChunks.isNotEmpty) {
+      final removed = _pcmChunks.removeAt(0);
+      _pcmBufferedBytes -= removed.length;
+      _zeroBytes(removed);
+    }
+  }
+
+  Uint8List _pcmSnapshotBytes() {
+    if (_pcmBufferedBytes <= 0 || _pcmChunks.isEmpty) return Uint8List(0);
+    final bytes = Uint8List(_pcmBufferedBytes);
+    var offset = 0;
+    for (final chunk in _pcmChunks) {
+      bytes.setRange(offset, offset + chunk.length, chunk);
+      offset += chunk.length;
+    }
+    return bytes;
+  }
+
+  void _clearPcmBuffer() {
+    for (final chunk in _pcmChunks) {
+      _zeroBytes(chunk);
+    }
+    _pcmChunks.clear();
+    _pcmBufferedBytes = 0;
+  }
+
+  void _zeroBytes(Uint8List bytes) {
+    bytes.fillRange(0, bytes.length, 0);
+  }
+
+  Future<void> deleteTempPath(String? path) async {
+    if (path == null || path.isEmpty) return;
+    try {
+      final file = File(path);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } catch (error, stackTrace) {
+      debugPrint('[SACA] Temp audio cleanup failed: $error\n$stackTrace');
     }
   }
 
@@ -287,8 +331,8 @@ class AudioRecorderService {
         _lastSpeechAt = now;
       }
     } catch (_) {
-      if (_shouldFallbackStopWithoutSpeech(now, startedAt)) {
-        await _stopRecording(reason: 'macos_no_amplitude_fallback');
+      if (_shouldAutoStopWithoutSpeech(now, startedAt)) {
+        await _stopRecording(reason: 'no_amplitude_no_speech');
       }
       return;
     }
@@ -300,20 +344,18 @@ class AudioRecorderService {
       await _stopRecording(reason: 'silence');
       return;
     }
-    if (_shouldFallbackStopWithoutSpeech(now, startedAt)) {
-      await _stopRecording(reason: 'macos_no_speech_fallback');
+    if (_shouldAutoStopWithoutSpeech(now, startedAt)) {
+      await _stopRecording(reason: 'no_speech');
     }
   }
 
-  bool _shouldFallbackStopWithoutSpeech(DateTime now, DateTime startedAt) {
-    return defaultTargetPlatform == TargetPlatform.macOS &&
-        !_heardSpeech &&
-        now.difference(startedAt) >= _macosNoSpeechFallbackDelay;
+  bool _shouldAutoStopWithoutSpeech(DateTime now, DateTime startedAt) {
+    return !_heardSpeech && now.difference(startedAt) >= _noSpeechAutoStopDelay;
   }
 
   Duration _fallbackDelayFor(Duration maxDuration) {
-    if (maxDuration <= macosNoSpeechFallbackDelay) return maxDuration;
-    return macosNoSpeechFallbackDelay;
+    if (maxDuration <= noSpeechAutoStopDelay) return maxDuration;
+    return noSpeechAutoStopDelay;
   }
 
   Future<int?> _fileSize(String? path) async {

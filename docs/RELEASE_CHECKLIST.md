@@ -14,12 +14,20 @@
 - [ ] Optional platform builds checked if relevant:
   - [ ] `flutter build windows`
   - [ ] `flutter build apk`
+- [ ] Release hardening builds checked for release candidates:
+  - [ ] `flutter build windows --release --obfuscate --split-debug-info=build/symbols/windows`
+  - [ ] `flutter build macos --release --obfuscate --split-debug-info=build/symbols/macos`
+  - [ ] `flutter build apk --release --obfuscate --split-debug-info=build/symbols/android`
+  - [ ] `flutter build appbundle --release --obfuscate --split-debug-info=build/symbols/android`
+  - [ ] `flutter build ipa --release --obfuscate --split-debug-info=build/symbols/ios`
+- [ ] Release symbol files are archived securely and are not committed.
 
 ## Docs
 
 - [ ] `README.md` reflects current setup and known limitations.
 - [ ] `CHANGELOG.md` updated.
 - [ ] Model asset policy and release notes updated if runtime assets changed.
+- [ ] Release notes do not claim full binary/model encryption; Flutter obfuscation hides Dart symbols but does not encrypt assets.
 
 ## Tagging / release prep
 
