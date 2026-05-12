@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../core/runtime/runtime_acceleration_policy.dart';
 import '../../core/errors/app_error.dart';
 import '../../domain/models/saca_models.dart';
 import '../../domain/services/analysis_service.dart';
@@ -149,6 +150,13 @@ class OnDeviceDiagnosisAnalysisService implements AnalysisService {
         fallbackValue.disease == 'No clear illness detected') {
       return fallbackResult;
     }
+
+    final acceleration = RuntimeAccelerationPolicy().choose(
+      feature: RuntimeFeature.ml,
+      cpuBackend: AccelerationBackend.cpu,
+      unavailableReason: 'diagnosis classifier has no GPU provider',
+    );
+    debugPrint('[SACA] Diagnosis runtime ${acceleration.toLogFields()}');
 
     try {
       final prediction = await _classifier.predict(normalizedRequest);

@@ -26,11 +26,17 @@ extension _WhisperWindowsRuntime on WhisperService {
 
     _disposeWindowsRecognizer();
     _windowsRecognizer = sherpa.OfflineRecognizer(config);
+    final acceleration = RuntimeAccelerationPolicy().choose(
+      feature: RuntimeFeature.stt,
+      cpuBackend: AccelerationBackend.cpu,
+      unavailableReason: 'sherpa_onnx provider selection not exposed for SACA',
+    );
 
     debugPrint(
       '[SACA] Windows ${bundle.label} loaded '
       'appLanguage=${_language.name} '
       'languageCode="$languageCode" '
+      '${acceleration.toLogFields()} '
       'modelDir=${modelDir.path}',
     );
   }

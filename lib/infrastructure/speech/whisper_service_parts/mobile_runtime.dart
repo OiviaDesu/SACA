@@ -8,16 +8,23 @@ extension _WhisperMobileRuntime on WhisperService {
     }
 
     final rc1ModelDir = await _prepareBundledRc1MobileModel();
+    final acceleration = RuntimeAccelerationPolicy().choose(
+      feature: RuntimeFeature.stt,
+      cpuBackend: AccelerationBackend.platformDefault,
+      unavailableReason: 'whisper_kit acceleration status not exposed',
+    );
     if (rc1ModelDir != null) {
       debugPrint(
-        '[SACA] Mobile English/Gurindji STT: using ${SacaSttModelAssets.rc1Label}.',
+        '[SACA] Mobile English/Gurindji STT: using ${SacaSttModelAssets.rc1Label} '
+        '${acceleration.toLogFields()}.',
       );
       _whisper = Whisper(model: WhisperModel.base, modelDir: rc1ModelDir.path);
       return;
     }
 
     debugPrint(
-      '[SACA] Mobile RC1 STT asset missing; falling back to multilingual whisper-base download/cache.',
+      '[SACA] Mobile RC1 STT asset missing; falling back to multilingual '
+      'whisper-base download/cache ${acceleration.toLogFields()}.',
     );
     _whisper = Whisper(
       model: WhisperModel.base,

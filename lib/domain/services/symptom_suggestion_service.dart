@@ -6,6 +6,55 @@ abstract interface class SymptomSuggestionService {
   Future<List<String>> refineRelatedSymptoms(AnalysisRequest request);
 }
 
+abstract interface class NonSpeechSuggestionService {
+  List<String> reviewOnlySuggestions(AnalysisRequest request);
+}
+
+class SafeNonSpeechSuggestionService implements NonSpeechSuggestionService {
+  const SafeNonSpeechSuggestionService();
+
+  @override
+  List<String> reviewOnlySuggestions(AnalysisRequest request) {
+    final features = request.speechSignalFeatures;
+    if (features == null || !features.hasUsableSignals) {
+      return const <String>[];
+    }
+
+    final suggestions = <String>{};
+    final hasCoughCue = features.cues.any(
+      (cue) => cue.kind == 'cough' && cue.confidence >= 0.55,
+    );
+    if (hasCoughCue) {
+      suggestions.add('cough');
+    }
+
+    final input = request.combinedInput.toLowerCase();
+    final hasAirwayContext = request.selectedBodyAreaIds.contains('chest') ||
+        request.selectedBodyAreaIds.contains('throat') ||
+        input.contains('chest') ||
+        input.contains('throat') ||
+        input.contains('breath');
+    final hasBreathingCue = features.cues.any(
+      (cue) =>
+          (cue.kind == 'choke' ||
+              cue.kind == 'gasp' ||
+              cue.kind == 'breath' ||
+              cue.kind == 'wheeze') &&
+          cue.confidence >= 0.55,
+    );
+    if (hasAirwayContext && hasBreathingCue) {
+      suggestions.add('breathing_trouble');
+    }
+
+    suggestions.removeAll(RuleBasedSymptomSuggestionService.knownSymptomIds(
+      request,
+    ));
+    return RuleBasedSymptomSuggestionService.orderedRelatedSymptoms(
+      suggestions,
+    );
+  }
+}
+
 class RuleBasedSymptomSuggestionService implements SymptomSuggestionService {
   const RuleBasedSymptomSuggestionService();
 
@@ -37,6 +86,28 @@ class RuleBasedSymptomSuggestionService implements SymptomSuggestionService {
     'bloating': ['nausea_vomiting'],
   };
 
+  static const Map<String, List<String>> _knownSymptomTerms = {
+    'headache': ['headache', 'head pain'],
+    'fever': ['fever', 'temperature', 'hot body'],
+    'stomachache': ['stomachache', 'stomach ache', 'belly pain'],
+    'sore_throat': ['sore throat', 'throat pain'],
+    'chest_pain': ['chest pain'],
+    'breathing_trouble': [
+      'breathing trouble',
+      'trouble breathing',
+      'cannot breathe',
+      'can not breathe',
+      'shortness of breath',
+      'short of breath',
+      'wheezing',
+    ],
+    'vomiting': ['vomiting', 'vomit', 'throwing up'],
+    'bloating': ['bloating', 'bloated'],
+    'cough': ['cough', 'coughing', 'coughs'],
+    'nausea_vomiting': ['nausea', 'nauseous', 'vomiting', 'vomit'],
+    'rash': ['rash', 'skin itch', 'itchy skin'],
+  };
+
   @override
   List<String> suggestRelatedSymptoms(AnalysisRequest request) {
     final suggestions = <String>{};
@@ -53,7 +124,7 @@ class RuleBasedSymptomSuggestionService implements SymptomSuggestionService {
     }
 
     suggestions.remove('none');
-    suggestions.removeAll(request.selectedSymptomIds);
+    suggestions.removeAll(knownSymptomIds(request));
     return _orderedRelatedSymptoms(suggestions);
   }
 
@@ -64,6 +135,17 @@ class RuleBasedSymptomSuggestionService implements SymptomSuggestionService {
 
   static List<String> orderedRelatedSymptoms(Iterable<String> ids) {
     return _orderedRelatedSymptoms(ids);
+  }
+
+  static Set<String> knownSymptomIds(AnalysisRequest request) {
+    final known = <String>{...request.selectedSymptomIds};
+    final input = request.combinedInput.toLowerCase();
+    for (final entry in _knownSymptomTerms.entries) {
+      if (entry.value.any(input.contains)) {
+        known.add(entry.key);
+      }
+    }
+    return known;
   }
 
   static List<String> _orderedRelatedSymptoms(Iterable<String> ids) {

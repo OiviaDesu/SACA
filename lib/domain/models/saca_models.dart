@@ -8,6 +8,8 @@ enum ConfidenceLevel { low, medium, high }
 
 enum VoiceBusyPhase { none, preparing, transcribing }
 
+enum SacaConfirmationType { emptyInput, noClearIllness }
+
 enum SacaStep {
   splash,
   language,
@@ -107,6 +109,40 @@ class AnalysisResult {
   }
 }
 
+class NonSpeechCue {
+  const NonSpeechCue({
+    required this.kind,
+    required this.confidence,
+    required this.evidence,
+  });
+
+  final String kind;
+  final double confidence;
+  final String evidence;
+}
+
+class SpeechSignalFeatures {
+  const SpeechSignalFeatures({
+    required this.transcript,
+    this.cues = const <NonSpeechCue>[],
+    this.confidence,
+    this.qualityFlags = const <String>[],
+    this.isSupported = true,
+  });
+
+  final String transcript;
+  final List<NonSpeechCue> cues;
+  final double? confidence;
+  final List<String> qualityFlags;
+  final bool isSupported;
+
+  bool get hasUsableSignals {
+    if (!isSupported || qualityFlags.isNotEmpty) return false;
+    final value = confidence;
+    return value == null || value >= 0.55;
+  }
+}
+
 class AnalysisRequest {
   const AnalysisRequest({
     required this.language,
@@ -116,6 +152,7 @@ class AnalysisRequest {
     required this.selectedSymptomIds,
     required this.selectedBodyAreaIds,
     required this.answers,
+    this.speechSignalFeatures,
   });
 
   final SacaLanguage language;
@@ -125,6 +162,7 @@ class AnalysisRequest {
   final Set<String> selectedSymptomIds;
   final Set<String> selectedBodyAreaIds;
   final Map<String, String> answers;
+  final SpeechSignalFeatures? speechSignalFeatures;
 
   String get combinedInput {
     return [
@@ -144,6 +182,8 @@ class AnalysisRequest {
     Set<String>? selectedSymptomIds,
     Set<String>? selectedBodyAreaIds,
     Map<String, String>? answers,
+    SpeechSignalFeatures? speechSignalFeatures,
+    bool clearSpeechSignalFeatures = false,
   }) {
     return AnalysisRequest(
       language: language ?? this.language,
@@ -153,6 +193,9 @@ class AnalysisRequest {
       selectedSymptomIds: selectedSymptomIds ?? this.selectedSymptomIds,
       selectedBodyAreaIds: selectedBodyAreaIds ?? this.selectedBodyAreaIds,
       answers: answers ?? this.answers,
+      speechSignalFeatures: clearSpeechSignalFeatures
+          ? null
+          : speechSignalFeatures ?? this.speechSignalFeatures,
     );
   }
 }
@@ -167,7 +210,9 @@ class SacaFlowState {
     this.selectedSymptomIds = const <String>{},
     this.selectedBodyAreaIds = const <String>{},
     this.suggestedRelatedSymptomIds = const <String>[],
+    this.voiceCueSuggestedSymptomIds = const <String>[],
     this.questionAnswers = const <String, String>{},
+    this.speechSignalFeatures,
     this.voiceAnswerTranscript = '',
     this.voiceAnswerMatched = true,
     this.voiceDraftNotice,
@@ -176,6 +221,7 @@ class SacaFlowState {
     this.isRecording = false,
     this.isBusy = false,
     this.voiceBusyPhase = VoiceBusyPhase.none,
+    this.pendingConfirmation,
     this.errorMessage,
   });
 
@@ -187,7 +233,9 @@ class SacaFlowState {
   final Set<String> selectedSymptomIds;
   final Set<String> selectedBodyAreaIds;
   final List<String> suggestedRelatedSymptomIds;
+  final List<String> voiceCueSuggestedSymptomIds;
   final Map<String, String> questionAnswers;
+  final SpeechSignalFeatures? speechSignalFeatures;
   final String voiceAnswerTranscript;
   final bool voiceAnswerMatched;
   final String? voiceDraftNotice;
@@ -196,6 +244,7 @@ class SacaFlowState {
   final bool isRecording;
   final bool isBusy;
   final VoiceBusyPhase voiceBusyPhase;
+  final SacaConfirmationType? pendingConfirmation;
   final String? errorMessage;
 
   String get combinedInput => analysisRequest.combinedInput;
@@ -209,6 +258,7 @@ class SacaFlowState {
       selectedSymptomIds: selectedSymptomIds,
       selectedBodyAreaIds: selectedBodyAreaIds,
       answers: questionAnswers,
+      speechSignalFeatures: speechSignalFeatures,
     );
   }
 
@@ -223,7 +273,10 @@ class SacaFlowState {
     Set<String>? selectedSymptomIds,
     Set<String>? selectedBodyAreaIds,
     List<String>? suggestedRelatedSymptomIds,
+    List<String>? voiceCueSuggestedSymptomIds,
     Map<String, String>? questionAnswers,
+    SpeechSignalFeatures? speechSignalFeatures,
+    bool clearSpeechSignalFeatures = false,
     String? voiceAnswerTranscript,
     bool? voiceAnswerMatched,
     String? voiceDraftNotice,
@@ -234,6 +287,8 @@ class SacaFlowState {
     bool? isRecording,
     bool? isBusy,
     VoiceBusyPhase? voiceBusyPhase,
+    SacaConfirmationType? pendingConfirmation,
+    bool clearPendingConfirmation = false,
     String? errorMessage,
     bool clearError = false,
   }) {
@@ -247,7 +302,12 @@ class SacaFlowState {
       selectedBodyAreaIds: selectedBodyAreaIds ?? this.selectedBodyAreaIds,
       suggestedRelatedSymptomIds:
           suggestedRelatedSymptomIds ?? this.suggestedRelatedSymptomIds,
+      voiceCueSuggestedSymptomIds:
+          voiceCueSuggestedSymptomIds ?? this.voiceCueSuggestedSymptomIds,
       questionAnswers: questionAnswers ?? this.questionAnswers,
+      speechSignalFeatures: clearSpeechSignalFeatures
+          ? null
+          : speechSignalFeatures ?? this.speechSignalFeatures,
       voiceAnswerTranscript:
           voiceAnswerTranscript ?? this.voiceAnswerTranscript,
       voiceAnswerMatched: voiceAnswerMatched ?? this.voiceAnswerMatched,
@@ -260,6 +320,9 @@ class SacaFlowState {
       isRecording: isRecording ?? this.isRecording,
       isBusy: isBusy ?? this.isBusy,
       voiceBusyPhase: voiceBusyPhase ?? this.voiceBusyPhase,
+      pendingConfirmation: clearPendingConfirmation
+          ? null
+          : pendingConfirmation ?? this.pendingConfirmation,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }

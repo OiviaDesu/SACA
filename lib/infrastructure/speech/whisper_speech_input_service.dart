@@ -162,12 +162,17 @@ class WhisperSpeechInputService implements SpeechInputService {
       );
       final rawText = segments.map((segment) => segment.text).join(' ').trim();
       final text = _transcriptSanitizer.clean(rawText);
+      final signalFeatures = _buildSignalFeatures(
+        rawText: rawText,
+        transcript: text,
+      );
       stopwatch.stop();
       debugPrint(
         '[SACA] Voice ${mode.name} stop-to-text '
         'latency=${stopwatch.elapsedMilliseconds}ms',
       );
-      if (!_transcriptSanitizer.isUsable(text)) {
+      if (!_transcriptSanitizer.isUsable(text) &&
+          !signalFeatures.hasUsableSignals) {
         return const AppResult.failure(
           AppFailure(
             kind: AppFailureKind.emptyInput,
@@ -177,7 +182,9 @@ class WhisperSpeechInputService implements SpeechInputService {
         );
       }
 
-      return AppResult.success(SpeechInputResult(text: text));
+      return AppResult.success(
+        SpeechInputResult(text: text, signalFeatures: signalFeatures),
+      );
     } catch (error, stackTrace) {
       debugPrint('[SACA] Transcription failed: $error\n$stackTrace');
       return AppResult.failure(
@@ -187,7 +194,60 @@ class WhisperSpeechInputService implements SpeechInputService {
           debugMessage: error,
         ),
       );
+    } finally {
+      await _recorder.deleteTempPath(audioPath);
     }
+  }
+
+  domain.SpeechSignalFeatures _buildSignalFeatures({
+    required String rawText,
+    required String transcript,
+  }) {
+    final cues = <domain.NonSpeechCue>[];
+    void addCue(String kind, String evidence) {
+      if (cues.any((cue) => cue.kind == kind)) return;
+      cues.add(
+        domain.NonSpeechCue(
+          kind: kind,
+          confidence: evidence == 'bracket_token' ? 0.75 : 0.62,
+          evidence: evidence,
+        ),
+      );
+    }
+
+    final lower = rawText.toLowerCase();
+    final wrappedCues = RegExp(r'[\[\(<]([^\]\)>]+)[\]\)>]').allMatches(lower);
+    for (final match in wrappedCues) {
+      final value = match.group(1) ?? '';
+      if (value.contains('cough')) addCue('cough', 'bracket_token');
+      if (value.contains('chok')) addCue('choke', 'bracket_token');
+      if (value.contains('gasp')) addCue('gasp', 'bracket_token');
+      if (value.contains('breath')) addCue('breath', 'bracket_token');
+      if (value.contains('wheez')) addCue('wheeze', 'bracket_token');
+    }
+
+    if (RegExp(r'\b(cough|coughing|coughs)\b').hasMatch(lower)) {
+      addCue('cough', 'raw_transcript_token');
+    }
+    if (RegExp(r'\b(choke|choking|choked)\b').hasMatch(lower)) {
+      addCue('choke', 'raw_transcript_token');
+    }
+    if (RegExp(r'\b(gasp|gasping|gasped)\b').hasMatch(lower)) {
+      addCue('gasp', 'raw_transcript_token');
+    }
+    if (RegExp(r'\b(breath|breathing|breathe)\b').hasMatch(lower)) {
+      addCue('breath', 'raw_transcript_token');
+    }
+    if (RegExp(r'\b(wheeze|wheezing|wheezed)\b').hasMatch(lower)) {
+      addCue('wheeze', 'raw_transcript_token');
+    }
+
+    return domain.SpeechSignalFeatures(
+      transcript: transcript,
+      cues: cues,
+      confidence: cues.isEmpty ? null : 0.65,
+      isSupported: cues.isNotEmpty,
+    );
   }
 
   @override
@@ -246,22 +306,27 @@ class WhisperSpeechInputService implements SpeechInputService {
         );
         return;
       }
-      final segments = await _whisper.transcribe(
-        audioPath,
-        options: whisper.WhisperTranscriptionOptions.command,
-      );
-      final rawText = segments.map((segment) => segment.text).join(' ').trim();
-      final text = _transcriptSanitizer.clean(rawText);
-      stopwatch.stop();
-      _updatePartialPerformance(stopwatch.elapsed);
-      if (!_transcriptSanitizer.isUsable(text)) return;
-      if (text == _lastPartialTranscript) return;
-      _lastPartialTranscript = text;
-      _partialTranscriptController.add(text);
-      debugPrint(
-        '[SACA] Voice partial transcript platform=${defaultTargetPlatform.name} '
-        'latency=${stopwatch.elapsedMilliseconds}ms',
-      );
+      try {
+        final segments = await _whisper.transcribe(
+          audioPath,
+          options: whisper.WhisperTranscriptionOptions.command,
+        );
+        final rawText =
+            segments.map((segment) => segment.text).join(' ').trim();
+        final text = _transcriptSanitizer.clean(rawText);
+        stopwatch.stop();
+        _updatePartialPerformance(stopwatch.elapsed);
+        if (!_transcriptSanitizer.isUsable(text)) return;
+        if (text == _lastPartialTranscript) return;
+        _lastPartialTranscript = text;
+        _partialTranscriptController.add(text);
+        debugPrint(
+          '[SACA] Voice partial transcript platform=${defaultTargetPlatform.name} '
+          'latency=${stopwatch.elapsedMilliseconds}ms',
+        );
+      } finally {
+        await _recorder.deleteTempPath(audioPath);
+      }
     } catch (error, stackTrace) {
       debugPrint('[SACA] Partial transcription skipped: $error\n$stackTrace');
       if (_partialTranscriptPolicy.isMobile) {
