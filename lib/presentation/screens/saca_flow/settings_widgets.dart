@@ -26,6 +26,7 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
           builder: (context, _) {
             final settingsState = _settings.state;
             final colors = SacaThemeColors.of(context);
+            final themeContext = SacaThemeContext.of(context);
             final currentLanguage = state.language ?? SacaLanguage.english;
             final panels = <Widget>[
               _SettingsPanel(
@@ -59,6 +60,55 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                         }
                       },
                     ),
+                  ],
+                ),
+              ),
+              _SettingsPanel(
+                title: _localizer.t(state.language, 'settingsThemeStyleTitle'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      _localizer.t(
+                          state.language, 'settingsThemeStyleSubtitle'),
+                      style: SacaTheme.small.copyWith(color: colors.mutedText),
+                    ),
+                    const SizedBox(height: 12),
+                    CupertinoSlidingSegmentedControl<SacaVisualThemeStyle>(
+                      key: const ValueKey('settingsThemeStyleControl'),
+                      groupValue: settingsState.visualThemeStyle,
+                      children: <SacaVisualThemeStyle, Widget>{
+                        SacaVisualThemeStyle.modern: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(_localizer.t(
+                              state.language, 'settingsThemeModern')),
+                        ),
+                        SacaVisualThemeStyle.glass: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(_localizer.t(
+                              state.language, 'settingsThemeGlass')),
+                        ),
+                        SacaVisualThemeStyle.classic: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(_localizer.t(
+                              state.language, 'settingsThemeClassic')),
+                        ),
+                      },
+                      onValueChanged: (value) {
+                        if (value != null) {
+                          _settings.setVisualThemeStyle(value);
+                        }
+                      },
+                    ),
+                    if (themeContext.glassUnavailable) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        _localizer.t(
+                            state.language, 'settingsThemeGlassFallback'),
+                        style:
+                            SacaTheme.small.copyWith(color: colors.mutedText),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -191,7 +241,8 @@ class _SettingsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
-    return DecoratedBox(
+    final theme = SacaThemeContext.of(context);
+    final panel = DecoratedBox(
       decoration: BoxDecoration(
         gradient: colors.surfaceGradient,
         borderRadius: BorderRadius.circular(SacaTheme.radius),
@@ -208,6 +259,12 @@ class _SettingsPanel extends StatelessWidget {
           ],
         ),
       ),
+    );
+    if (!theme.useGlass) return panel;
+    return GlassCard(
+      padding: EdgeInsets.zero,
+      quality: GlassQuality.minimal,
+      child: panel,
     );
   }
 }

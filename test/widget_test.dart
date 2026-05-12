@@ -23,6 +23,7 @@ import 'package:saca_demo/presentation/screens/saca_flow_screen.dart';
 import 'package:saca_demo/presentation/settings/saca_settings_controller.dart';
 import 'package:saca_demo/presentation/widgets/saca_controls.dart';
 import 'package:saca_demo/presentation/widgets/saca_logo_header.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -191,6 +192,9 @@ void main() {
 
     expect(controller.state.step, SacaStep.settings);
     expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Modern (Default)'), findsOneWidget);
+    expect(find.text('Glass (Preview)'), findsOneWidget);
+    expect(find.text('Classic'), findsOneWidget);
     expect(find.text('Light'), findsOneWidget);
     expect(find.text('Dark'), findsOneWidget);
     expect(find.text('System'), findsOneWidget);
@@ -200,9 +204,16 @@ void main() {
 
     await tester.tap(find.text('Dark'));
     await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Glass (Preview)'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Glass (Preview)'), findsOneWidget);
+    await tester.ensureVisible(
+        find.byKey(const ValueKey('settingsTextScaleSlider')));
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.drag(
       find.byKey(const ValueKey('settingsTextScaleSlider')),
       const Offset(200, 0),
+      warnIfMissed: false,
     );
     await tester.pump(const Duration(milliseconds: 300));
 
@@ -211,6 +222,69 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(controller.state.step, SacaStep.language);
+  });
+
+  testWidgets('settings theme style keeps brightness separate', (tester) async {
+    final store = _WidgetSettingsStore();
+    final settings = SacaSettingsController(store: store);
+    await settings.load();
+    final controller = SacaFlowController(
+      speechInput: _NoopSpeechInputService(),
+      analysisService: MockAnalysisService(vocabulary: vocabulary),
+    );
+
+    await tester.pumpWidget(
+      CupertinoApp(
+        theme: SacaTheme.cupertinoTheme,
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          glassUnavailable: true,
+          child: SacaFlowScreen(
+            controller: controller,
+            readiness: SacaReadinessState.ready,
+            settings: settings,
+            styleOverride: SacaPlatformStyle.androidMobile,
+            localizer: SacaLocalizer(vocabulary: vocabulary),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 700));
+
+    await tester.ensureVisible(find.bySemanticsLabel('Settings').first);
+    await tester.tap(find.bySemanticsLabel('Settings').first,
+        warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.tap(find.text('Glass (Preview)'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('System'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(settings.state.visualThemeStyle, SacaVisualThemeStyle.glass);
+    expect(settings.state.themePreference, SacaThemePreference.system);
+    expect(find.textContaining('Glass preview is unavailable'), findsOneWidget);
+  });
+
+  testWidgets('glass style wraps shared controls in glass surface',
+      (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          surfaceStyle: SacaThemeSurfaceStyle.glass,
+          child: Center(
+            child: SacaPrimaryButton(
+              label: 'Continue',
+              onPressed: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(GlassContainer), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
   });
 
   testWidgets('settings page can switch app language to Gurindji',

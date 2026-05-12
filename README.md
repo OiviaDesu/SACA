@@ -27,6 +27,7 @@ When in doubt, keep the safety layer conservative and escalate to human care.
 - Adaptive Flutter UI for Windows desktop and Android mobile.
 - English and Gurindji UI modes.
 - Text, voice, and visual symptom input.
+- Theme styles in Settings: Modern (Default), Glass (Preview), and Classic.
 - Structured follow-up questionnaire.
 - Placeholder local analysis via `MockAnalysisService`.
 - Emergency red-flag override through `SafetyRuleService`.
@@ -194,6 +195,12 @@ where Flutter supports it, but Skia fallback is not universal. In particular,
 iOS does not support switching back to Skia, Android fallback is handled by
 Flutter when Impeller is unsupported, and Windows/macOS keep Flutter defaults.
 SACA does not support Web. See [Renderer policy](docs/RENDERER_POLICY.md).
+
+## UI Credits
+
+Glass (Preview) uses [`liquid_glass_widgets`](https://github.com/sdegenaar/liquid_glass_widgets)
+for adaptive liquid-glass surfaces. Modern remains the default SACA theme, and
+Classic uses Material 3 theme tokens.
 
 ## CI
 

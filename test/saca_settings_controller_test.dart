@@ -5,16 +5,18 @@ import 'package:saca_demo/presentation/settings/saca_settings_controller.dart';
 
 void main() {
   group('SacaSettingsController', () {
-    test('defaults to light theme and larger readable text', () {
+    test('defaults to light theme, modern style, and larger readable text', () {
       final controller = SacaSettingsController(store: _MemorySettingsStore());
 
       expect(controller.state.themePreference, SacaThemePreference.light);
+      expect(controller.state.visualThemeStyle, SacaVisualThemeStyle.modern);
       expect(controller.state.textScale, 1.15);
     });
 
-    test('loads saved theme and clamps text scale', () async {
+    test('loads saved theme style and clamps text scale', () async {
       final store = _MemorySettingsStore(<String, Object?>{
         'saca.themePreference': 'dark',
+        'saca.visualThemeStyle': 'classic',
         'saca.textScale': 2.0,
       });
       final controller = SacaSettingsController(store: store);
@@ -22,17 +24,20 @@ void main() {
       await controller.load();
 
       expect(controller.state.themePreference, SacaThemePreference.dark);
+      expect(controller.state.visualThemeStyle, SacaVisualThemeStyle.classic);
       expect(controller.state.textScale, 1.40);
     });
 
-    test('saves theme and text scale changes', () async {
+    test('saves theme style and text scale changes', () async {
       final store = _MemorySettingsStore();
       final controller = SacaSettingsController(store: store);
 
       await controller.setThemePreference(SacaThemePreference.system);
+      await controller.setVisualThemeStyle(SacaVisualThemeStyle.glass);
       await controller.setTextScale(0.5);
 
       expect(store.values['saca.themePreference'], 'system');
+      expect(store.values['saca.visualThemeStyle'], 'glass');
       expect(store.values['saca.textScale'], 0.90);
     });
 
@@ -56,6 +61,16 @@ void main() {
       expect(SacaTheme.darkColors.surfaceAlt, const Color(0xFF202020));
       expect(SacaTheme.darkColors.surfaceGradient.colors.first,
           const Color(0xFF202020));
+    });
+
+    test('classic material theme uses Material 3', () {
+      final theme = SacaTheme.materialTheme(
+        SacaTheme.lightColors,
+        Brightness.light,
+      );
+
+      expect(theme.useMaterial3, isTrue);
+      expect(theme.scaffoldBackgroundColor, SacaTheme.lightColors.background);
     });
   });
 }

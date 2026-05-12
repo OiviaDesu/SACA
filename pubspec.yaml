@@ -24,6 +24,7 @@ dependencies:
   # UI
   gap: ^3.0.1
   cupertino_icons: ^1.0.8
+  liquid_glass_widgets: ^0.10.9
   window_manager: 0.5.1
 
 dev_dependencies:
@@ -44,4 +45,3 @@ flutter:
     - assets/models/sherpa-onnx-whisper-gue-base-run4-rc1/
     - assets/Images/
     
-

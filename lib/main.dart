@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show Theme;
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import 'core/theme/saca_theme.dart';
 import 'domain/services/clinical_vocabulary_service.dart';
@@ -23,15 +25,37 @@ Future<void> main() async {
   final vocabulary = await _loadVocabulary();
   final speechInput = WhisperSpeechInputService();
   final settings = SacaSettingsController();
+  final glassAvailable = await _initializeGlassTheme();
   unawaited(_loadSettings(settings));
-  runApp(SacaApp(
+  final app = SacaApp(
     vocabulary: vocabulary,
     speechInput: speechInput,
     settings: settings,
-  ));
+    glassAvailable: glassAvailable,
+  );
+  runApp(
+    glassAvailable
+        ? LiquidGlassWidgets.wrap(
+            child: app,
+            adaptiveQuality: true,
+            respectSystemAccessibility: true,
+          )
+        : app,
+  );
   WidgetsBinding.instance.addPostFrameCallback((_) {
     VoicePrewarmService(speechInput: speechInput).prewarm();
   });
+}
+
+Future<bool> _initializeGlassTheme() async {
+  try {
+    await LiquidGlassWidgets.initialize();
+    return true;
+  } catch (error, stackTrace) {
+    debugPrint('[SACA] Glass theme unavailable: $error');
+    debugPrintStack(stackTrace: stackTrace);
+    return false;
+  }
 }
 
 Future<void> _configureWindow() async {
@@ -71,6 +95,7 @@ class SacaApp extends StatelessWidget {
     required this.vocabulary,
     required this.speechInput,
     this.readiness = SacaReadinessState.ready,
+    this.glassAvailable = false,
     SacaSettingsController? settings,
   }) : settings = settings ?? SacaSettingsController();
 
@@ -78,6 +103,7 @@ class SacaApp extends StatelessWidget {
   final WhisperSpeechInputService speechInput;
   final SacaSettingsController settings;
   final SacaReadinessState readiness;
+  final bool glassAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +116,26 @@ class SacaApp extends StatelessWidget {
         final colors = brightness == Brightness.dark
             ? SacaTheme.darkColors
             : SacaTheme.lightColors;
+        final requestedStyle = settings.state.visualThemeStyle;
+        final surfaceStyle = _surfaceStyleFor(
+          requestedStyle,
+          glassAvailable: glassAvailable,
+        );
+        final glassUnavailable = requestedStyle == SacaVisualThemeStyle.glass &&
+            !glassAvailable;
+        final home = SacaFlowScreen(
+          controller: SacaFlowController(
+            speechInput: speechInput,
+            analysisService: OnDeviceDiagnosisAnalysisService(
+              fallback: MockAnalysisService(vocabulary: vocabulary),
+              vocabulary: vocabulary,
+            ),
+            symptomSuggestionService: HybridSymptomSuggestionService(),
+          ),
+          localizer: SacaLocalizer(vocabulary: vocabulary),
+          settings: settings,
+          readiness: readiness,
+        );
         return CupertinoApp(
           title: 'SACA',
           debugShowCheckedModeBanner: false,
@@ -99,32 +145,39 @@ class SacaApp extends StatelessWidget {
           builder: (context, child) {
             return _AnimatedSacaTheme(
               colors: colors,
+              surfaceStyle: surfaceStyle,
+              glassUnavailable: glassUnavailable,
+              brightness: brightness,
               textScale: settings.state.textScale,
               child: child ?? const SizedBox.shrink(),
             );
           },
-          home: SacaFlowScreen(
-            controller: SacaFlowController(
-              speechInput: speechInput,
-              analysisService: OnDeviceDiagnosisAnalysisService(
-                fallback: MockAnalysisService(vocabulary: vocabulary),
-                vocabulary: vocabulary,
-              ),
-              symptomSuggestionService: HybridSymptomSuggestionService(),
-            ),
-            localizer: SacaLocalizer(vocabulary: vocabulary),
-            settings: settings,
-            readiness: readiness,
-          ),
+          home: home,
         );
       },
     );
+  }
+
+  SacaThemeSurfaceStyle _surfaceStyleFor(
+    SacaVisualThemeStyle style, {
+    required bool glassAvailable,
+  }) {
+    return switch (style) {
+      SacaVisualThemeStyle.modern => SacaThemeSurfaceStyle.modern,
+      SacaVisualThemeStyle.glass => glassAvailable
+          ? SacaThemeSurfaceStyle.glass
+          : SacaThemeSurfaceStyle.modern,
+      SacaVisualThemeStyle.classic => SacaThemeSurfaceStyle.classic,
+    };
   }
 }
 
 class _AnimatedSacaTheme extends ImplicitlyAnimatedWidget {
   const _AnimatedSacaTheme({
     required this.colors,
+    required this.surfaceStyle,
+    required this.glassUnavailable,
+    required this.brightness,
     required this.textScale,
     required this.child,
   }) : super(
@@ -133,6 +186,9 @@ class _AnimatedSacaTheme extends ImplicitlyAnimatedWidget {
         );
 
   final SacaThemeColors colors;
+  final SacaThemeSurfaceStyle surfaceStyle;
+  final bool glassUnavailable;
+  final Brightness brightness;
   final double textScale;
   final Widget child;
 
@@ -162,14 +218,23 @@ class _AnimatedSacaThemeState
 
   @override
   Widget build(BuildContext context) {
-    return SacaThemeScope(
+    final scoped = SacaThemeScope(
       colors: _colors!.evaluate(animation),
+      surfaceStyle: widget.surfaceStyle,
+      glassUnavailable: widget.glassUnavailable,
       child: MediaQuery(
         data: MediaQuery.of(context).copyWith(
           textScaler: TextScaler.linear(_textScale!.evaluate(animation)),
         ),
         child: widget.child,
       ),
+    );
+    if (widget.surfaceStyle != SacaThemeSurfaceStyle.classic) {
+      return scoped;
+    }
+    return Theme(
+      data: SacaTheme.materialTheme(_colors!.evaluate(animation), widget.brightness),
+      child: scoped,
     );
   }
 }

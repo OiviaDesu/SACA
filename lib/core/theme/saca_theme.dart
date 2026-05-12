@@ -1,17 +1,52 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show ColorScheme, ThemeData;
+
+enum SacaThemeSurfaceStyle { modern, glass, classic }
 
 class SacaThemeScope extends InheritedWidget {
   const SacaThemeScope({
     super.key,
     required this.colors,
+    this.surfaceStyle = SacaThemeSurfaceStyle.modern,
+    this.glassUnavailable = false,
     required super.child,
   });
 
   final SacaThemeColors colors;
+  final SacaThemeSurfaceStyle surfaceStyle;
+  final bool glassUnavailable;
 
   @override
   bool updateShouldNotify(SacaThemeScope oldWidget) =>
-      colors != oldWidget.colors;
+      colors != oldWidget.colors ||
+      surfaceStyle != oldWidget.surfaceStyle ||
+      glassUnavailable != oldWidget.glassUnavailable;
+}
+
+class SacaThemeContext {
+  const SacaThemeContext({
+    required this.colors,
+    required this.surfaceStyle,
+    required this.glassUnavailable,
+  });
+
+  final SacaThemeColors colors;
+  final SacaThemeSurfaceStyle surfaceStyle;
+  final bool glassUnavailable;
+
+  bool get useGlass =>
+      surfaceStyle == SacaThemeSurfaceStyle.glass && !glassUnavailable;
+  bool get useClassic => surfaceStyle == SacaThemeSurfaceStyle.classic;
+
+  static SacaThemeContext of(BuildContext context) {
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<SacaThemeScope>();
+    return SacaThemeContext(
+      colors: scope?.colors ?? SacaTheme.lightColors,
+      surfaceStyle: scope?.surfaceStyle ?? SacaThemeSurfaceStyle.modern,
+      glassUnavailable: scope?.glassUnavailable ?? false,
+    );
+  }
 }
 
 class SacaThemeColors {
@@ -73,10 +108,7 @@ class SacaThemeColors {
   }
 
   static SacaThemeColors of(BuildContext context) {
-    return context
-            .dependOnInheritedWidgetOfExactType<SacaThemeScope>()
-            ?.colors ??
-        SacaTheme.lightColors;
+    return SacaThemeContext.of(context).colors;
   }
 }
 
@@ -267,4 +299,16 @@ class SacaTheme {
       ),
     ),
   );
+
+  static ThemeData materialTheme(SacaThemeColors colors, Brightness brightness) {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: brightness,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: colors.accent,
+        brightness: brightness,
+      ),
+      scaffoldBackgroundColor: colors.background,
+    );
+  }
 }
