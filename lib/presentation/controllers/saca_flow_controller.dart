@@ -360,6 +360,9 @@ class SacaFlowController extends ChangeNotifier {
     } else {
       next[questionId] = current.join('|');
     }
+    if (questionId == 'related_symptoms' && option == 'none') {
+      next.remove('related_other');
+    }
     _setState(_state.copyWith(questionAnswers: next, clearError: true));
   }
 
@@ -381,23 +384,27 @@ class SacaFlowController extends ChangeNotifier {
         );
         return;
       }
-
-      final suggestions = _symptomSuggestionService.suggestRelatedSymptoms(
-        _state.analysisRequest,
-      );
-      _setState(
-        _state.copyWith(
-          step: SacaStep.questionSeverity,
-          suggestedRelatedSymptomIds: _filterKnownRelatedSymptoms(
-            suggestions,
-            _state.analysisRequest,
-          ),
-          voiceAnswerTranscript: '',
-          voiceAnswerMatched: true,
-          clearError: true,
-        ),
-      );
+      _advanceFromInput();
     }
+  }
+
+  void _advanceFromInput({bool clearPendingConfirmation = false}) {
+    final suggestions = _symptomSuggestionService.suggestRelatedSymptoms(
+      _state.analysisRequest,
+    );
+    _setState(
+      _state.copyWith(
+        step: SacaStep.questionSeverity,
+        suggestedRelatedSymptomIds: _filterKnownRelatedSymptoms(
+          suggestions,
+          _state.analysisRequest,
+        ),
+        voiceAnswerTranscript: '',
+        voiceAnswerMatched: true,
+        clearError: true,
+        clearPendingConfirmation: clearPendingConfirmation,
+      ),
+    );
   }
 
   void nextQuestion() {
@@ -596,7 +603,7 @@ class SacaFlowController extends ChangeNotifier {
     final pending = _state.pendingConfirmation;
     if (pending == null) return;
     if (pending == SacaConfirmationType.emptyInput) {
-      _setState(_state.copyWith(clearPendingConfirmation: true));
+      _advanceFromInput(clearPendingConfirmation: true);
       return;
     }
     if (pending == SacaConfirmationType.noClearIllness &&

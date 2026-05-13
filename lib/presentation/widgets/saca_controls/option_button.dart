@@ -10,6 +10,7 @@ class SacaOptionButton extends StatelessWidget {
     this.selected = false,
     this.autofocus = false,
     this.focusNode,
+    this.subdued = false,
   });
 
   final String label;
@@ -19,13 +20,23 @@ class SacaOptionButton extends StatelessWidget {
   final bool selected;
   final bool autofocus;
   final FocusNode? focusNode;
+  final bool subdued;
 
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
     final theme = SacaThemeContext.of(context);
     final enabled = onPressed != null;
+    final selectedForeground =
+        theme.useGlassStyle ? colors.onControl : colors.onSelected;
     if (theme.useClassic) {
+      final classicForeground = subdued
+          ? colors.onSurfaceMuted
+          : selected
+              ? colors.onControl
+              : colors.onSurface;
+      final classicMuted =
+          selected && !subdued ? colors.onControl : colors.onSurfaceMuted;
       final content = SizedBox(
         width: double.infinity,
         child: Padding(
@@ -36,19 +47,24 @@ class SacaOptionButton extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label, style: SacaTheme.body),
+                    Text(
+                      label,
+                      style: SacaTheme.body.copyWith(color: classicForeground),
+                    ),
                     if (description != null) ...[
                       const SizedBox(height: 5),
                       Text(
                         description!,
-                        style: SacaTheme.small.copyWith(color: colors.mutedText),
+                        style: SacaTheme.small.copyWith(color: classicMuted),
                       ),
                     ],
                   ],
                 ),
               ),
-              if (selected) const Icon(Icons.check_circle, size: 22),
-              if (!selected && icon != null) Icon(icon, size: 22),
+              if (selected)
+                Icon(Icons.check_circle, size: 22, color: classicForeground),
+              if (!selected && icon != null)
+                Icon(icon, size: 22, color: classicForeground),
             ],
           ),
         ),
@@ -76,7 +92,7 @@ class SacaOptionButton extends StatelessWidget {
       child: _SacaInteractiveSurface(
         surfaceKey: _controlSurfaceKey(key),
         enabled: enabled,
-        selected: selected,
+        selected: selected && !subdued,
         baseGradient: colors.surfaceGradient,
         selectedGradient: colors.selectedGradient,
         baseBorderColor: colors.border,
@@ -100,7 +116,13 @@ class SacaOptionButton extends StatelessWidget {
                       children: [
                         Text(
                           label,
-                          style: SacaTheme.body.copyWith(color: colors.text),
+                          style: SacaTheme.body.copyWith(
+                            color: subdued
+                                ? colors.onSurfaceMuted
+                                : selected
+                                    ? selectedForeground
+                                    : colors.onSurface,
+                          ),
                           overflow: TextOverflow.visible,
                         ),
                         if (description != null) ...[
@@ -108,14 +130,23 @@ class SacaOptionButton extends StatelessWidget {
                           Text(
                             description!,
                             style: SacaTheme.small
-                                .copyWith(color: colors.mutedText),
+                                .copyWith(color: colors.onSurfaceMuted),
                             overflow: TextOverflow.visible,
                           ),
                         ],
                       ],
                     ),
                   ),
-                  if (icon != null) Icon(icon, size: 24, color: colors.text),
+                  if (icon != null)
+                    Icon(
+                      icon,
+                      size: 24,
+                      color: subdued
+                          ? colors.onSurfaceMuted
+                          : selected
+                              ? selectedForeground
+                              : colors.onSurface,
+                    ),
                 ],
               ),
             ),

@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/core/theme/saca_theme.dart';
-import 'package:saca_demo/domain/models/saca_models.dart';
-import 'package:saca_demo/presentation/widgets/body_diagram.dart';
-import 'package:saca_demo/presentation/widgets/saca_controls.dart';
+import 'package:saca/core/theme/saca_theme.dart';
+import 'package:saca/domain/models/saca_models.dart';
+import 'package:saca/presentation/widgets/body_diagram.dart';
+import 'package:saca/presentation/widgets/saca_controls.dart';
 
 void main() {
   group('BodyDiagram', () {

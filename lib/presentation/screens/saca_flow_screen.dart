@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show LinearProgressIndicator;
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/saca_theme.dart';
 import '../../core/layout/saca_window_size_class.dart';
@@ -51,6 +54,9 @@ class SacaFlowScreen extends StatefulWidget {
 }
 
 class _SacaFlowScreenState extends State<SacaFlowScreen> {
+  static final Uri _nativeReleaseUri =
+      Uri.parse('https://github.com/OiviaDesu/SACA/releases');
+
   late final SacaFlowController _controller;
   late final SacaLocalizer _localizer;
   late final SacaSettingsController _settings;
@@ -214,30 +220,284 @@ class _SacaFlowScreenState extends State<SacaFlowScreen> {
     showCupertinoDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return CupertinoAlertDialog(
-          title: Text(_localizer.t(language, titleKey)),
-          content: Text(_localizer.t(language, messageKey)),
-          actions: [
-            CupertinoDialogAction(
-              child: Text(_localizer.t(language, 'reviewAnswers')),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _controller.dismissPendingConfirmation();
-                _shownConfirmation = null;
-              },
-            ),
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              child: Text(_localizer.t(language, 'continueAnyway')),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _controller.confirmPendingAction();
-                _shownConfirmation = null;
-              },
-            ),
-          ],
+        return _SacaConfirmationDialog(
+          title: _localizer.t(language, titleKey),
+          message: _localizer.t(language, messageKey),
+          reviewLabel: _localizer.t(language, 'reviewAnswers'),
+          continueLabel: _localizer.t(language, 'continueAnyway'),
+          onReview: () {
+            Navigator.of(dialogContext).pop();
+            _controller.dismissPendingConfirmation();
+            _shownConfirmation = null;
+          },
+          onContinue: () {
+            Navigator.of(dialogContext).pop();
+            _controller.confirmPendingAction();
+            _shownConfirmation = null;
+          },
         );
       },
+    );
+  }
+
+  // ignore: unused_element
+  void _showNativeOnlyDialog(BuildContext context) {
+    final language = _controller.state.language;
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return _SacaConfirmationDialog(
+          title: _localizer.t(language, 'nativeOnlyTitle'),
+          message: _localizer.t(language, 'nativeOnlyMessage'),
+          reviewLabel: _localizer.t(language, 'ok'),
+          continueLabel: _localizer.t(language, 'openReleases'),
+          onReview: () => Navigator.of(dialogContext).pop(),
+          onContinue: () {
+            Navigator.of(dialogContext).pop();
+            unawaited(
+              launchUrl(
+                _nativeReleaseUri,
+                mode: LaunchMode.externalApplication,
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _SacaConfirmationDialog extends StatelessWidget {
+  const _SacaConfirmationDialog({
+    required this.title,
+    required this.message,
+    required this.reviewLabel,
+    required this.continueLabel,
+    required this.onReview,
+    required this.onContinue,
+  });
+
+  final String title;
+  final String message;
+  final String reviewLabel;
+  final String continueLabel;
+  final VoidCallback onReview;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
+    final radius = theme.radius(theme.useClassic ? 18 : 22);
+    final background = theme.useGlassStyle
+        ? theme.glassMaterial(SacaGlassMaterial.dialog).withValues(
+              alpha: theme.glassOpacity(SacaGlassMaterial.dialog),
+            )
+        : colors.surface;
+    final foreground = theme.useGlassStyle
+        ? colors.onGlassPrimary
+        : theme.foregroundFor(SacaThemeSurfaceRole.surface);
+    final muted =
+        theme.useGlassStyle ? colors.onGlassMuted : colors.onSurfaceMuted;
+    final border = theme.useGlassStyle ? colors.glassBorder : colors.outline;
+    final actionForeground = theme.useClassic ? colors.onSurface : foreground;
+    final defaultActionForeground = theme.useClassic
+        ? colors.onSurface
+        : theme.useGlassStyle
+            ? colors.onGlassPrimary
+            : colors.onSelected;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(radius),
+              border: Border.all(
+                  color: border, width: theme.useGlassStyle ? 1.2 : 1),
+              boxShadow: theme.surfaceShadow(highlighted: theme.useGlassStyle),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 340),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 14),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: SacaTheme.title.copyWith(
+                            color: foreground,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: SacaTheme.body.copyWith(
+                            color: muted,
+                            height: 1.32,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _SacaDialogAction(
+                    label: reviewLabel,
+                    color: actionForeground,
+                    borderColor: colors.separator,
+                    onPressed: onReview,
+                  ),
+                  _SacaDialogAction(
+                    label: continueLabel,
+                    color: defaultActionForeground,
+                    borderColor: colors.separator,
+                    isDefault: true,
+                    onPressed: onContinue,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SacaDialogAction extends StatelessWidget {
+  const _SacaDialogAction({
+    required this.label,
+    required this.color,
+    required this.borderColor,
+    required this.onPressed,
+    this.isDefault = false,
+  });
+
+  final String label;
+  final Color color;
+  final Color borderColor;
+  final VoidCallback onPressed;
+  final bool isDefault;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: borderColor, width: 0.8)),
+      ),
+      child: CupertinoButton(
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        pressedOpacity: 0.72,
+        onPressed: onPressed,
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: SacaTheme.body.copyWith(
+            color: color,
+            fontWeight: isDefault ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SacaMessageDialog extends StatelessWidget {
+  const _SacaMessageDialog({
+    required this.title,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final String title;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
+    final radius = theme.radius(theme.useClassic ? 18 : 22);
+    final background = theme.useGlassStyle
+        ? theme.glassMaterial(SacaGlassMaterial.dialog).withValues(
+              alpha: theme.glassOpacity(SacaGlassMaterial.dialog),
+            )
+        : colors.surface;
+    final foreground = theme.useGlassStyle
+        ? colors.onGlassPrimary
+        : theme.foregroundFor(SacaThemeSurfaceRole.surface);
+    final muted =
+        theme.useGlassStyle ? colors.onGlassMuted : colors.onSurfaceMuted;
+    final border = theme.useGlassStyle ? colors.glassBorder : colors.outline;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(radius),
+              border: Border.all(
+                  color: border, width: theme.useGlassStyle ? 1.2 : 1),
+              boxShadow: theme.surfaceShadow(highlighted: theme.useGlassStyle),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 340),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 14),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: SacaTheme.title.copyWith(
+                            color: foreground,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: SacaTheme.body.copyWith(
+                            color: muted,
+                            height: 1.32,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _SacaDialogAction(
+                    label: actionLabel,
+                    color: foreground,
+                    borderColor: colors.separator,
+                    isDefault: true,
+                    onPressed: onAction,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

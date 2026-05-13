@@ -103,13 +103,21 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
         widget.selected ? widget.selectedBorderColor : widget.baseBorderColor;
     final theme = SacaThemeContext.of(context);
     final themedGradient = theme.surfaceGradient(selected: widget.selected);
-    final effectiveBaseGradient = theme.useGlass || theme.useClassic
-        ? themedGradient
-        : baseGradient;
+    final effectiveBaseGradient =
+        theme.useGlassStyle || theme.useClassic ? themedGradient : baseGradient;
     final effectiveRadius = theme.radius(SacaTheme.radius);
     final hoverTint =
-        widget.selected ? SacaTheme.accent : SacaTheme.selectedBorder;
-    final pressedTint = widget.selected ? SacaTheme.text : SacaTheme.accent;
+        widget.selected ? theme.colors.control : theme.colors.selectedBorder;
+    final pressedTint =
+        widget.selected ? theme.colors.onSurface : theme.colors.control;
+    final glassFill = !widget.enabled && widget.selected
+        ? theme.colors.disabledControl
+        : widget.selected
+            ? theme.glassMaterial(SacaGlassMaterial.control)
+            : theme.glassMaterial(SacaGlassMaterial.field);
+    final glassOpacity = theme.glassOpacity(
+      widget.selected ? SacaGlassMaterial.control : SacaGlassMaterial.field,
+    );
 
     final hovered = widget.enabled && _hovered;
     final focused = widget.enabled && _focused;
@@ -128,7 +136,7 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
         : hovered
             ? widget.hoverShadow
             : widget.baseShadow;
-    final effectiveShadow = theme.useGlass || theme.useClassic
+    final effectiveShadow = theme.useGlassStyle || theme.useClassic
         ? theme.surfaceShadow(highlighted: widget.selected)
         : boxShadow;
     final effectiveDuration = Duration(
@@ -146,19 +154,20 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
           darkenTint: pressedTint,
           darkenAmount: darkenAmount,
         ),
-        color: theme.useGlass
-            ? (widget.selected ? theme.colors.selected : theme.colors.surface)
-                .withValues(alpha: theme.surfaceOpacity)
+        color: theme.useGlassStyle
+            ? glassFill.withValues(alpha: glassOpacity)
             : null,
         borderRadius: BorderRadius.circular(effectiveRadius),
         border: Border.all(
-          color: _mixBorder(
-            baseColor: baseBorder,
-            hoverTint: hoverTint,
-            pressedTint: pressedTint,
-            hoverAmount: hovered ? borderStrength : 0,
-            pressedAmount: pressed ? borderStrength : 0,
-          ),
+          color: theme.useGlassStyle
+              ? theme.colors.glassBorder.withValues(alpha: theme.borderOpacity)
+              : _mixBorder(
+                  baseColor: baseBorder,
+                  hoverTint: hoverTint,
+                  pressedTint: pressedTint,
+                  hoverAmount: hovered ? borderStrength : 0,
+                  pressedAmount: pressed ? borderStrength : 0,
+                ),
         ),
         boxShadow: [
           ...effectiveShadow,
@@ -172,7 +181,7 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
       ),
       child: AnimatedOpacity(
         duration: effectiveDuration,
-        opacity: widget.enabled ? 1 : 0.44,
+        opacity: widget.enabled ? 1 : (theme.useGlassStyle ? 0.86 : 0.58),
         child: AnimatedContainer(
           duration: effectiveDuration,
           curve: Curves.easeOutCubic,

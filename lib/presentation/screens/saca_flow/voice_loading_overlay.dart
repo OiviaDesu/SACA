@@ -43,6 +43,7 @@ class _VoiceLoadingOverlayState extends State<_VoiceLoadingOverlay> {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
     return IgnorePointer(
       ignoring: !widget.visible,
       child: AnimatedSwitcher(
@@ -75,14 +76,19 @@ class _VoiceLoadingOverlayState extends State<_VoiceLoadingOverlay> {
                 children: [
                   DecoratedBox(
                     decoration: BoxDecoration(
-                      color: colors.text.withValues(alpha: 0.18),
+                      color: colors.glassScrim.withValues(
+                        alpha: theme.useGlassStyle ? 0.38 : 0.18,
+                      ),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          colors.accent.withValues(alpha: 0.16),
+                          colors.glassHighlight.withValues(
+                            alpha:
+                                theme.useGlassStyle ? theme.glowOpacity : 0.16,
+                          ),
                           colors.background.withValues(alpha: 0.62),
-                          colors.text.withValues(alpha: 0.20),
+                          colors.onSurface.withValues(alpha: 0.20),
                         ],
                       ),
                     ),
@@ -92,9 +98,23 @@ class _VoiceLoadingOverlayState extends State<_VoiceLoadingOverlay> {
                       constraints: const BoxConstraints(maxWidth: 320),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          gradient: colors.surfaceGradient,
+                          gradient: theme.surfaceGradient(),
+                          color: theme.useGlassStyle
+                              ? theme
+                                  .glassMaterial(SacaGlassMaterial.dialog)
+                                  .withValues(
+                                    alpha: theme
+                                        .glassOpacity(SacaGlassMaterial.dialog),
+                                  )
+                              : null,
                           borderRadius: BorderRadius.circular(26),
-                          border: Border.all(color: colors.selectedBorder),
+                          border: Border.all(
+                            color: theme.useGlassStyle
+                                ? colors.glassBorder.withValues(
+                                    alpha: theme.borderOpacity,
+                                  )
+                                : colors.selectedBorder,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: colors.shadow,
@@ -149,7 +169,7 @@ class _VoiceLoadingOverlayState extends State<_VoiceLoadingOverlay> {
                                   key: const ValueKey('voiceLoadingTitle'),
                                   textAlign: TextAlign.center,
                                   style: SacaTheme.body.copyWith(
-                                    color: colors.text,
+                                    color: colors.onSurface,
                                   ),
                                 ),
                               ],
@@ -160,7 +180,7 @@ class _VoiceLoadingOverlayState extends State<_VoiceLoadingOverlay> {
                                   key: const ValueKey('voiceLoadingSubtitle'),
                                   textAlign: TextAlign.center,
                                   style: SacaTheme.small.copyWith(
-                                    color: colors.mutedText,
+                                    color: colors.onSurfaceMuted,
                                   ),
                                 ),
                               ],

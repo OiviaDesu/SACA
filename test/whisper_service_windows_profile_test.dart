@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/infrastructure/speech/whisper_service_io.dart';
+import 'package:saca/infrastructure/speech/whisper_service_io.dart';
 
 void main() {
   group('SacaSttModelAssets Windows profile', () {

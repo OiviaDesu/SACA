@@ -1,8 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/domain/models/lexicon_entry.dart';
-import 'package:saca_demo/domain/models/saca_models.dart';
-import 'package:saca_demo/domain/services/clinical_vocabulary_service.dart';
+import 'package:saca/domain/models/lexicon_entry.dart';
+import 'package:saca/domain/models/saca_models.dart';
+import 'package:saca/domain/services/clinical_vocabulary_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

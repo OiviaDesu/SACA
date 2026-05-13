@@ -36,7 +36,8 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                   children: [
                     Text(
                       _localizer.t(state.language, 'settingsLanguageSubtitle'),
-                      style: SacaTheme.small.copyWith(color: colors.mutedText),
+                      style: SacaTheme.small
+                          .copyWith(color: colors.onSurfaceMuted),
                     ),
                     const SizedBox(height: 12),
                     CupertinoSlidingSegmentedControl<SacaLanguage>(
@@ -71,7 +72,8 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                     Text(
                       _localizer.t(
                           state.language, 'settingsThemeStyleSubtitle'),
-                      style: SacaTheme.small.copyWith(color: colors.mutedText),
+                      style: SacaTheme.small
+                          .copyWith(color: colors.onSurfaceMuted),
                     ),
                     const SizedBox(height: 12),
                     _ThemePreviewRow(
@@ -85,8 +87,17 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                       Text(
                         _localizer.t(
                             state.language, 'settingsThemeGlassFallback'),
-                        style:
-                            SacaTheme.small.copyWith(color: colors.mutedText),
+                        style: SacaTheme.small
+                            .copyWith(color: colors.onSurfaceMuted),
+                      ),
+                    ],
+                    if (themeContext.glassSolidFallback) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        _localizer.t(state.language,
+                            'settingsThemeGlassAccessibilityFallback'),
+                        style: SacaTheme.small
+                            .copyWith(color: colors.onSurfaceMuted),
                       ),
                     ],
                   ],
@@ -118,13 +129,15 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                         Expanded(
                           child: Text(
                             _localizer.t(state.language, 'settingsTextScale'),
-                            style: SacaTheme.body.copyWith(color: colors.text),
+                            style: SacaTheme.body
+                                .copyWith(color: colors.onSurface),
                           ),
                         ),
                         Text(
                           '${(settingsState.textScale * 100).round()}%',
                           key: const ValueKey('settingsTextScaleValue'),
-                          style: SacaTheme.body.copyWith(color: colors.text),
+                          style:
+                              SacaTheme.body.copyWith(color: colors.onSurface),
                         ),
                       ],
                     ),
@@ -140,7 +153,7 @@ extension _SacaSettingsStepWidgets on _SacaFlowScreenState {
                       _localizer.t(state.language, 'settingsTextPreview'),
                       style: SacaTheme.body.copyWith(
                         fontSize: 17 * settingsState.textScale,
-                        color: colors.mutedText,
+                        color: colors.onSurfaceMuted,
                       ),
                     ),
                   ],
@@ -274,7 +287,7 @@ class _ThemePreviewChip extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: SacaTheme.small.copyWith(color: colors.text),
+                    style: SacaTheme.small.copyWith(color: colors.onSurface),
                   ),
                 ),
                 if (selected)
@@ -299,7 +312,7 @@ class _ThemePreviewChip extends StatelessWidget {
   }
 }
 
-class _SettingsChoiceRow<T> extends StatelessWidget {
+class _SettingsChoiceRow<T extends Object> extends StatelessWidget {
   const _SettingsChoiceRow({
     required this.selected,
     required this.values,
@@ -314,17 +327,21 @@ class _SettingsChoiceRow<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
+    return CupertinoSlidingSegmentedControl<T>(
+      key: const ValueKey('settingsChoiceSegmentedControl'),
+      groupValue: selected,
+      children: <T, Widget>{
         for (final value in values)
-          SacaChipButton(
-            label: labelFor(value),
-            selected: value == selected,
-            onPressed: () => onSelected(value),
+          value: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(labelFor(value)),
           ),
-      ],
+      },
+      onValueChanged: (value) {
+        if (value != null) {
+          onSelected(value);
+        }
+      },
     );
   }
 }
@@ -376,13 +393,15 @@ class _SettingsPanel extends StatelessWidget {
     final panel = DecoratedBox(
       decoration: BoxDecoration(
         gradient: theme.surfaceGradient(),
-        color: theme.useGlass
-            ? colors.surface.withValues(alpha: theme.surfaceOpacity)
+        color: theme.useGlassStyle
+            ? theme
+                .glassMaterial(SacaGlassMaterial.panel)
+                .withValues(alpha: theme.glassOpacity(SacaGlassMaterial.panel))
             : null,
         borderRadius: BorderRadius.circular(theme.radius(SacaTheme.radius)),
         border: Border.all(
-          color: theme.useGlass
-              ? colors.border.withValues(alpha: 0.42)
+          color: theme.useGlassStyle
+              ? colors.glassBorder.withValues(alpha: theme.borderOpacity)
               : colors.border,
         ),
         boxShadow: theme.surfaceShadow(),
@@ -392,7 +411,8 @@ class _SettingsPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(title, style: SacaTheme.body.copyWith(color: colors.text)),
+            Text(title,
+                style: SacaTheme.body.copyWith(color: colors.onSurface)),
             const SizedBox(height: 12),
             child,
           ],

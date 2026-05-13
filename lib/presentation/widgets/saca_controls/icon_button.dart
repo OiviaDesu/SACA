@@ -22,7 +22,7 @@ class SacaIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
     final enabled = onPressed != null;
-    final color = destructive ? SacaTheme.emergency : colors.text;
+    final color = destructive ? SacaTheme.emergency : colors.onSurface;
     return CupertinoButton(
       padding: EdgeInsets.zero,
       minimumSize: minimumSize,

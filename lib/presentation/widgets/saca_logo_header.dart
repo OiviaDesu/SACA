@@ -27,7 +27,7 @@ class SacaLogoHeader extends StatelessWidget {
                   'SACA',
                   style: SacaTheme.logoText.copyWith(
                     fontSize: logoSize,
-                    color: colors.text,
+                    color: colors.onSurface,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -35,7 +35,7 @@ class SacaLogoHeader extends StatelessWidget {
                   'Smart Adaptive Clinical Assistant',
                   textAlign: TextAlign.center,
                   style: SacaTheme.small.copyWith(
-                    color: colors.mutedText,
+                    color: colors.onSurfaceMuted,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

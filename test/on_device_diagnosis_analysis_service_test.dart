@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/domain/models/saca_models.dart';
-import 'package:saca_demo/infrastructure/analysis/mock_analysis_service.dart';
-import 'package:saca_demo/infrastructure/analysis/on_device_diagnosis_analysis_service.dart';
-import 'package:saca_demo/infrastructure/analysis/xgb_m2cgen_runtime.dart';
+import 'package:saca/domain/models/saca_models.dart';
+import 'package:saca/infrastructure/analysis/mock_analysis_service.dart';
+import 'package:saca/infrastructure/analysis/on_device_diagnosis_analysis_service.dart';
+import 'package:saca/infrastructure/analysis/xgb_m2cgen_runtime.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

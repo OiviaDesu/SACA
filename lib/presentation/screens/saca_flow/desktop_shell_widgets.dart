@@ -22,6 +22,7 @@ class _DesktopShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.escape): () {
@@ -31,7 +32,11 @@ class _DesktopShell extends StatelessWidget {
       child: FocusTraversalGroup(
         child: DecoratedBox(
           key: const ValueKey('windowsFramelessShell'),
-          decoration: BoxDecoration(color: colors.background),
+          decoration: BoxDecoration(
+            color: theme.useGlassStyle
+                ? theme.glassMaterial(SacaGlassMaterial.panel)
+                : colors.background,
+          ),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -227,6 +232,7 @@ class _DesktopToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
     final language = switch (state.language) {
       SacaLanguage.gurindji => 'Gurindji',
       SacaLanguage.english => 'English',
@@ -239,8 +245,17 @@ class _DesktopToolbar extends StatelessWidget {
         return DecoratedBox(
           key: const ValueKey('windowsCustomTitleBar'),
           decoration: BoxDecoration(
-            color: colors.surfaceAlt,
-            border: Border(bottom: BorderSide(color: colors.border)),
+            color: theme.useGlassStyle
+                ? theme.glassMaterial(SacaGlassMaterial.nav).withValues(
+                    alpha: theme.glassOpacity(SacaGlassMaterial.nav))
+                : colors.surfaceAlt,
+            border: Border(
+              bottom: BorderSide(
+                color: theme.useGlassStyle
+                    ? colors.glassBorder.withValues(alpha: theme.borderOpacity)
+                    : colors.border,
+              ),
+            ),
           ),
           child: SizedBox(
             height: 64,
@@ -267,7 +282,7 @@ class _DesktopToolbar extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: SacaTheme.logoText.copyWith(
                                   fontSize: compact ? 24 : 28,
-                                  color: colors.text,
+                                  color: colors.onSurface,
                                 ),
                               ),
                             ),
@@ -298,7 +313,7 @@ class _DesktopToolbar extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                   style: SacaTheme.small
-                                      .copyWith(color: colors.mutedText),
+                                      .copyWith(color: colors.onSurfaceMuted),
                                 ),
                               ),
                             ],
@@ -340,19 +355,13 @@ void _showReadinessDialog(
   showCupertinoDialog<void>(
     context: context,
     builder: (dialogContext) {
-      return CupertinoAlertDialog(
-        title: Text(
-          readiness.isReady
-              ? localizer.t(language, 'offlineReady')
-              : localizer.t(language, 'offlineNotReady'),
-        ),
-        content: Text(readiness.messages.join('\n')),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(localizer.t(language, 'ok')),
-          ),
-        ],
+      return _SacaMessageDialog(
+        title: readiness.isReady
+            ? localizer.t(language, 'offlineReady')
+            : localizer.t(language, 'offlineNotReady'),
+        message: readiness.messages.join('\n'),
+        actionLabel: localizer.t(language, 'ok'),
+        onAction: () => Navigator.of(dialogContext).pop(),
       );
     },
   );

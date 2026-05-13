@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/domain/services/duration_interpreter.dart';
+import 'package:saca/domain/services/duration_interpreter.dart';
 
 void main() {
   const interpreter = DurationInterpreter();

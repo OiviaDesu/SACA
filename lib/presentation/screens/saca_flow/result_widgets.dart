@@ -25,7 +25,7 @@ class _ResultPanel extends StatelessWidget {
               localizer.t(language, 'possiblePattern'),
               textAlign: TextAlign.center,
               style: SacaTheme.body.copyWith(
-                color: colors.text,
+                color: colors.onSurface,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -33,7 +33,7 @@ class _ResultPanel extends StatelessWidget {
             Text(
               localizer.t(language, 'possiblePatternHelper'),
               textAlign: TextAlign.center,
-              style: SacaTheme.small.copyWith(color: colors.mutedText),
+              style: SacaTheme.small.copyWith(color: colors.onSurfaceMuted),
             ),
             const SizedBox(height: 12),
             _PredictionList(
@@ -57,13 +57,13 @@ class _ResultPanel extends StatelessWidget {
             Text(
               localizer.t(language, 'resultNextStepNote'),
               textAlign: TextAlign.center,
-              style: SacaTheme.small.copyWith(color: colors.mutedText),
+              style: SacaTheme.small.copyWith(color: colors.onSurfaceMuted),
             ),
             const SizedBox(height: 12),
             Text(
               localizer.t(language, 'recommendations'),
               style: SacaTheme.body.copyWith(
-                color: colors.text,
+                color: colors.onSurface,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -74,7 +74,7 @@ class _ResultPanel extends StatelessWidget {
             Text(
               localizer.disclaimer(language, result.disclaimer),
               textAlign: TextAlign.center,
-              style: SacaTheme.small.copyWith(color: colors.mutedText),
+              style: SacaTheme.small.copyWith(color: colors.onSurfaceMuted),
             ),
             if (result.isEmergency) ...[
               const SizedBox(height: 18),
@@ -130,7 +130,7 @@ class _PredictionList extends StatelessWidget {
             child: Text(
               localizer.t(language, 'otherPossibilities'),
               style: SacaTheme.small.copyWith(
-                color: SacaThemeColors.of(context).mutedText,
+                color: SacaThemeColors.of(context).onSurfaceMuted,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -166,7 +166,6 @@ class _PredictionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = SacaThemeColors.of(context);
     return DecoratedBox(
       decoration: _sacaPanelDecoration(
         context,
@@ -175,61 +174,137 @@ class _PredictionCard extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.all(primary ? 16 : 13),
-        child: Row(
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.surface,
-                shape: BoxShape.circle,
-              ),
-              child: SizedBox(
-                width: primary ? 38 : 32,
-                height: primary ? 38 : 32,
-                child: Center(
-                  child: Text(
-                    '${prediction.rank}',
-                    style: SacaTheme.body.copyWith(
-                      color: colors.accent,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    localizer.resultDiseaseLabel(language, prediction.label),
-                    style:
-                        (primary ? SacaTheme.title : SacaTheme.body).copyWith(
-                      color: colors.text,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    localizer.conditionExplanation(language, prediction.label),
-                    style: SacaTheme.small.copyWith(color: colors.mutedText),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            _ConfidenceChip(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 360;
+            final rankBadge = _PredictionRankBadge(
+              rank: prediction.rank,
+              primary: primary,
+            );
+            final textBlock = _PredictionTextBlock(
               prediction: prediction,
               primary: primary,
               language: language,
               localizer: localizer,
-            ),
-          ],
+            );
+            final chip = _ConfidenceChip(
+              prediction: prediction,
+              primary: primary,
+              language: language,
+              localizer: localizer,
+            );
+
+            if (isCompact) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      rankBadge,
+                      const SizedBox(width: 12),
+                      Expanded(child: textBlock),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: chip,
+                  ),
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                rankBadge,
+                const SizedBox(width: 12),
+                Expanded(child: textBlock),
+                const SizedBox(width: 10),
+                Flexible(
+                  flex: 0,
+                  child: chip,
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
+}
 
+class _PredictionRankBadge extends StatelessWidget {
+  const _PredictionRankBadge({required this.rank, required this.primary});
+
+  final int rank;
+  final bool primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        shape: BoxShape.circle,
+      ),
+      child: SizedBox(
+        width: primary ? 38 : 32,
+        height: primary ? 38 : 32,
+        child: Center(
+          child: Text(
+            '$rank',
+            style: SacaTheme.body.copyWith(
+              color: colors.accent,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PredictionTextBlock extends StatelessWidget {
+  const _PredictionTextBlock({
+    required this.prediction,
+    required this.primary,
+    required this.language,
+    required this.localizer,
+  });
+
+  final ConditionPrediction prediction;
+  final bool primary;
+  final SacaLanguage? language;
+  final SacaLocalizer localizer;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SacaThemeColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          localizer.resultDiseaseLabel(language, prediction.label),
+          softWrap: true,
+          overflow: TextOverflow.visible,
+          style: (primary ? SacaTheme.title : SacaTheme.body).copyWith(
+            color: colors.onSurface,
+            fontWeight: FontWeight.w900,
+            height: 1.05,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          localizer.conditionExplanation(language, prediction.label),
+          softWrap: true,
+          overflow: TextOverflow.visible,
+          style: SacaTheme.small.copyWith(color: colors.onSurfaceMuted),
+        ),
+      ],
+    );
+  }
 }
 
 class _ConfidenceChip extends StatelessWidget {
@@ -304,7 +379,7 @@ class _ConfidenceWarning extends StatelessWidget {
           text,
           textAlign: TextAlign.center,
           style: SacaTheme.small.copyWith(
-            color: SacaThemeColors.of(context).text,
+            color: SacaThemeColors.of(context).onSurface,
           ),
         ),
       ),
@@ -369,13 +444,13 @@ class _GuidanceLine extends StatelessWidget {
             child: Icon(
               CupertinoIcons.check_mark_circled,
               size: 18,
-              color: colors.text,
+              color: colors.onSurface,
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
               child: Text(text,
-                  style: SacaTheme.body.copyWith(color: colors.text))),
+                  style: SacaTheme.body.copyWith(color: colors.onSurface))),
         ],
       ),
     );
@@ -425,7 +500,9 @@ class _SeverityMeter extends StatelessWidget {
               '${localizer.t(language, 'severity')}: $label',
               textAlign: TextAlign.center,
               style: SacaTheme.body.copyWith(
-                color: severity == SeverityLevel.moderate ? colors.text : color,
+                color: severity == SeverityLevel.moderate
+                    ? colors.onSurface
+                    : color,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -459,7 +536,7 @@ class _SeverityMeter extends StatelessWidget {
                     left: (constraints.maxWidth - 18) * position,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: colors.text,
+                        color: colors.onSurface,
                         shape: BoxShape.circle,
                       ),
                       child: SizedBox(width: 18, height: 18),

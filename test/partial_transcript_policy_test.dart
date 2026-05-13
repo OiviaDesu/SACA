@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/infrastructure/speech/partial_transcript_policy.dart';
+import 'package:saca/infrastructure/speech/partial_transcript_policy.dart';
 
 void main() {
   group('PartialTranscriptPolicy', () {

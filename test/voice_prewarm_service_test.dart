@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/core/errors/app_error.dart';
-import 'package:saca_demo/domain/models/saca_models.dart';
-import 'package:saca_demo/domain/services/speech_input_service.dart';
-import 'package:saca_demo/infrastructure/speech/voice_prewarm_service.dart';
+import 'package:saca/core/errors/app_error.dart';
+import 'package:saca/domain/models/saca_models.dart';
+import 'package:saca/domain/services/speech_input_service.dart';
+import 'package:saca/infrastructure/speech/voice_prewarm_service.dart';
 
 void main() {
   group('VoicePrewarmService', () {

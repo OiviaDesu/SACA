@@ -7,20 +7,26 @@ class _ShellBackdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
     final theme = SacaThemeContext.of(context);
-    final gradient = theme.useGlass
-        ? LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colors.background,
-              colors.accent.withValues(alpha: 0.16),
-              colors.backgroundAlt,
-            ],
-          )
-        : theme.useClassic
-            ? LinearGradient(colors: [colors.backgroundAlt, colors.backgroundAlt])
-            : colors.shellGradient;
+    final glassLightUsesModernBackdrop =
+        theme.useGlassStyle && colors.background == SacaTheme.background;
+    final gradient = glassLightUsesModernBackdrop
+        ? colors.shellGradient
+        : theme.useGlassStyle
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  colors.glassScrim,
+                  colors.glassHighlight.withValues(alpha: theme.glowOpacity),
+                  colors.glassScrim,
+                ],
+              )
+            : theme.useClassic
+                ? LinearGradient(
+                    colors: [colors.backgroundAlt, colors.backgroundAlt])
+                : colors.shellGradient;
     return DecoratedBox(
+      key: const ValueKey('shellBackdrop'),
       decoration: BoxDecoration(gradient: gradient),
       child: Stack(
         fit: StackFit.expand,
@@ -198,12 +204,12 @@ class _StepTitle extends StatelessWidget {
       children: [
         Text(title,
             textAlign: align,
-            style: SacaTheme.title.copyWith(color: colors.text)),
+            style: SacaTheme.title.copyWith(color: colors.onSurface)),
         const SizedBox(height: 8),
         Text(
           subtitle,
           textAlign: align,
-          style: SacaTheme.body.copyWith(color: colors.mutedText),
+          style: SacaTheme.body.copyWith(color: colors.onSurfaceMuted),
         ),
       ],
     );
@@ -221,7 +227,7 @@ class _Footnote extends StatelessWidget {
     return Text(
       text,
       textAlign: TextAlign.center,
-      style: SacaTheme.small.copyWith(color: colors.mutedText),
+      style: SacaTheme.small.copyWith(color: colors.onSurfaceMuted),
     );
   }
 }
@@ -269,7 +275,7 @@ class _LanguageCarouselTextState extends State<_LanguageCarouselText>
             _messages[index],
             key: ValueKey<int>(index),
             textAlign: TextAlign.center,
-            style: SacaTheme.body.copyWith(color: colors.mutedText),
+            style: SacaTheme.body.copyWith(color: colors.onSurfaceMuted),
           ),
         );
       },
@@ -311,7 +317,7 @@ class _StatusPill extends StatelessWidget {
           child: Text(
             label,
             style: SacaTheme.small.copyWith(
-              color: isReady ? colors.text : SacaTheme.emergency,
+              color: isReady ? colors.onSurface : SacaTheme.emergency,
             ),
           ),
         ),
@@ -329,14 +335,21 @@ BoxDecoration _sacaPanelDecoration(
   final colors = theme.colors;
   return BoxDecoration(
     gradient: theme.surfaceGradient(selected: selected),
-    color: theme.useGlass
-        ? (selected ? colors.selected : colors.surface)
-            .withValues(alpha: theme.surfaceOpacity)
+    color: theme.useGlassStyle
+        ? theme
+            .glassMaterial(
+              selected ? SacaGlassMaterial.control : SacaGlassMaterial.panel,
+            )
+            .withValues(
+              alpha: theme.glassOpacity(
+                selected ? SacaGlassMaterial.control : SacaGlassMaterial.panel,
+              ),
+            )
         : null,
     borderRadius: BorderRadius.circular(theme.radius(baseRadius)),
     border: Border.all(
-      color: theme.useGlass
-          ? colors.border.withValues(alpha: 0.42)
+      color: theme.useGlassStyle
+          ? colors.glassBorder.withValues(alpha: theme.borderOpacity)
           : selected
               ? colors.selectedBorder
               : colors.border,

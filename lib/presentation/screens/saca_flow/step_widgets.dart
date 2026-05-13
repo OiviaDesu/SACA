@@ -148,7 +148,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
           child: Text(
             _localizer.t(state.language, 'transcriptPreview'),
             style: SacaTheme.small.copyWith(
-              color: SacaThemeColors.of(context).mutedText,
+              color: SacaThemeColors.of(context).onSurfaceMuted,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -626,7 +626,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
                   : 'suggestedFromFirstSymptom',
             ),
             style: SacaTheme.small.copyWith(
-              color: SacaThemeColors.of(context).mutedText,
+              color: SacaThemeColors.of(context).onSurfaceMuted,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1176,15 +1176,11 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     showCupertinoDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return CupertinoAlertDialog(
-          title: Text(_localizer.t(language, 'infoTitle')),
-          content: Text(_localizer.t(language, 'infoContent')),
-          actions: [
-            CupertinoDialogAction(
-              child: Text(_localizer.t(language, 'ok')),
-              onPressed: () => Navigator.of(dialogContext).pop(),
-            ),
-          ],
+        return _SacaMessageDialog(
+          title: _localizer.t(language, 'infoTitle'),
+          message: _localizer.t(language, 'infoContent'),
+          actionLabel: _localizer.t(language, 'ok'),
+          onAction: () => Navigator.of(dialogContext).pop(),
         );
       },
     );
@@ -1280,7 +1276,7 @@ class _VoiceDraftNotice extends StatelessWidget {
           child: Text(
             message,
             textAlign: TextAlign.center,
-            style: SacaTheme.small.copyWith(color: colors.mutedText),
+            style: SacaTheme.small.copyWith(color: colors.onSurfaceMuted),
           ),
         ),
       ),
@@ -1329,13 +1325,14 @@ class _CompactSelectedSummary extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(title, style: SacaTheme.small.copyWith(color: colors.text)),
+            Text(title,
+                style: SacaTheme.small.copyWith(color: colors.onSurface)),
             const SizedBox(height: 3),
             Text(
               text,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: SacaTheme.body.copyWith(color: colors.text),
+              style: SacaTheme.body.copyWith(color: colors.onSurface),
             ),
           ],
         ),

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/domain/models/saca_models.dart';
-import 'package:saca_demo/domain/services/voice_command_matcher.dart';
+import 'package:saca/domain/models/saca_models.dart';
+import 'package:saca/domain/services/voice_command_matcher.dart';
 
 void main() {
   const matcher = VoiceCommandMatcher();

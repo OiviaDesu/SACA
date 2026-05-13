@@ -16,6 +16,11 @@ const _english = <String, String>{
   'textInputDescription': 'Type symptoms in simple words, such as fever.',
   'voiceInput': 'Voice input',
   'voiceInputDescription': 'Record speech offline, then review the transcript.',
+  'webNativeOnlyDescription': 'Available in the native app only.',
+  'nativeOnlyTitle': 'Available in the native app',
+  'nativeOnlyMessage':
+      'This web build is a demo. This feature needs the installed SACA app.',
+  'openReleases': 'Open app downloads',
   'visualSelection': 'Body map',
   'visualSelectionDescription': 'Pick symptoms on a body guide.',
   'voiceTitle': 'Voice input',
@@ -156,6 +161,8 @@ const _english = <String, String>{
   'settingsThemeClassic': 'Classic',
   'settingsThemeGlassFallback':
       'Glass preview is unavailable on this device. Modern is shown instead.',
+  'settingsThemeGlassAccessibilityFallback':
+      'Glass is using solid readable surfaces because accessibility settings request stronger contrast.',
   'settingsLight': 'Light',
   'settingsDark': 'Dark',
   'settingsSystem': 'System',
@@ -198,6 +205,10 @@ const _gurindji = <String, String>{
   'textInputDescription': 'Jangany yawu nyawa.',
   'voiceInput': 'Ngayirrp',
   'voiceInputDescription': 'Ngayirrp nyawa. Yawu nyawa.',
+  'webNativeOnlyDescription': 'Native app nyawa only.',
+  'nativeOnlyTitle': 'Native app nyawa',
+  'nativeOnlyMessage': 'Web demo. Feature nyawa native SACA app.',
+  'openReleases': 'App downloads nyawa',
   'visualSelection': 'Puya nyawa',
   'visualSelectionDescription': 'Jangany puya nyawa.',
   'voiceTitle': 'Ngayirrp',
@@ -325,6 +336,8 @@ const _gurindji = <String, String>{
   'settingsThemeClassic': 'Classic',
   'settingsThemeGlassFallback':
       'Glass preview is unavailable on this device. Modern is shown instead.',
+  'settingsThemeGlassAccessibilityFallback':
+      'Glass is using solid readable surfaces because accessibility settings request stronger contrast.',
   'settingsLight': 'Warlakap',
   'settingsDark': 'Karrap',
   'settingsSystem': 'Jalajala',

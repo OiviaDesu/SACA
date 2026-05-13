@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/core/errors/app_error.dart';
-import 'package:saca_demo/domain/models/saca_models.dart';
-import 'package:saca_demo/domain/services/analysis_service.dart';
-import 'package:saca_demo/domain/services/speech_input_service.dart';
-import 'package:saca_demo/domain/services/symptom_suggestion_service.dart';
-import 'package:saca_demo/presentation/controllers/saca_flow_controller.dart';
+import 'package:saca/core/errors/app_error.dart';
+import 'package:saca/domain/models/saca_models.dart';
+import 'package:saca/domain/services/analysis_service.dart';
+import 'package:saca/domain/services/speech_input_service.dart';
+import 'package:saca/domain/services/symptom_suggestion_service.dart';
+import 'package:saca/presentation/controllers/saca_flow_controller.dart';
 
 void main() {
   group('SacaFlowController', () {
@@ -235,6 +235,32 @@ void main() {
 
       expect(controller.state.suggestedRelatedSymptomIds,
           <String>['sore_throat', 'cough']);
+    });
+
+    test('none clears related symptoms and other text', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.toggleQuestionOption('related_symptoms', 'cough');
+      controller.toggleQuestionOption('related_symptoms', 'headache');
+      controller.updateQuestionAnswer('related_other', 'dizziness');
+
+      controller.toggleQuestionOption('related_symptoms', 'none');
+
+      expect(controller.state.questionAnswers['related_symptoms'], 'none');
+      expect(controller.state.questionAnswers.containsKey('related_other'),
+          isFalse);
+      expect(
+          controller.hasQuestionAnswer('related_symptoms', 'cough'), isFalse);
+
+      controller.toggleQuestionOption('related_symptoms', 'sore_throat');
+
+      expect(
+          controller.state.questionAnswers['related_symptoms'], 'sore_throat');
+      expect(controller.hasQuestionAnswer('related_symptoms', 'none'), isFalse);
     });
 
     test('voice prepare failure is exposed as plain recovery text', () async {
@@ -1049,6 +1075,28 @@ void main() {
       expect(controller.state.pendingConfirmation,
           SacaConfirmationType.emptyInput);
       expect(controller.state.errorMessage, isNull);
+
+      controller.confirmPendingAction();
+
+      expect(controller.state.pendingConfirmation, isNull);
+      expect(controller.state.step, SacaStep.questionSeverity);
+    });
+
+    test('empty input review stays on input step', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.continueFromInput();
+      controller.dismissPendingConfirmation();
+
+      expect(controller.state.pendingConfirmation, isNull);
+      expect(controller.state.step, SacaStep.textInput);
     });
 
     test('no clear illness waits for confirmation before result', () async {
