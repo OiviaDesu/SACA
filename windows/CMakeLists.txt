@@ -1,6 +1,6 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
-project(saca_demo LANGUAGES CXX)
+project(SACA LANGUAGES CXX)
 
 if(MSVC)
   add_compile_options(/utf-8)
