@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/infrastructure/speech/whisper_service_io.dart';
-import 'package:saca_demo/presentation/readiness/saca_readiness_controller.dart';
+import 'package:saca/infrastructure/speech/whisper_service_io.dart';
+import 'package:saca/presentation/readiness/saca_readiness_controller.dart';
 
 void main() {
   test('ready state passes when active assets exist', () async {

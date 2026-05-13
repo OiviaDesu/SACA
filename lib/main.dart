@@ -5,13 +5,12 @@ import 'package:flutter/material.dart' show Theme;
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import 'core/theme/saca_theme.dart';
+import 'domain/services/analysis_service.dart';
 import 'domain/services/clinical_vocabulary_service.dart';
+import 'domain/services/speech_input_service.dart';
+import 'infrastructure/app/saca_runtime_services.dart';
 import 'infrastructure/analysis/hybrid_symptom_suggestion_service.dart';
-import 'infrastructure/analysis/mock_analysis_service.dart';
-import 'infrastructure/analysis/on_device_diagnosis_analysis_service.dart';
 import 'infrastructure/localization/asset_lexicon_repository.dart';
-import 'infrastructure/speech/voice_prewarm_service.dart';
-import 'infrastructure/speech/whisper_speech_input_service.dart';
 import 'infrastructure/window/saca_window_configurator.dart';
 import 'presentation/controllers/saca_flow_controller.dart';
 import 'presentation/localization/saca_localizer.dart';
@@ -23,13 +22,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _configureWindow();
   final vocabulary = await _loadVocabulary();
-  final speechInput = WhisperSpeechInputService();
+  final runtimeServices =
+      await createSacaRuntimeServices(vocabulary: vocabulary);
   final settings = SacaSettingsController();
   final glassAvailable = await _initializeGlassTheme();
   unawaited(_loadSettings(settings));
   final app = SacaApp(
     vocabulary: vocabulary,
-    speechInput: speechInput,
+    speechInput: runtimeServices.speechInput,
+    analysisService: runtimeServices.analysisService,
     settings: settings,
     glassAvailable: glassAvailable,
   );
@@ -43,7 +44,7 @@ Future<void> main() async {
         : app,
   );
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    VoicePrewarmService(speechInput: speechInput).prewarm();
+    prewarmSacaRuntimeServices(runtimeServices);
   });
 }
 
@@ -94,13 +95,15 @@ class SacaApp extends StatelessWidget {
     super.key,
     required this.vocabulary,
     required this.speechInput,
+    required this.analysisService,
     this.readiness = SacaReadinessState.ready,
     this.glassAvailable = false,
     SacaSettingsController? settings,
   }) : settings = settings ?? SacaSettingsController();
 
   final ClinicalVocabularyService vocabulary;
-  final WhisperSpeechInputService speechInput;
+  final SpeechInputService speechInput;
+  final AnalysisService analysisService;
   final SacaSettingsController settings;
   final SacaReadinessState readiness;
   final bool glassAvailable;
@@ -121,15 +124,12 @@ class SacaApp extends StatelessWidget {
           requestedStyle,
           glassAvailable: glassAvailable,
         );
-        final glassUnavailable = requestedStyle == SacaVisualThemeStyle.glass &&
-            !glassAvailable;
+        final glassUnavailable =
+            requestedStyle == SacaVisualThemeStyle.glass && !glassAvailable;
         final home = SacaFlowScreen(
           controller: SacaFlowController(
             speechInput: speechInput,
-            analysisService: OnDeviceDiagnosisAnalysisService(
-              fallback: MockAnalysisService(vocabulary: vocabulary),
-              vocabulary: vocabulary,
-            ),
+            analysisService: analysisService,
             symptomSuggestionService: HybridSymptomSuggestionService(),
           ),
           localizer: SacaLocalizer(vocabulary: vocabulary),
@@ -218,12 +218,17 @@ class _AnimatedSacaThemeState
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final glassSolidFallback =
+        widget.surfaceStyle == SacaThemeSurfaceStyle.glass &&
+            (media.highContrast || media.disableAnimations || media.boldText);
     final scoped = SacaThemeScope(
       colors: _colors!.evaluate(animation),
       surfaceStyle: widget.surfaceStyle,
       glassUnavailable: widget.glassUnavailable,
+      glassSolidFallback: glassSolidFallback,
       child: MediaQuery(
-        data: MediaQuery.of(context).copyWith(
+        data: media.copyWith(
           textScaler: TextScaler.linear(_textScale!.evaluate(animation)),
         ),
         child: widget.child,
@@ -233,7 +238,8 @@ class _AnimatedSacaThemeState
       return scoped;
     }
     return Theme(
-      data: SacaTheme.materialTheme(_colors!.evaluate(animation), widget.brightness),
+      data: SacaTheme.materialTheme(
+          _colors!.evaluate(animation), widget.brightness),
       child: scoped,
     );
   }

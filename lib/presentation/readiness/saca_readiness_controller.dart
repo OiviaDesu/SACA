@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:saca_demo/infrastructure/speech/stt_model_catalog.dart';
+import 'package:saca/infrastructure/speech/stt_model_catalog.dart';
 
 class SacaReadinessState {
   const SacaReadinessState({required this.isReady, required this.messages});

@@ -57,6 +57,8 @@ path for your machine.
 - Android: mobile UI, local audio recording, `whisper_kit` path.
 - macOS: desktop UI and Flutter desktop runtime support.
 - iOS: mobile UI and Flutter iOS runtime support.
+- Web: local/LAN demo only. The browser frontend calls a backend on this
+  machine for STT and diagnosis; see [docs/web_lan_backend.md](docs/web_lan_backend.md).
 
 ## Platform Setup Notes
 
@@ -118,6 +120,18 @@ classifier training, and Whisper fine-tuning research.
 
 See [python_pipeline/README_pipeline.md](python_pipeline/README_pipeline.md) for
 setup, Slurm usage, and artifact policy.
+
+## Store Readiness
+
+SACA targets Windows, macOS, iOS, and Android. Web is not a supported release
+target.
+Web remains a local/LAN demo target; see
+[docs/web_lan_backend.md](docs/web_lan_backend.md) for the backend contract.
+
+- [Store readiness checklist](docs/store_readiness.md) covers Apple App Store,
+  Google Play, and Microsoft Store preparation guardrails.
+- [Permissions and fallback matrix](docs/permissions_fallback_matrix.md) maps
+  recoverable runtime failures to calm user recovery paths.
 
 ## Git Workflow
 
