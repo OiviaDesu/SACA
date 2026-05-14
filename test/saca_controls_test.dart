@@ -145,7 +145,7 @@ void main() {
       expect(after.border!.top.color, equals(before.border!.top.color));
       expect(after.boxShadow!.first.blurRadius,
           equals(before.boxShadow!.first.blurRadius));
-      expect(_surfaceOpacity(tester, 'disabled').opacity, equals(0.44));
+      expect(_surfaceOpacity(tester, 'disabled').opacity, equals(0.58));
     });
 
     testWidgets('error banner renders centered emergency copy', (tester) async {

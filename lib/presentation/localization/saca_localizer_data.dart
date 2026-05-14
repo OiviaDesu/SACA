@@ -88,6 +88,9 @@ const _english = <String, String>{
   'selectedNow': 'Selected now',
   'noneSelectedYet': 'Nothing selected yet.',
   'relatedOtherPlaceholder': 'Other symptom',
+  'skinDetailsTitle': 'Any skin details?',
+  'skinDetailsSubtitle':
+      'These details can help explain rash or itching patterns.',
   'emptyInputConfirmTitle': 'No clear symptom heard',
   'emptyInputConfirmMessage':
       'SACA did not receive enough symptom information. Please record again or type a symptom before continuing.',

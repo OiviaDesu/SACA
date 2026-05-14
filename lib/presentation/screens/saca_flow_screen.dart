@@ -28,6 +28,10 @@ part 'saca_flow/shared_layout_widgets.dart';
 part 'saca_flow/voice_loading_overlay.dart';
 part 'saca_flow/input_widgets.dart';
 part 'saca_flow/result_widgets.dart';
+part 'saca_flow/question_step_widgets.dart';
+part 'saca_flow/review_step_widgets.dart';
+part 'saca_flow/visual_body_layout_widgets.dart';
+part 'saca_flow/visual_symptom_widgets.dart';
 part 'saca_flow/step_widgets.dart';
 part 'saca_flow/settings_widgets.dart';
 

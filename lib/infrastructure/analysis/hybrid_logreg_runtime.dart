@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../../domain/models/saca_models.dart';
-import 'on_device_diagnosis_analysis_service.dart';
+import '../../domain/services/diagnosis_classifier.dart';
 
 class HybridLogRegDiagnosisClassifier implements DiagnosisClassifier {
   HybridLogRegDiagnosisClassifier({
@@ -150,7 +150,9 @@ class _HybridLogRegBundle {
     };
     return [
       for (final column in symptomColumns)
-        active.any((value) => value == column || column.contains(value)) ? 1.0 : 0.0,
+        active.any((value) => value == column || column.contains(value))
+            ? 1.0
+            : 0.0,
     ];
   }
 
@@ -163,14 +165,18 @@ class _HybridLogRegBundle {
             : value >= 5
                 ? 'moderate'
                 : 'mild';
-    return [for (final category in severityCategories) category == severity ? 1.0 : 0.0];
+    return [
+      for (final category in severityCategories)
+        category == severity ? 1.0 : 0.0
+    ];
   }
 
   List<double> _indicators(AnalysisRequest request) {
     return [
       request.answers.containsKey('severity') ? 1.0 : 0.0,
       request.selectedSymptomIds.isNotEmpty ? 1.0 : 0.0,
-      request.inputMethod == InputMethod.text || request.inputMethod == InputMethod.voice
+      request.inputMethod == InputMethod.text ||
+              request.inputMethod == InputMethod.voice
           ? 1.0
           : 0.0,
       0.0,

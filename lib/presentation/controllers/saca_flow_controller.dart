@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import '../../core/errors/app_error.dart';
 import '../../domain/models/saca_models.dart';
 import '../../domain/services/analysis_service.dart';
+import '../../domain/services/saca_flow_step_policy.dart';
 import '../../domain/services/speech_input_service.dart';
 import '../../domain/services/symptom_suggestion_service.dart';
 import '../../domain/services/voice_command_matcher.dart';
@@ -18,17 +19,20 @@ class SacaFlowController extends ChangeNotifier {
     NonSpeechSuggestionService nonSpeechSuggestionService =
         const SafeNonSpeechSuggestionService(),
     VoiceCommandMatcher voiceCommandMatcher = const VoiceCommandMatcher(),
+    SacaFlowStepPolicy stepPolicy = const SacaFlowStepPolicy(),
   })  : _speechInput = speechInput,
         _analysisService = analysisService,
         _symptomSuggestionService = symptomSuggestionService,
         _nonSpeechSuggestionService = nonSpeechSuggestionService,
-        _voiceCommandMatcher = voiceCommandMatcher;
+        _voiceCommandMatcher = voiceCommandMatcher,
+        _stepPolicy = stepPolicy;
 
   final SpeechInputService _speechInput;
   final AnalysisService _analysisService;
   final SymptomSuggestionService _symptomSuggestionService;
   final NonSpeechSuggestionService _nonSpeechSuggestionService;
   final VoiceCommandMatcher _voiceCommandMatcher;
+  final SacaFlowStepPolicy _stepPolicy;
   StreamSubscription<String>? _partialTranscriptSubscription;
   int? _activeRecordingId;
   int _recordingSequence = 0;
@@ -101,7 +105,7 @@ class SacaFlowController extends ChangeNotifier {
     _setState(
       _state.copyWith(
         inputMethod: method,
-        step: _stepForMethod(method),
+        step: _stepPolicy.stepForInputMethod(method),
         voiceBusyPhase: VoiceBusyPhase.none,
         clearError: true,
       ),
@@ -109,7 +113,7 @@ class SacaFlowController extends ChangeNotifier {
   }
 
   Future<void> startRecording() async {
-    final mode = _isFollowUpQuestion(_state.step)
+    final mode = _stepPolicy.isFollowUpQuestion(_state.step)
         ? SpeechInputMode.command
         : SpeechInputMode.dictation;
     final recordingId = ++_recordingSequence;
@@ -187,7 +191,7 @@ class SacaFlowController extends ChangeNotifier {
       ),
     );
     _stopPartialTranscript();
-    final mode = _isFollowUpQuestion(_state.step)
+    final mode = _stepPolicy.isFollowUpQuestion(_state.step)
         ? SpeechInputMode.command
         : SpeechInputMode.dictation;
     final result = await _speechInput.stopAndTranscribe(mode: mode);
@@ -219,7 +223,7 @@ class SacaFlowController extends ChangeNotifier {
     final transcript = result.value?.text ?? '';
     final signalFeatures = result.value?.signalFeatures;
     _stopPartialTranscript();
-    if (_isFollowUpQuestion(_state.step)) {
+    if (_stepPolicy.isFollowUpQuestion(_state.step)) {
       final stopwatch = Stopwatch()..start();
       final answer = _voiceCommandMatcher.match(_state.step, transcript);
       stopwatch.stop();
@@ -238,8 +242,9 @@ class SacaFlowController extends ChangeNotifier {
       if (answer != null) {
         nextAnswers[answer.questionId] = answer.value;
       }
-      final nextStep =
-          answer == null ? _state.step : _nextQuestionStep(_state.step);
+      final nextStep = answer == null
+          ? _state.step
+          : _stepPolicy.nextQuestionStep(_state.step, _state);
       _setState(
         _state.copyWith(
           isBusy: false,
@@ -412,11 +417,12 @@ class SacaFlowController extends ChangeNotifier {
       SacaStep.questionSeverity ||
       SacaStep.questionDuration ||
       SacaStep.questionRelatedSymptoms ||
+      SacaStep.questionSkinDetails ||
       SacaStep.questionMedication ||
       SacaStep.questionFood ||
       SacaStep.questionAllergies ||
       SacaStep.questionHealthChanges =>
-        _nextQuestionStep(_state.step),
+        _stepPolicy.nextQuestionStep(_state.step, _state),
       _ => _state.step,
     };
 
@@ -431,19 +437,6 @@ class SacaFlowController extends ChangeNotifier {
     if (nextStep == SacaStep.questionRelatedSymptoms) {
       _refineRelatedSymptomSuggestions();
     }
-  }
-
-  SacaStep _nextQuestionStep(SacaStep step) {
-    return switch (step) {
-      SacaStep.questionSeverity => SacaStep.questionDuration,
-      SacaStep.questionDuration => SacaStep.questionRelatedSymptoms,
-      SacaStep.questionRelatedSymptoms => SacaStep.questionMedication,
-      SacaStep.questionMedication => SacaStep.questionFood,
-      SacaStep.questionFood => SacaStep.questionAllergies,
-      SacaStep.questionAllergies => SacaStep.questionHealthChanges,
-      SacaStep.questionHealthChanges => SacaStep.reviewInformation,
-      _ => step,
-    };
   }
 
   void showReview() {
@@ -631,27 +624,11 @@ class SacaFlowController extends ChangeNotifier {
   }
 
   void goBack() {
-    final previous = switch (_state.step) {
-      SacaStep.splash => SacaStep.splash,
-      SacaStep.language => SacaStep.splash,
-      SacaStep.inputMethod => SacaStep.language,
-      SacaStep.voiceInput => SacaStep.inputMethod,
-      SacaStep.textInput => SacaStep.inputMethod,
-      SacaStep.visualInput => SacaStep.inputMethod,
-      SacaStep.questionSeverity => _stepForMethod(
-          _state.inputMethod ?? InputMethod.text,
-        ),
-      SacaStep.questionDuration => SacaStep.questionSeverity,
-      SacaStep.questionRelatedSymptoms => SacaStep.questionDuration,
-      SacaStep.questionMedication => SacaStep.questionRelatedSymptoms,
-      SacaStep.questionFood => SacaStep.questionMedication,
-      SacaStep.questionAllergies => SacaStep.questionFood,
-      SacaStep.questionHealthChanges => SacaStep.questionAllergies,
-      SacaStep.reviewInformation => SacaStep.questionHealthChanges,
-      SacaStep.settings => _settingsReturnStep ?? SacaStep.language,
-      SacaStep.analysing => SacaStep.questionHealthChanges,
-      SacaStep.result => SacaStep.reviewInformation,
-    };
+    final previous = _stepPolicy.previousStep(
+      _state.step,
+      _state,
+      settingsReturnStep: _settingsReturnStep,
+    );
 
     if (_state.step == SacaStep.settings) {
       _settingsReturnStep = null;
@@ -680,34 +657,9 @@ class SacaFlowController extends ChangeNotifier {
     super.dispose();
   }
 
-  SacaStep _stepForMethod(InputMethod method) {
-    switch (method) {
-      case InputMethod.text:
-        return SacaStep.textInput;
-      case InputMethod.voice:
-        return SacaStep.voiceInput;
-      case InputMethod.visual:
-        return SacaStep.visualInput;
-    }
-  }
-
   void _setState(SacaFlowState value) {
     _state = value;
     notifyListeners();
-  }
-
-  bool _isFollowUpQuestion(SacaStep step) {
-    return switch (step) {
-      SacaStep.questionSeverity ||
-      SacaStep.questionDuration ||
-      SacaStep.questionRelatedSymptoms ||
-      SacaStep.questionMedication ||
-      SacaStep.questionFood ||
-      SacaStep.questionAllergies ||
-      SacaStep.questionHealthChanges =>
-        true,
-      _ => false,
-    };
   }
 
   void updateQuestionAnswer(String questionId, String answer) {

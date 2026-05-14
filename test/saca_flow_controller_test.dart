@@ -263,6 +263,59 @@ void main() {
       expect(controller.hasQuestionAnswer('related_symptoms', 'none'), isFalse);
     });
 
+    test('rash input asks skin details before medication', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.updateTextInput('itchy rash on skin');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '4');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'one to three days');
+      controller.nextQuestion();
+      controller.toggleQuestionOption('related_symptoms', 'none');
+      controller.nextQuestion();
+
+      expect(controller.state.step, SacaStep.questionSkinDetails);
+
+      controller.answerQuestion('skin_details', 'itching at night');
+      controller.nextQuestion();
+
+      expect(controller.state.step, SacaStep.questionMedication);
+      expect(
+        controller.state.analysisRequest.answers['skin_details'],
+        'itching at night',
+      );
+    });
+
+    test('non-skin input skips skin details', () async {
+      final controller = SacaFlowController(
+        speechInput: _FakeSpeechInputService(),
+        analysisService: _FakeAnalysisService(),
+      );
+      addTearDown(controller.dispose);
+
+      controller.showLanguage();
+      controller.selectLanguage(SacaLanguage.english);
+      await controller.chooseInputMethod(InputMethod.text);
+      controller.updateTextInput('fever and headache');
+      controller.continueFromInput();
+      controller.answerQuestion('severity', '4');
+      controller.nextQuestion();
+      controller.answerQuestion('duration', 'one to three days');
+      controller.nextQuestion();
+      controller.toggleQuestionOption('related_symptoms', 'none');
+      controller.nextQuestion();
+
+      expect(controller.state.step, SacaStep.questionMedication);
+    });
+
     test('voice prepare failure is exposed as plain recovery text', () async {
       final controller = SacaFlowController(
         speechInput: _FakeSpeechInputService(

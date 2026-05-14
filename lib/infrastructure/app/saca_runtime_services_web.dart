@@ -6,7 +6,7 @@ import '../../domain/models/saca_models.dart';
 import '../../domain/services/analysis_service.dart';
 import '../../domain/services/clinical_vocabulary_service.dart';
 import '../../domain/services/speech_input_service.dart';
-import '../web/http_analysis_service.dart';
+import '../analysis/on_device_diagnosis_analysis_service.dart';
 import '../web/web_speech_input_service.dart';
 
 const String _apiBase = String.fromEnvironment(
@@ -29,7 +29,7 @@ Future<SacaRuntimeServices> createSacaRuntimeServices({
   debugPrint('[SACA] Web backend: $baseUri');
   return SacaRuntimeServices(
     speechInput: WebSpeechInputService(baseUri: baseUri),
-    analysisService: HttpAnalysisService(baseUri: baseUri),
+    analysisService: OnDeviceDiagnosisAnalysisService(vocabulary: vocabulary),
   );
 }
 
