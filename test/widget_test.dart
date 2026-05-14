@@ -1350,10 +1350,49 @@ void main() {
     expect(find.text('Other possibilities to discuss'), findsOneWidget);
     expect(find.text('Also possible'), findsOneWidget);
     expect(find.text('Less likely'), findsOneWidget);
+    expect(find.text('General pattern from the information provided.'),
+        findsNothing);
     expect(find.textContaining('%'), findsNothing);
     expect(find.text('High'), findsNothing);
     expect(find.text('Medium'), findsNothing);
     expect(find.text('Low'), findsNothing);
+  });
+
+  testWidgets('compact result cards avoid generic repeated explanation',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 568));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(
+      tester,
+      analysisService: const _PepticRankedAnalysisService(),
+      style: SacaPlatformStyle.androidMobile,
+      mediaSize: const Size(320, 568),
+    );
+    await _reachInputMethod(tester);
+    await tester.tap(find.text('Text input'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'upper stomach pain and nausea',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Continue'));
+    await _answerQuestionnaire(tester);
+
+    expect(find.text('peptic ulcer disease'), findsOneWidget);
+    expect(find.text('diabetes'), findsOneWidget);
+    expect(find.text('drug reaction'), findsOneWidget);
+    expect(find.text('General pattern from the information provided.'),
+        findsNothing);
+    _expectNoHorizontalOverflow(
+      tester,
+      const _ViewportCase(
+        'iphone-se',
+        Size(320, 568),
+        SacaPlatformStyle.androidMobile,
+      ),
+    );
   });
 
   testWidgets('result screen renders key content in dark mode', (tester) async {
@@ -2062,6 +2101,29 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('gurindji visible flow avoids blocked English UI tokens',
+      (tester) async {
+    await _pumpFlow(tester, vocabulary: vocabulary, localizer: localizer);
+    await _reachInputMethod(tester, language: 'Gurindji');
+    _expectNoBlockedEnglishUi(tester);
+
+    await tester.tap(find.text('Yawu'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'makurrmakurr warrgarrk',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Kawayi'));
+    await _answerQuestionnaire(
+      tester,
+      gurindji: true,
+      related: 'ngirlkirri pung',
+    );
+
+    _expectNoBlockedEnglishUi(tester);
+  });
 }
 
 class _ViewportCase {
@@ -2344,6 +2406,21 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
   await tester.pump();
 }
 
+void _expectNoBlockedEnglishUi(WidgetTester tester) {
+  final blocklist = RegExp(
+    r'\b(Continue|Back|Settings|Result|Review|Light|Dark|System|Modern|Glass|Classic|Selected|Other|None|Not sure|Emergency|Severity|Recommendations|Text input|Voice input|Body map|Start|Finish|Done|Skip|Analyse|Edit|Theme)\b',
+    caseSensitive: false,
+  );
+  final visibleTexts = tester
+      .widgetList<Text>(find.byType(Text))
+      .map((widget) => widget.data)
+      .whereType<String>();
+  for (final text in visibleTexts) {
+    final scrubbed = text.replaceAll('SACA', '').replaceAll('000', '');
+    expect(blocklist.hasMatch(scrubbed), isFalse, reason: text);
+  }
+}
+
 Future<void> _pressPrimaryButton(
     WidgetTester tester, ValueKey<String> key) async {
   final button = tester.widget<SacaPrimaryButton>(find.byKey(key));
@@ -2409,6 +2486,36 @@ class _RankedAnalysisService implements AnalysisService {
           ConditionPrediction(label: 'Influenza', rank: 1, confidence: 0.82),
           ConditionPrediction(label: 'Common Cold', rank: 2, confidence: 0.54),
           ConditionPrediction(label: 'Migraine', rank: 3, confidence: 0.21),
+        ],
+      ),
+    );
+  }
+}
+
+class _PepticRankedAnalysisService implements AnalysisService {
+  const _PepticRankedAnalysisService();
+
+  @override
+  Future<AppResult<AnalysisResult>> analyse(AnalysisRequest request) async {
+    return const AppResult.success(
+      AnalysisResult(
+        disease: 'peptic ulcer disease',
+        severity: SeverityLevel.moderate,
+        guidance: <String>['Visit the clinic if pain keeps going.'],
+        isEmergency: false,
+        disclaimer: 'Prototype guidance only.',
+        predictions: <ConditionPrediction>[
+          ConditionPrediction(
+            label: 'peptic ulcer disease',
+            rank: 1,
+            confidence: 0.62,
+          ),
+          ConditionPrediction(label: 'diabetes', rank: 2, confidence: 0.31),
+          ConditionPrediction(
+            label: 'drug reaction',
+            rank: 3,
+            confidence: 0.22,
+          ),
         ],
       ),
     );

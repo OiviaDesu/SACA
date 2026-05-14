@@ -299,7 +299,8 @@ class _PredictionTextBlock extends StatelessWidget {
         Text(
           localizer.conditionExplanation(language, prediction.label),
           softWrap: true,
-          overflow: TextOverflow.visible,
+          maxLines: primary ? null : 2,
+          overflow: primary ? TextOverflow.visible : TextOverflow.ellipsis,
           style: SacaTheme.small.copyWith(color: colors.onSurfaceMuted),
         ),
       ],
