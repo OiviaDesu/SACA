@@ -5,28 +5,14 @@ import '../../core/errors/app_error.dart';
 import '../../domain/models/saca_models.dart';
 import '../../domain/services/analysis_service.dart';
 import '../../domain/services/clinical_vocabulary_service.dart';
+import '../../domain/services/diagnosis_classifier.dart';
 import '../../domain/services/safety_rule_service.dart';
+import 'diagnosis_result_formatter.dart';
 import 'hybrid_logreg_runtime.dart';
 import 'mock_analysis_service.dart';
 import 'xgb_m2cgen_runtime.dart';
 
 enum DiagnosisModelMode { hybridLogReg, xgbBundle }
-
-class DiagnosisPrediction {
-  const DiagnosisPrediction({
-    required this.label,
-    this.confidence,
-    this.ranked = const <ConditionPrediction>[],
-  });
-
-  final String label;
-  final double? confidence;
-  final List<ConditionPrediction> ranked;
-}
-
-abstract interface class DiagnosisClassifier {
-  Future<DiagnosisPrediction> predict(AnalysisRequest request);
-}
 
 class DiagnosisClassifierFactory {
   const DiagnosisClassifierFactory._();
@@ -58,7 +44,8 @@ class FallbackDiagnosisClassifier implements DiagnosisClassifier {
     try {
       return await primary.predict(request);
     } catch (error, stackTrace) {
-      debugPrint('[SACA] Hybrid LogReg unavailable, using XGB fallback: $error');
+      debugPrint(
+          '[SACA] Hybrid LogReg unavailable, using XGB fallback: $error');
       debugPrintStack(stackTrace: stackTrace);
       return fallback.predict(request);
     }
@@ -128,15 +115,18 @@ class OnDeviceDiagnosisAnalysisService implements AnalysisService {
     AnalysisService? fallback,
     SafetyRuleService? safetyRules,
     ClinicalVocabularyService? vocabulary,
+    DiagnosisResultFormatter formatter = const DiagnosisResultFormatter(),
   })  : _classifier = classifier ?? DiagnosisClassifierFactory.create(),
         _fallback = fallback ?? MockAnalysisService(vocabulary: vocabulary),
         _safetyRules = safetyRules ?? const SafetyRuleService(),
-        _vocabulary = vocabulary ?? const ClinicalVocabularyService.empty();
+        _vocabulary = vocabulary ?? const ClinicalVocabularyService.empty(),
+        _formatter = formatter;
 
   final DiagnosisClassifier _classifier;
   final AnalysisService _fallback;
   final SafetyRuleService _safetyRules;
   final ClinicalVocabularyService _vocabulary;
+  final DiagnosisResultFormatter _formatter;
 
   @override
   Future<AppResult<AnalysisResult>> analyse(AnalysisRequest request) async {
@@ -160,9 +150,15 @@ class OnDeviceDiagnosisAnalysisService implements AnalysisService {
 
     try {
       final prediction = await _classifier.predict(normalizedRequest);
+      final mlSeverity = _maxSeverity(<SeverityLevel>[
+        fallbackValue.severity,
+        _severityFromUserAnswer(normalizedRequest),
+        _minimumSeverityForDisease(prediction.label),
+      ]);
       final mlResult = fallbackValue.copyWith(
-        disease: _humanizeDisease(prediction.label),
-        predictions: _humanizedPredictions(prediction),
+        disease: _formatter.humanizeDisease(prediction.label),
+        severity: mlSeverity,
+        predictions: _formatter.humanizedPredictions(prediction),
       );
       return AppResult.success(_safetyRules.apply(normalizedRequest, mlResult));
     } catch (error, stackTrace) {
@@ -173,34 +169,31 @@ class OnDeviceDiagnosisAnalysisService implements AnalysisService {
     }
   }
 
-  String _humanizeDisease(String label) {
-    return label
-        .split(RegExp(r'[ _-]+'))
-        .where((word) => word.isNotEmpty)
-        .map((word) => word.length == 1
-            ? word.toUpperCase()
-            : '${word[0].toUpperCase()}${word.substring(1)}')
-        .join(' ');
+  SeverityLevel _severityFromUserAnswer(AnalysisRequest request) {
+    final value = int.tryParse(request.answers['severity'] ?? '');
+    if (value == null) return SeverityLevel.mild;
+    if (value >= 8) return SeverityLevel.severe;
+    if (value >= 5) return SeverityLevel.moderate;
+    return SeverityLevel.mild;
   }
 
-  List<ConditionPrediction> _humanizedPredictions(
-      DiagnosisPrediction prediction) {
-    final source = prediction.ranked.isEmpty
-        ? <ConditionPrediction>[
-            ConditionPrediction(
-              label: prediction.label,
-              rank: 1,
-              confidence: prediction.confidence,
-            ),
-          ]
-        : prediction.ranked;
-    return <ConditionPrediction>[
-      for (final item in source.take(3))
-        ConditionPrediction(
-          label: _humanizeDisease(item.label),
-          rank: item.rank,
-          confidence: item.confidence,
-        ),
-    ];
+  SeverityLevel _minimumSeverityForDisease(String label) {
+    final normalized = label.toLowerCase().replaceAll(RegExp(r'[_-]+'), ' ');
+    const moderateFloorDiseases = <String>{
+      'malaria',
+      'dengue',
+      'typhoid',
+      'pneumonia',
+      'jaundice',
+    };
+    return moderateFloorDiseases.any(normalized.contains)
+        ? SeverityLevel.moderate
+        : SeverityLevel.mild;
+  }
+
+  SeverityLevel _maxSeverity(List<SeverityLevel> values) {
+    return values.reduce(
+      (current, next) => next.index > current.index ? next : current,
+    );
   }
 }

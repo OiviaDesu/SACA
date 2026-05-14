@@ -1,4 +1,5 @@
 import '../../domain/models/saca_models.dart';
+import '../../domain/services/diagnosis_classifier.dart';
 import '../../domain/services/symptom_suggestion_service.dart';
 import 'on_device_diagnosis_analysis_service.dart';
 

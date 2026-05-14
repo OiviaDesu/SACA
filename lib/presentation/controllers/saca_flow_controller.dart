@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 
+import '../../application/assessment/assessment_use_cases.dart';
 import '../../core/errors/app_error.dart';
 import '../../domain/models/saca_models.dart';
 import '../../domain/services/analysis_service.dart';
+import '../../domain/services/related_symptom_policy.dart';
+import '../../domain/services/saca_flow_step_policy.dart';
 import '../../domain/services/speech_input_service.dart';
 import '../../domain/services/symptom_suggestion_service.dart';
 import '../../domain/services/voice_command_matcher.dart';
@@ -18,17 +21,37 @@ class SacaFlowController extends ChangeNotifier {
     NonSpeechSuggestionService nonSpeechSuggestionService =
         const SafeNonSpeechSuggestionService(),
     VoiceCommandMatcher voiceCommandMatcher = const VoiceCommandMatcher(),
+    SacaFlowStepPolicy stepPolicy = const SacaFlowStepPolicy(),
+    RelatedSymptomPolicy relatedSymptomPolicy = const RelatedSymptomPolicy(),
   })  : _speechInput = speechInput,
-        _analysisService = analysisService,
         _symptomSuggestionService = symptomSuggestionService,
         _nonSpeechSuggestionService = nonSpeechSuggestionService,
-        _voiceCommandMatcher = voiceCommandMatcher;
+        _voiceCommandMatcher = voiceCommandMatcher,
+        _stepPolicy = stepPolicy,
+        _relatedSymptomPolicy = relatedSymptomPolicy,
+        _submitInput = SubmitInput(
+          symptomSuggestionService: symptomSuggestionService,
+          relatedSymptomPolicy: relatedSymptomPolicy,
+        ),
+        _answerQuestionUseCase = AnswerQuestion(stepPolicy: stepPolicy),
+        _runAnalysis = RunAnalysis(analysisService: analysisService),
+        _handleVoiceTranscript = HandleVoiceTranscript(
+          voiceCommandMatcher: voiceCommandMatcher,
+          stepPolicy: stepPolicy,
+          nonSpeechSuggestionService: nonSpeechSuggestionService,
+          relatedSymptomPolicy: relatedSymptomPolicy,
+        );
 
   final SpeechInputService _speechInput;
-  final AnalysisService _analysisService;
   final SymptomSuggestionService _symptomSuggestionService;
   final NonSpeechSuggestionService _nonSpeechSuggestionService;
   final VoiceCommandMatcher _voiceCommandMatcher;
+  final SacaFlowStepPolicy _stepPolicy;
+  final RelatedSymptomPolicy _relatedSymptomPolicy;
+  final SubmitInput _submitInput;
+  final AnswerQuestion _answerQuestionUseCase;
+  final RunAnalysis _runAnalysis;
+  final HandleVoiceTranscript _handleVoiceTranscript;
   StreamSubscription<String>? _partialTranscriptSubscription;
   int? _activeRecordingId;
   int _recordingSequence = 0;
@@ -101,7 +124,7 @@ class SacaFlowController extends ChangeNotifier {
     _setState(
       _state.copyWith(
         inputMethod: method,
-        step: _stepForMethod(method),
+        step: _stepPolicy.stepForInputMethod(method),
         voiceBusyPhase: VoiceBusyPhase.none,
         clearError: true,
       ),
@@ -109,7 +132,7 @@ class SacaFlowController extends ChangeNotifier {
   }
 
   Future<void> startRecording() async {
-    final mode = _isFollowUpQuestion(_state.step)
+    final mode = _stepPolicy.isFollowUpQuestion(_state.step)
         ? SpeechInputMode.command
         : SpeechInputMode.dictation;
     final recordingId = ++_recordingSequence;
@@ -187,7 +210,7 @@ class SacaFlowController extends ChangeNotifier {
       ),
     );
     _stopPartialTranscript();
-    final mode = _isFollowUpQuestion(_state.step)
+    final mode = _stepPolicy.isFollowUpQuestion(_state.step)
         ? SpeechInputMode.command
         : SpeechInputMode.dictation;
     final result = await _speechInput.stopAndTranscribe(mode: mode);
@@ -219,53 +242,27 @@ class SacaFlowController extends ChangeNotifier {
     final transcript = result.value?.text ?? '';
     final signalFeatures = result.value?.signalFeatures;
     _stopPartialTranscript();
-    if (_isFollowUpQuestion(_state.step)) {
+    if (_stepPolicy.isFollowUpQuestion(_state.step)) {
       final stopwatch = Stopwatch()..start();
-      final answer = _voiceCommandMatcher.match(_state.step, transcript);
+      final next = _handleVoiceTranscript(
+        _state,
+        transcript,
+        signalFeatures: signalFeatures,
+      );
       stopwatch.stop();
       debugPrint(
-        '[SACA] Voice command parser match=${answer != null} '
+        '[SACA] Voice command parser match=${next.voiceAnswerMatched} '
         'latency=${stopwatch.elapsedMilliseconds}ms',
       );
-      if (_state.step == SacaStep.questionRelatedSymptoms && answer == null) {
-        final mergedCueSuggestions = _mergeVoiceCueRelatedSuggestions(
-          signalFeatures,
-          transcript,
-        );
-        if (mergedCueSuggestions) return;
-      }
-      final nextAnswers = Map<String, String>.from(_state.questionAnswers);
-      if (answer != null) {
-        nextAnswers[answer.questionId] = answer.value;
-      }
-      final nextStep =
-          answer == null ? _state.step : _nextQuestionStep(_state.step);
-      _setState(
-        _state.copyWith(
-          isBusy: false,
-          isRecording: false,
-          step: nextStep,
-          voiceBusyPhase: VoiceBusyPhase.none,
-          questionAnswers: nextAnswers,
-          voiceAnswerTranscript: transcript,
-          voiceAnswerMatched: answer != null,
-          clearError: answer != null,
-        ),
-      );
+      _setState(next);
       return;
     }
 
     _setState(
-      _state.copyWith(
-        isBusy: false,
-        isRecording: false,
-        voiceBusyPhase: VoiceBusyPhase.none,
-        transcript: transcript,
-        speechSignalFeatures: signalFeatures,
-        voiceAnswerTranscript: '',
-        voiceAnswerMatched: true,
-        clearVoiceDraftNotice: true,
-        clearError: true,
+      _handleVoiceTranscript(
+        _state,
+        transcript,
+        signalFeatures: signalFeatures,
       ),
     );
   }
@@ -300,15 +297,7 @@ class SacaFlowController extends ChangeNotifier {
   }
 
   void answerQuestion(String questionId, String answer) {
-    final next = Map<String, String>.from(_state.questionAnswers);
-    next[questionId] = answer;
-    _setState(
-      _state.copyWith(
-        questionAnswers: next,
-        voiceAnswerMatched: true,
-        clearError: true,
-      ),
-    );
+    _setState(_answerQuestionUseCase.answer(_state, questionId, answer));
   }
 
   bool answerCurrentQuestionByVoice(String transcript) {
@@ -337,30 +326,7 @@ class SacaFlowController extends ChangeNotifier {
   }
 
   void toggleQuestionOption(String questionId, String option) {
-    final current = _state.questionAnswers[questionId]
-            ?.split('|')
-            .where((item) => item.isNotEmpty)
-            .toSet() ??
-        <String>{};
-
-    if (option == 'none') {
-      current
-        ..clear()
-        ..add(option);
-    } else {
-      current.remove('none');
-      if (!current.add(option)) {
-        current.remove(option);
-      }
-    }
-
-    final next = Map<String, String>.from(_state.questionAnswers);
-    if (current.isEmpty) {
-      next.remove(questionId);
-    } else {
-      next[questionId] = current.join('|');
-    }
-    _setState(_state.copyWith(questionAnswers: next, clearError: true));
+    _setState(_answerQuestionUseCase.toggleOption(_state, questionId, option));
   }
 
   bool hasQuestionAnswer(String questionId, String option) {
@@ -372,71 +338,26 @@ class SacaFlowController extends ChangeNotifier {
     if (_state.step == SacaStep.voiceInput ||
         _state.step == SacaStep.textInput ||
         _state.step == SacaStep.visualInput) {
-      if (_state.combinedInput.trim().isEmpty) {
-        _setState(
-          _state.copyWith(
-            pendingConfirmation: SacaConfirmationType.emptyInput,
-            clearError: true,
-          ),
-        );
-        return;
-      }
-
-      final suggestions = _symptomSuggestionService.suggestRelatedSymptoms(
-        _state.analysisRequest,
-      );
-      _setState(
-        _state.copyWith(
-          step: SacaStep.questionSeverity,
-          suggestedRelatedSymptomIds: _filterKnownRelatedSymptoms(
-            suggestions,
-            _state.analysisRequest,
-          ),
-          voiceAnswerTranscript: '',
-          voiceAnswerMatched: true,
-          clearError: true,
-        ),
-      );
+      _advanceFromInput();
     }
+  }
+
+  void _advanceFromInput({bool clearPendingConfirmation = false}) {
+    _setState(
+      _submitInput(
+        _state,
+        clearPendingConfirmation: clearPendingConfirmation,
+      ).state,
+    );
   }
 
   void nextQuestion() {
-    final nextStep = switch (_state.step) {
-      SacaStep.questionSeverity ||
-      SacaStep.questionDuration ||
-      SacaStep.questionRelatedSymptoms ||
-      SacaStep.questionMedication ||
-      SacaStep.questionFood ||
-      SacaStep.questionAllergies ||
-      SacaStep.questionHealthChanges =>
-        _nextQuestionStep(_state.step),
-      _ => _state.step,
-    };
+    final next = _answerQuestionUseCase.next(_state);
 
-    _setState(
-      _state.copyWith(
-        step: nextStep,
-        voiceAnswerTranscript: '',
-        voiceAnswerMatched: true,
-        clearError: true,
-      ),
-    );
-    if (nextStep == SacaStep.questionRelatedSymptoms) {
+    _setState(next);
+    if (next.step == SacaStep.questionRelatedSymptoms) {
       _refineRelatedSymptomSuggestions();
     }
-  }
-
-  SacaStep _nextQuestionStep(SacaStep step) {
-    return switch (step) {
-      SacaStep.questionSeverity => SacaStep.questionDuration,
-      SacaStep.questionDuration => SacaStep.questionRelatedSymptoms,
-      SacaStep.questionRelatedSymptoms => SacaStep.questionMedication,
-      SacaStep.questionMedication => SacaStep.questionFood,
-      SacaStep.questionFood => SacaStep.questionAllergies,
-      SacaStep.questionAllergies => SacaStep.questionHealthChanges,
-      SacaStep.questionHealthChanges => SacaStep.reviewInformation,
-      _ => step,
-    };
   }
 
   void showReview() {
@@ -458,16 +379,11 @@ class SacaFlowController extends ChangeNotifier {
 
   void startOverKeepLanguage() {
     final language = _state.language;
-    _setState(
-      SacaFlowState(
-        step: SacaStep.inputMethod,
-        language: language,
-      ),
-    );
+    _setState(const StartAssessment()(keepLanguage: language));
   }
 
   void finish() {
-    _setState(const SacaFlowState(step: SacaStep.language));
+    _setState(const StartAssessment()());
   }
 
   Future<void> _refineRelatedSymptomSuggestions() async {
@@ -496,107 +412,19 @@ class SacaFlowController extends ChangeNotifier {
     Iterable<String> ids,
     AnalysisRequest request,
   ) {
-    final known = RuleBasedSymptomSuggestionService.knownSymptomIds(request);
-    return RuleBasedSymptomSuggestionService.orderedRelatedSymptoms(
-      ids.where((id) => !known.contains(id)),
-    );
-  }
-
-  bool _mergeVoiceCueRelatedSuggestions(
-    SpeechSignalFeatures? signalFeatures,
-    String transcript,
-  ) {
-    if (signalFeatures == null || !signalFeatures.hasUsableSignals) {
-      return false;
-    }
-    final request = _state.analysisRequest.copyWith(
-      transcript: transcript.isNotEmpty ? transcript : _state.transcript,
-      speechSignalFeatures: signalFeatures,
-    );
-    final voiceCueSuggestions = _filterKnownRelatedSymptoms(
-      _nonSpeechSuggestionService.reviewOnlySuggestions(request),
-      request,
-    );
-    if (voiceCueSuggestions.isEmpty) return false;
-
-    final mergedSuggestions =
-        RuleBasedSymptomSuggestionService.orderedRelatedSymptoms(<String>{
-      ..._state.suggestedRelatedSymptomIds,
-      ...voiceCueSuggestions,
-    });
-    final mergedVoiceCueSuggestions =
-        RuleBasedSymptomSuggestionService.orderedRelatedSymptoms(<String>{
-      ..._state.voiceCueSuggestedSymptomIds,
-      ...voiceCueSuggestions,
-    });
-    _setState(
-      _state.copyWith(
-        isBusy: false,
-        isRecording: false,
-        voiceBusyPhase: VoiceBusyPhase.none,
-        suggestedRelatedSymptomIds: mergedSuggestions,
-        voiceCueSuggestedSymptomIds: mergedVoiceCueSuggestions,
-        speechSignalFeatures: signalFeatures,
-        voiceAnswerTranscript: transcript,
-        voiceAnswerMatched: true,
-        clearError: true,
-      ),
-    );
-    return true;
+    return _relatedSymptomPolicy.knownFilteredSuggestions(ids, request);
   }
 
   Future<void> analyse() async {
-    _setState(
-      _state.copyWith(
-        step: SacaStep.analysing,
-        isBusy: true,
-        clearAnalysisResult: true,
-        clearError: true,
-      ),
-    );
-
-    final result = await _analysisService.analyse(_state.analysisRequest);
-    if (!result.isSuccess) {
-      _setState(
-        _state.copyWith(
-          step: SacaStep.questionHealthChanges,
-          isBusy: false,
-          errorMessage: result.failure?.message,
-        ),
-      );
-      return;
-    }
-
-    final value = result.value;
-    if (value != null &&
-        !value.isEmergency &&
-        value.disease == 'No clear illness detected') {
-      _setState(
-        _state.copyWith(
-          isBusy: false,
-          pendingConfirmation: SacaConfirmationType.noClearIllness,
-          analysisResult: value,
-          clearError: true,
-        ),
-      );
-      return;
-    }
-
-    _setState(
-      _state.copyWith(
-        step: SacaStep.result,
-        isBusy: false,
-        analysisResult: result.value,
-        clearError: true,
-      ),
-    );
+    final result = await _runAnalysis(_state);
+    _setState(result.state);
   }
 
   void confirmPendingAction() {
     final pending = _state.pendingConfirmation;
     if (pending == null) return;
     if (pending == SacaConfirmationType.emptyInput) {
-      _setState(_state.copyWith(clearPendingConfirmation: true));
+      _advanceFromInput(clearPendingConfirmation: true);
       return;
     }
     if (pending == SacaConfirmationType.noClearIllness &&
@@ -624,27 +452,11 @@ class SacaFlowController extends ChangeNotifier {
   }
 
   void goBack() {
-    final previous = switch (_state.step) {
-      SacaStep.splash => SacaStep.splash,
-      SacaStep.language => SacaStep.splash,
-      SacaStep.inputMethod => SacaStep.language,
-      SacaStep.voiceInput => SacaStep.inputMethod,
-      SacaStep.textInput => SacaStep.inputMethod,
-      SacaStep.visualInput => SacaStep.inputMethod,
-      SacaStep.questionSeverity => _stepForMethod(
-          _state.inputMethod ?? InputMethod.text,
-        ),
-      SacaStep.questionDuration => SacaStep.questionSeverity,
-      SacaStep.questionRelatedSymptoms => SacaStep.questionDuration,
-      SacaStep.questionMedication => SacaStep.questionRelatedSymptoms,
-      SacaStep.questionFood => SacaStep.questionMedication,
-      SacaStep.questionAllergies => SacaStep.questionFood,
-      SacaStep.questionHealthChanges => SacaStep.questionAllergies,
-      SacaStep.reviewInformation => SacaStep.questionHealthChanges,
-      SacaStep.settings => _settingsReturnStep ?? SacaStep.language,
-      SacaStep.analysing => SacaStep.questionHealthChanges,
-      SacaStep.result => SacaStep.reviewInformation,
-    };
+    final previous = _stepPolicy.previousStep(
+      _state.step,
+      _state,
+      settingsReturnStep: _settingsReturnStep,
+    );
 
     if (_state.step == SacaStep.settings) {
       _settingsReturnStep = null;
@@ -673,34 +485,9 @@ class SacaFlowController extends ChangeNotifier {
     super.dispose();
   }
 
-  SacaStep _stepForMethod(InputMethod method) {
-    switch (method) {
-      case InputMethod.text:
-        return SacaStep.textInput;
-      case InputMethod.voice:
-        return SacaStep.voiceInput;
-      case InputMethod.visual:
-        return SacaStep.visualInput;
-    }
-  }
-
   void _setState(SacaFlowState value) {
     _state = value;
     notifyListeners();
-  }
-
-  bool _isFollowUpQuestion(SacaStep step) {
-    return switch (step) {
-      SacaStep.questionSeverity ||
-      SacaStep.questionDuration ||
-      SacaStep.questionRelatedSymptoms ||
-      SacaStep.questionMedication ||
-      SacaStep.questionFood ||
-      SacaStep.questionAllergies ||
-      SacaStep.questionHealthChanges =>
-        true,
-      _ => false,
-    };
   }
 
   void updateQuestionAnswer(String questionId, String answer) {

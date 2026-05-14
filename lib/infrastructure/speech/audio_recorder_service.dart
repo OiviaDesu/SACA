@@ -1,8 +1,3 @@
-// AudioRecorderService – captures 16 kHz mono PCM WAV for Whisper.
-//
-// Uses the `record` package.
-//   startRecording() → user speaks → stopRecording() → returns file path.
-
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -67,7 +62,7 @@ class AudioRecorderService {
     const config = RecordConfig(
       encoder: AudioEncoder.wav,
       sampleRate: 16000,
-      numChannels: 1, // mono – Whisper requirement
+      numChannels: 1,
       bitRate: 256000,
     );
 

@@ -1,9 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/domain/models/lexicon_entry.dart';
-import 'package:saca_demo/domain/models/saca_models.dart';
-import 'package:saca_demo/domain/services/clinical_vocabulary_service.dart';
-import 'package:saca_demo/presentation/localization/saca_localizer.dart';
+import 'package:saca/domain/models/lexicon_entry.dart';
+import 'package:saca/domain/models/saca_models.dart';
+import 'package:saca/domain/services/clinical_vocabulary_service.dart';
+import 'package:saca/presentation/localization/saca_localizer.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -101,6 +104,70 @@ void main() {
     expect(guidance.join(' ').toLowerCase(), isNot(contains('drink')));
   });
 
+  test('model classes have non-generic condition explanations', () async {
+    final source = await rootBundle.loadString(
+      'assets/models/classifier-xgb-best/bundle.json',
+    );
+    final json = jsonDecode(source) as Map<String, dynamic>;
+    final classes = (json['classes'] as List<dynamic>).cast<String>();
+
+    for (final disease in classes) {
+      final english = localizer.conditionExplanation(
+        SacaLanguage.english,
+        disease,
+      );
+      final gurindji = localizer.conditionExplanation(
+        SacaLanguage.gurindji,
+        disease,
+      );
+
+      expect(english, isNot('General pattern from the information provided.'),
+          reason: disease);
+      expect(english.toLowerCase(), isNot(contains('general pattern')),
+          reason: disease);
+      expect(gurindji, isNot('Jangany nyawa jala.'), reason: disease);
+      expect(gurindji, isNot(isEmpty), reason: disease);
+    }
+  });
+
+  test('structured UI catalogs keep key parity', () {
+    expect(
+      SacaLocalizationCatalogs.gurindji.keys,
+      SacaLocalizationCatalogs.english.keys,
+    );
+  });
+
+  test('Gurindji UI strings avoid blocked English UI tokens', () async {
+    final source = File('lib/presentation/localization/saca_localizer_data.dart')
+        .readAsStringSync();
+    final keys = RegExp(r"^\s*'([^']+)':", multiLine: true)
+        .allMatches(_mapBody(source, '_english'))
+        .map((match) => match.group(1)!)
+        .toSet();
+    final blocklist = RegExp(
+      r'\b(Continue|Back|Settings|Result|Review|Light|Dark|System|Modern|Glass|Classic|Selected|Other|None|Not sure|Emergency|Severity|Recommendations|Text|Voice|Visual|Start|Finish|Done|Skip|Analyse|Edit|Theme)\b',
+      caseSensitive: false,
+    );
+
+    for (final key in keys) {
+      final value = localizer.t(SacaLanguage.gurindji, key);
+      final scrubbed = value.replaceAll('SACA', '').replaceAll('000', '');
+      expect(blocklist.hasMatch(scrubbed), isFalse,
+          reason: '$key => $value');
+    }
+  });
+
+  test('unknown disease keeps safe generic explanation fallback', () {
+    expect(
+      localizer.conditionExplanation(SacaLanguage.english, 'unknown disease'),
+      'General pattern from the information provided.',
+    );
+    expect(
+      localizer.conditionExplanation(SacaLanguage.gurindji, 'unknown disease'),
+      'Jangany nyawa jala.',
+    );
+  });
+
   test('English result labels and guidance stay unchanged', () {
     expect(
       localizer.resultDiseaseLabel(SacaLanguage.english, 'common cold'),
@@ -120,4 +187,12 @@ void main() {
       <String>['Use the original guidance.'],
     );
   });
+}
+
+String _mapBody(String source, String name) {
+  final match = RegExp(
+    'const $name = <String, String>\\{(.*?)\\};',
+    dotAll: true,
+  ).firstMatch(source);
+  return match?.group(1) ?? '';
 }

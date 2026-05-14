@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/domain/services/transcript_sanitizer.dart';
+import 'package:saca/domain/services/transcript_sanitizer.dart';
 
 void main() {
   const sanitizer = TranscriptSanitizer();

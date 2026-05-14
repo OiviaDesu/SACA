@@ -58,7 +58,7 @@ jobs:
       - name: Runtime asset note
         run: |
           echo "Windows build succeeded. Offline speech runtime still requires local model assets."
-          echo "See docs/MODEL_ASSETS.md for the expected asset layout."
+          echo "See docs/model_assets.md for the expected asset layout."
 
   build-android:
     runs-on: ubuntu-latest
@@ -81,7 +81,7 @@ jobs:
       - name: Runtime asset note
         run: |
           echo "Android build succeeded. Voice runtime still depends on local or bundled model assets at runtime."
-          echo "See docs/MODEL_ASSETS.md for model asset expectations."
+          echo "See docs/model_assets.md for model asset expectations."
 
   build-ios:
     runs-on: macos-latest
@@ -104,7 +104,7 @@ jobs:
       - name: Runtime asset note
         run: |
           echo "iOS build succeeded without codesigning. No build artifacts are uploaded."
-          echo "See docs/MODEL_ASSETS.md for model asset expectations."
+          echo "See docs/model_assets.md for model asset expectations."
 
   build-macos:
     runs-on: macos-latest
@@ -127,4 +127,4 @@ jobs:
       - name: Runtime asset note
         run: |
           echo "macOS build succeeded. No build artifacts are uploaded."
-          echo "See docs/MODEL_ASSETS.md for model asset expectations."
+          echo "See docs/model_assets.md for model asset expectations."

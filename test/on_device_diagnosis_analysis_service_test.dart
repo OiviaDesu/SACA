@@ -1,10 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/domain/models/saca_models.dart';
-import 'package:saca_demo/infrastructure/analysis/mock_analysis_service.dart';
-import 'package:saca_demo/infrastructure/analysis/on_device_diagnosis_analysis_service.dart';
-import 'package:saca_demo/infrastructure/analysis/xgb_m2cgen_runtime.dart';
+import 'package:saca/domain/models/saca_models.dart';
+import 'package:saca/domain/services/diagnosis_classifier.dart';
+import 'package:saca/infrastructure/analysis/mock_analysis_service.dart';
+import 'package:saca/infrastructure/analysis/on_device_diagnosis_analysis_service.dart';
+import 'package:saca/infrastructure/analysis/xgb_m2cgen_runtime.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +34,51 @@ void main() {
       expect(result.value?.severity, SeverityLevel.mild);
       expect(result.value?.isEmergency, isFalse);
       expect(result.value?.guidance, isNotEmpty);
+    });
+
+    test('serious infectious top disease raises severity floor', () async {
+      final service = OnDeviceDiagnosisAnalysisService(
+        classifier: const _FakeDiagnosisClassifier('malaria'),
+        fallback: MockAnalysisService(),
+      );
+
+      final result = await service.analyse(
+        const AnalysisRequest(
+          language: SacaLanguage.english,
+          inputMethod: InputMethod.text,
+          transcript: '',
+          textInput: 'fever with chills and sweating, weak and cold',
+          selectedSymptomIds: <String>{},
+          selectedBodyAreaIds: <String>{},
+          answers: <String, String>{'severity': '7'},
+        ),
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value?.disease, 'Malaria');
+      expect(result.value?.severity, SeverityLevel.moderate);
+    });
+
+    test('high user severity still stays severe for ML disease', () async {
+      final service = OnDeviceDiagnosisAnalysisService(
+        classifier: const _FakeDiagnosisClassifier('malaria'),
+        fallback: MockAnalysisService(),
+      );
+
+      final result = await service.analyse(
+        const AnalysisRequest(
+          language: SacaLanguage.english,
+          inputMethod: InputMethod.text,
+          transcript: '',
+          textInput: 'fever with chills and sweating',
+          selectedSymptomIds: <String>{},
+          selectedBodyAreaIds: <String>{},
+          answers: <String, String>{'severity': '8'},
+        ),
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value?.severity, SeverityLevel.severe);
     });
 
     test('red flags override classifier disease', () async {

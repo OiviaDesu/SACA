@@ -104,8 +104,8 @@ class _BodyDiagramState extends State<BodyDiagram>
                                 ),
                                 child: Image.asset(
                                   widget.view == BodyView.front
-                                      ? 'assets/Images/Body-front.png'
-                                      : 'assets/Images/Body-back.png',
+                                      ? 'assets/images/body_front.png'
+                                      : 'assets/images/body_back.png',
                                   fit: BoxFit.contain,
                                 ),
                               ),

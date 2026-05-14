@@ -27,6 +27,7 @@ When in doubt, keep the safety layer conservative and escalate to human care.
 - Adaptive Flutter UI for Windows desktop and Android mobile.
 - English and Gurindji UI modes.
 - Text, voice, and visual symptom input.
+- Theme styles in Settings: Modern (Default), Glass (Preview), and Classic.
 - Structured follow-up questionnaire.
 - Placeholder local analysis via `MockAnalysisService`.
 - Emergency red-flag override through `SafetyRuleService`.
@@ -43,7 +44,7 @@ flutter run
 ```
 
 For Windows offline speech-to-text, add the local model assets first. See
-[docs/MODEL_ASSETS.md](docs/MODEL_ASSETS.md).
+[docs/model_assets.md](docs/model_assets.md).
 
 If Android Gradle complains that `flutter.sdk` is missing, copy
 `android/local.properties.example` to `android/local.properties` and update the
@@ -56,12 +57,14 @@ path for your machine.
 - Android: mobile UI, local audio recording, `whisper_kit` path.
 - macOS: desktop UI and Flutter desktop runtime support.
 - iOS: mobile UI and Flutter iOS runtime support.
+- Web: local/LAN demo only. The browser frontend calls a backend on this
+  machine for STT and diagnosis; see [docs/web_lan_backend.md](docs/web_lan_backend.md).
 
 ## Platform Setup Notes
 
 - **Windows:** `flutter build windows` compiles without local model binaries, but
   runtime offline speech still needs the Whisper ONNX assets described in
-  `docs/MODEL_ASSETS.md`.
+  `docs/model_assets.md`.
 - **Android:** the app builds with the normal Flutter Android toolchain. Voice
   runtime behavior still depends on local/bundled model assets at runtime.
 - **macOS/iOS:** build with the normal Flutter Apple toolchains. Voice runtime
@@ -117,6 +120,18 @@ classifier training, and Whisper fine-tuning research.
 
 See [python_pipeline/README_pipeline.md](python_pipeline/README_pipeline.md) for
 setup, Slurm usage, and artifact policy.
+
+## Store Readiness
+
+SACA targets Windows, macOS, iOS, and Android. Web is not a supported release
+target.
+Web remains a local/LAN demo target; see
+[docs/web_lan_backend.md](docs/web_lan_backend.md) for the backend contract.
+
+- [Store readiness checklist](docs/store_readiness.md) covers Apple App Store,
+  Google Play, and Microsoft Store preparation guardrails.
+- [Permissions and fallback matrix](docs/permissions_fallback_matrix.md) maps
+  recoverable runtime failures to calm user recovery paths.
 
 ## Git Workflow
 
@@ -193,7 +208,13 @@ SACA uses Flutter's default renderer behavior per platform. Impeller is used
 where Flutter supports it, but Skia fallback is not universal. In particular,
 iOS does not support switching back to Skia, Android fallback is handled by
 Flutter when Impeller is unsupported, and Windows/macOS keep Flutter defaults.
-SACA does not support Web. See [Renderer policy](docs/RENDERER_POLICY.md).
+SACA does not support Web. See [Renderer policy](docs/renderer_policy.md).
+
+## UI Credits
+
+Glass (Preview) uses [`liquid_glass_widgets`](https://github.com/sdegenaar/liquid_glass_widgets)
+for adaptive liquid-glass surfaces. Modern remains the default SACA theme, and
+Classic uses Material 3 theme tokens.
 
 ## CI
 
@@ -203,11 +224,11 @@ recognition on Windows still requires local model files.
 
 ## More Documentation
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [Gurindji NLP and dataset strategy](docs/GURINDJI_NLP.md)
-- [Dataset research summary](docs/DATASET_RESEARCH_SUMMARY.md)
-- [Model assets](docs/MODEL_ASSETS.md)
-- [Release checklist](docs/RELEASE_CHECKLIST.md)
+- [Architecture](docs/architecture.md)
+- [Gurindji NLP and dataset strategy](docs/gurindji_nlp.md)
+- [Dataset research summary](docs/dataset_research_summary.md)
+- [Model assets](docs/model_assets.md)
+- [Release checklist](docs/release_checklist.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Code of conduct](CODE_OF_CONDUCT.md)

@@ -45,18 +45,7 @@ class _SelectedSummary extends StatelessWidget {
     final colors = SacaThemeColors.of(context);
     final text = values.isEmpty ? emptyText : values.join(', ');
     return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: colors.surfaceGradient,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
+      decoration: _sacaPanelDecoration(context),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -64,10 +53,10 @@ class _SelectedSummary extends StatelessWidget {
           children: [
             Text(
               title,
-              style: SacaTheme.small.copyWith(color: colors.text),
+              style: SacaTheme.small.copyWith(color: colors.onSurface),
             ),
             const SizedBox(height: 6),
-            Text(text, style: SacaTheme.body.copyWith(color: colors.text)),
+            Text(text, style: SacaTheme.body.copyWith(color: colors.onSurface)),
           ],
         ),
       ),
@@ -92,18 +81,7 @@ class _ReviewSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
     return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: colors.surfaceGradient,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
+      decoration: _sacaPanelDecoration(context),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -115,7 +93,7 @@ class _ReviewSummaryCard extends StatelessWidget {
                   child: Text(
                     title,
                     style: SacaTheme.body.copyWith(
-                      color: colors.text,
+                      color: colors.onSurface,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -138,7 +116,8 @@ class _ReviewSummaryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(value, style: SacaTheme.small.copyWith(color: colors.text)),
+            Text(value,
+                style: SacaTheme.small.copyWith(color: colors.onSurface)),
           ],
         ),
       ),
@@ -202,22 +181,42 @@ class _SacaTextFieldState extends State<_SacaTextField> {
       placeholder: widget.placeholder,
       padding: const EdgeInsets.all(16),
       onChanged: widget.onChanged,
-      style: SacaTheme.body.copyWith(color: colors.text),
-      placeholderStyle: SacaTheme.body.copyWith(color: colors.mutedText),
-      decoration: BoxDecoration(
-        gradient: colors.surfaceGradient,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
+      style: SacaTheme.body.copyWith(color: colors.onFieldSurface),
+      placeholderStyle: SacaTheme.body.copyWith(
+        color: colors.onFieldSurface.withValues(alpha: 0.72),
       ),
+      decoration: _sacaFieldDecoration(context),
     );
   }
+}
+
+BoxDecoration _sacaFieldDecoration(BuildContext context) {
+  final theme = SacaThemeContext.of(context);
+  final colors = theme.colors;
+  if (!theme.useGlassStyle) {
+    return _sacaPanelDecoration(context);
+  }
+  final field = theme.glassMaterial(SacaGlassMaterial.field);
+  return BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        field.withValues(alpha: theme.glassOpacity(SacaGlassMaterial.field)),
+        colors.glassScrim.withValues(alpha: theme.scrimOpacity),
+      ],
+    ),
+    color: field.withValues(alpha: theme.glassOpacity(SacaGlassMaterial.field)),
+    borderRadius: BorderRadius.circular(theme.radius(18)),
+    border: Border.all(color: colors.glassBorder.withValues(alpha: 0.88)),
+    boxShadow: [
+      BoxShadow(
+        color: colors.glassHighlight.withValues(alpha: theme.glowOpacity),
+        blurRadius: 24,
+        offset: const Offset(0, 10),
+      ),
+    ],
+  );
 }
 
 class _RecordingButton extends StatefulWidget {
@@ -312,7 +311,7 @@ class _RecordingButtonState extends State<_RecordingButton>
                         Text(
                           'Listening… Speak clearly',
                           style: SacaTheme.body.copyWith(
-                            color: colors.text,
+                            color: colors.onSurface,
                             fontWeight: FontWeight.w800,
                           ),
                         ),

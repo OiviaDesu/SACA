@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/core/theme/saca_theme.dart';
-import 'package:saca_demo/presentation/widgets/saca_controls.dart';
+import 'package:saca/core/theme/saca_theme.dart';
+import 'package:saca/presentation/widgets/saca_controls.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -145,7 +145,7 @@ void main() {
       expect(after.border!.top.color, equals(before.border!.top.color));
       expect(after.boxShadow!.first.blurRadius,
           equals(before.boxShadow!.first.blurRadius));
-      expect(_surfaceOpacity(tester, 'disabled').opacity, equals(0.44));
+      expect(_surfaceOpacity(tester, 'disabled').opacity, equals(0.58));
     });
 
     testWidgets('error banner renders centered emergency copy', (tester) async {

@@ -22,8 +22,183 @@ class SacaSeveritySlider extends StatelessWidget {
   Widget build(BuildContext context) {
     final clampedValue = value.clamp(1, 10);
     final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
     final color = _colorFor(clampedValue);
     const sliderHorizontalPadding = 28.0;
+    if (theme.useClassic) {
+      return Semantics(
+        label: semanticLabel,
+        value: '$clampedValue',
+        increasedValue: '${(clampedValue + 1).clamp(1, 10)}',
+        decreasedValue: '${(clampedValue - 1).clamp(1, 10)}',
+        child: Material(
+          color: Colors.transparent,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.surfaceAlt,
+              borderRadius:
+                  BorderRadius.circular(theme.radius(SacaTheme.radius)),
+              border: Border.all(color: colors.border),
+              boxShadow: theme.surfaceShadow(),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '$clampedValue',
+                    key: ValueKey<String>('severityValue-$clampedValue'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 46,
+                      fontWeight: FontWeight.w800,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                  Text(
+                    descriptor,
+                    key: ValueKey<String>('severityDescriptor-$descriptor'),
+                    textAlign: TextAlign.center,
+                    style: SacaTheme.body.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  SliderTheme(
+                    data: SliderThemeData(
+                      activeTrackColor: color,
+                      thumbColor: color,
+                      inactiveTrackColor: colors.border,
+                    ),
+                    child: Slider(
+                      key: const ValueKey('severityMaterialSlider'),
+                      min: 1,
+                      max: 10,
+                      divisions: 9,
+                      value: clampedValue.toDouble(),
+                      onChanged: (value) => onChanged(value.round()),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(minLabel,
+                          style: SacaTheme.small
+                              .copyWith(color: colors.onSurfaceMuted)),
+                      Text(maxLabel,
+                          style: SacaTheme.small
+                              .copyWith(color: colors.onSurfaceMuted)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (theme.useGlassStyle) {
+      return Semantics(
+        label: semanticLabel,
+        value: '$clampedValue',
+        increasedValue: '${(clampedValue + 1).clamp(1, 10)}',
+        decreasedValue: '${(clampedValue - 1).clamp(1, 10)}',
+        child: KeyedSubtree(
+          key: const ValueKey('severitySliderInlineControl'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: theme.surfaceGradient(),
+                color: theme.glassMaterial(SacaGlassMaterial.panel).withValues(
+                      alpha: theme.glassOpacity(SacaGlassMaterial.panel),
+                    ),
+                borderRadius: BorderRadius.circular(
+                  theme.radius(SacaTheme.radius + 12),
+                ),
+                border: Border.all(
+                  color:
+                      colors.glassBorder.withValues(alpha: theme.borderOpacity),
+                ),
+                boxShadow: theme.surfaceShadow(highlighted: true),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '$clampedValue',
+                      key: ValueKey<String>('severityValue-$clampedValue'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 46,
+                        fontWeight: FontWeight.w800,
+                        color: colors.onGlassPrimary,
+                      ),
+                    ),
+                    Text(
+                      descriptor,
+                      key: ValueKey<String>('severityDescriptor-$descriptor'),
+                      textAlign: TextAlign.center,
+                      style: SacaTheme.body.copyWith(
+                        color: colors.onGlassMuted,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    GlassSlider(
+                      key: const ValueKey('severitySlider'),
+                      min: 1,
+                      max: 10,
+                      divisions: 9,
+                      value: clampedValue.toDouble(),
+                      activeColor: color,
+                      inactiveColor:
+                          colors.onGlassMuted.withValues(alpha: 0.24),
+                      thumbColor: const Color(0xFFFFFFFF),
+                      trackHeight: 8,
+                      thumbRadius: 16,
+                      interactionBehavior: GlassInteractionBehavior.full,
+                      glowColor: colors.glassHighlight.withValues(alpha: 0.36),
+                      glowRadius: 1.8,
+                      quality: GlassQuality.standard,
+                      onChanged: (value) {
+                        final next = value.round();
+                        if (next != clampedValue) {
+                          unawaited(SacaHaptics.selection());
+                        }
+                        onChanged(next);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          minLabel,
+                          style: SacaTheme.small.copyWith(
+                            color: colors.onGlassMuted,
+                          ),
+                        ),
+                        Text(
+                          maxLabel,
+                          style: SacaTheme.small.copyWith(
+                            color: colors.onGlassMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Semantics(
       label: semanticLabel,
@@ -38,16 +213,32 @@ class SacaSeveritySlider extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  gradient: colors.surfaceGradient,
-                  borderRadius: BorderRadius.circular(SacaTheme.radius + 12),
-                  border: Border.all(color: colors.border),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors.shadow,
-                      blurRadius: 24,
-                      offset: const Offset(0, 14),
-                    ),
-                  ],
+                  gradient: theme.surfaceGradient(),
+                  color: theme.useGlassStyle
+                      ? theme.glassMaterial(SacaGlassMaterial.panel).withValues(
+                            alpha: theme.glassOpacity(SacaGlassMaterial.panel),
+                          )
+                      : null,
+                  borderRadius: BorderRadius.circular(
+                    theme.useGlassStyle
+                        ? theme.radius(SacaTheme.radius + 12)
+                        : SacaTheme.radius + 12,
+                  ),
+                  border: Border.all(
+                    color: theme.useGlassStyle
+                        ? colors.glassBorder
+                            .withValues(alpha: theme.borderOpacity)
+                        : colors.border,
+                  ),
+                  boxShadow: theme.useGlassStyle
+                      ? theme.surfaceShadow(highlighted: true)
+                      : [
+                          BoxShadow(
+                            color: colors.shadow,
+                            blurRadius: 24,
+                            offset: const Offset(0, 14),
+                          ),
+                        ],
                 ),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
@@ -75,7 +266,7 @@ class SacaSeveritySlider extends StatelessWidget {
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: 0,
                                       height: 1,
-                                      color: colors.text,
+                                      color: colors.onSurface,
                                     ),
                                   ),
                                 ),
@@ -144,13 +335,13 @@ class SacaSeveritySlider extends StatelessWidget {
                             Text(
                               minLabel,
                               style: SacaTheme.small.copyWith(
-                                color: colors.mutedText,
+                                color: colors.onSurfaceMuted,
                               ),
                             ),
                             Text(
                               maxLabel,
                               style: SacaTheme.small.copyWith(
-                                color: colors.mutedText,
+                                color: colors.onSurfaceMuted,
                               ),
                             ),
                           ],
@@ -189,6 +380,7 @@ class _SeverityDragTrack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -214,7 +406,9 @@ class _SeverityDragTrack extends StatelessWidget {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: colors.text,
+                    color: theme.useGlassStyle
+                        ? colors.onGlassPrimary
+                        : const Color(0xFFFFFFFF),
                     shape: BoxShape.circle,
                     boxShadow: const [
                       BoxShadow(

@@ -101,9 +101,23 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
         widget.selected ? widget.selectedGradient : widget.baseGradient;
     final baseBorder =
         widget.selected ? widget.selectedBorderColor : widget.baseBorderColor;
+    final theme = SacaThemeContext.of(context);
+    final themedGradient = theme.surfaceGradient(selected: widget.selected);
+    final effectiveBaseGradient =
+        theme.useGlassStyle || theme.useClassic ? themedGradient : baseGradient;
+    final effectiveRadius = theme.radius(SacaTheme.radius);
     final hoverTint =
-        widget.selected ? SacaTheme.accent : SacaTheme.selectedBorder;
-    final pressedTint = widget.selected ? SacaTheme.text : SacaTheme.accent;
+        widget.selected ? theme.colors.control : theme.colors.selectedBorder;
+    final pressedTint =
+        widget.selected ? theme.colors.onSurface : theme.colors.control;
+    final glassFill = !widget.enabled && widget.selected
+        ? theme.colors.disabledControl
+        : widget.selected
+            ? theme.glassMaterial(SacaGlassMaterial.control)
+            : theme.glassMaterial(SacaGlassMaterial.field);
+    final glassOpacity = theme.glassOpacity(
+      widget.selected ? SacaGlassMaterial.control : SacaGlassMaterial.field,
+    );
 
     final hovered = widget.enabled && _hovered;
     final focused = widget.enabled && _focused;
@@ -122,9 +136,81 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
         : hovered
             ? widget.hoverShadow
             : widget.baseShadow;
+    final effectiveShadow = theme.useGlassStyle || theme.useClassic
+        ? theme.surfaceShadow(highlighted: widget.selected)
+        : boxShadow;
     final effectiveDuration = Duration(
       milliseconds: pressed ? 90 : 150,
     );
+    final decoratedChild = AnimatedContainer(
+      key: widget.surfaceKey,
+      duration: effectiveDuration,
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        gradient: _tintGradient(
+          effectiveBaseGradient,
+          brightenTint: hoverTint,
+          brightenAmount: brightenAmount,
+          darkenTint: pressedTint,
+          darkenAmount: darkenAmount,
+        ),
+        color: theme.useGlassStyle
+            ? glassFill.withValues(alpha: glassOpacity)
+            : null,
+        borderRadius: BorderRadius.circular(effectiveRadius),
+        border: Border.all(
+          color: theme.useGlassStyle
+              ? theme.colors.glassBorder.withValues(alpha: theme.borderOpacity)
+              : _mixBorder(
+                  baseColor: baseBorder,
+                  hoverTint: hoverTint,
+                  pressedTint: pressedTint,
+                  hoverAmount: hovered ? borderStrength : 0,
+                  pressedAmount: pressed ? borderStrength : 0,
+                ),
+        ),
+        boxShadow: [
+          ...effectiveShadow,
+          if (focused)
+            const BoxShadow(
+              color: Color(0x335FADC8),
+              blurRadius: 0,
+              spreadRadius: 2,
+            ),
+        ],
+      ),
+      child: AnimatedOpacity(
+        duration: effectiveDuration,
+        opacity: widget.enabled ? 1 : (theme.useGlassStyle ? 0.86 : 0.58),
+        child: AnimatedContainer(
+          duration: effectiveDuration,
+          curve: Curves.easeOutCubic,
+          transformAlignment: Alignment.center,
+          transform: Matrix4.translationValues(
+            0,
+            pressed
+                ? 0
+                : hovered
+                    ? -2
+                    : 0,
+            0,
+          )..scaleByDouble(
+              pressed ? 0.97 : 1.0,
+              pressed ? 0.97 : 1.0,
+              1,
+              1,
+            ),
+          child: widget.child,
+        ),
+      ),
+    );
+    final surface = theme.useGlass
+        ? GlassContainer(
+            padding: EdgeInsets.zero,
+            quality: GlassQuality.standard,
+            child: decoratedChild,
+          )
+        : decoratedChild;
 
     return FocusableActionDetector(
       enabled: widget.enabled,
@@ -150,63 +236,7 @@ class _SacaInteractiveSurfaceState extends State<_SacaInteractiveSurface> {
             onPointerDown: (_) => _setPressed(true),
             onPointerUp: (_) => _setPressed(false),
             onPointerCancel: (_) => _setPressed(false),
-            child: AnimatedContainer(
-              key: widget.surfaceKey,
-              duration: effectiveDuration,
-              curve: Curves.easeOutCubic,
-              decoration: BoxDecoration(
-                gradient: _tintGradient(
-                  baseGradient,
-                  brightenTint: hoverTint,
-                  brightenAmount: brightenAmount,
-                  darkenTint: pressedTint,
-                  darkenAmount: darkenAmount,
-                ),
-                borderRadius: BorderRadius.circular(SacaTheme.radius),
-                border: Border.all(
-                  color: _mixBorder(
-                    baseColor: baseBorder,
-                    hoverTint: hoverTint,
-                    pressedTint: pressedTint,
-                    hoverAmount: hovered ? borderStrength : 0,
-                    pressedAmount: pressed ? borderStrength : 0,
-                  ),
-                ),
-                boxShadow: [
-                  ...boxShadow,
-                  if (focused)
-                    const BoxShadow(
-                      color: Color(0x335FADC8),
-                      blurRadius: 0,
-                      spreadRadius: 2,
-                    ),
-                ],
-              ),
-              child: AnimatedOpacity(
-                duration: effectiveDuration,
-                opacity: widget.enabled ? 1 : 0.44,
-                child: AnimatedContainer(
-                  duration: effectiveDuration,
-                  curve: Curves.easeOutCubic,
-                  transformAlignment: Alignment.center,
-                  transform: Matrix4.translationValues(
-                    0,
-                    pressed
-                        ? 0
-                        : hovered
-                            ? -2
-                            : 0,
-                    0,
-                  )..scaleByDouble(
-                      pressed ? 0.97 : 1.0,
-                      pressed ? 0.97 : 1.0,
-                      1,
-                      1,
-                    ),
-                  child: widget.child,
-                ),
-              ),
-            ),
+            child: surface,
           ),
         ),
       ),

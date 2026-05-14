@@ -131,7 +131,7 @@ All submitted jobs completed successfully with exit code `0:0`.
   1. `quick xgb` (`macro-F1 0.3782`)
   2. `balanced xgb` (`macro-F1 0.3780`)
   3. `full xgb` (`macro-F1 0.3780`)
-  4. all LR variants around `0.1926`–`0.1929`
+  4. all LR variants around `0.1926` to `0.1929`
 
 ### 2. ROI of tuning profiles
 
@@ -155,7 +155,7 @@ All submitted jobs completed successfully with exit code `0:0`.
 
 - The `single` scope remains dramatically easier than the expanded `multi`
   scope.
-- `xgb` achieved about `0.965`–`0.969` macro-F1 on `single`, but only about
+- `xgb` achieved about `0.965` to `0.969` macro-F1 on `single`, but only about
   `0.378` on `multi`.
 - This confirms the real bottleneck is not search-budget size alone: the
   expanded dataset (`27941` rows / `47` labels) is simply a much harder problem

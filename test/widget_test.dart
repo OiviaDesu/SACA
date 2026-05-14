@@ -3,26 +3,29 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart'
+    show FilledButton, Icons, OutlinedButton, Slider;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/core/errors/app_error.dart';
-import 'package:saca_demo/core/layout/saca_adaptive_policy.dart';
-import 'package:saca_demo/core/layout/saca_window_size_class.dart';
-import 'package:saca_demo/core/theme/saca_theme.dart';
-import 'package:saca_demo/domain/models/lexicon_entry.dart';
-import 'package:saca_demo/domain/models/saca_models.dart';
-import 'package:saca_demo/domain/services/analysis_service.dart';
-import 'package:saca_demo/domain/services/clinical_vocabulary_service.dart';
-import 'package:saca_demo/domain/services/speech_input_service.dart';
-import 'package:saca_demo/infrastructure/analysis/mock_analysis_service.dart';
-import 'package:saca_demo/presentation/adaptive/saca_platform_style.dart';
-import 'package:saca_demo/presentation/controllers/saca_flow_controller.dart';
-import 'package:saca_demo/presentation/localization/saca_localizer.dart';
-import 'package:saca_demo/presentation/readiness/saca_readiness_controller.dart';
-import 'package:saca_demo/presentation/screens/saca_flow_screen.dart';
-import 'package:saca_demo/presentation/settings/saca_settings_controller.dart';
-import 'package:saca_demo/presentation/widgets/saca_controls.dart';
-import 'package:saca_demo/presentation/widgets/saca_logo_header.dart';
+import 'package:saca/core/errors/app_error.dart';
+import 'package:saca/core/layout/saca_adaptive_policy.dart';
+import 'package:saca/core/layout/saca_window_size_class.dart';
+import 'package:saca/core/theme/saca_theme.dart';
+import 'package:saca/domain/models/lexicon_entry.dart';
+import 'package:saca/domain/models/saca_models.dart';
+import 'package:saca/domain/services/analysis_service.dart';
+import 'package:saca/domain/services/clinical_vocabulary_service.dart';
+import 'package:saca/domain/services/speech_input_service.dart';
+import 'package:saca/infrastructure/analysis/mock_analysis_service.dart';
+import 'package:saca/presentation/adaptive/saca_platform_style.dart';
+import 'package:saca/presentation/controllers/saca_flow_controller.dart';
+import 'package:saca/presentation/localization/saca_localizer.dart';
+import 'package:saca/presentation/readiness/saca_readiness_controller.dart';
+import 'package:saca/presentation/screens/saca_flow_screen.dart';
+import 'package:saca/presentation/settings/saca_settings_controller.dart';
+import 'package:saca/presentation/widgets/saca_controls.dart';
+import 'package:saca/presentation/widgets/saca_logo_header.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -191,6 +194,9 @@ void main() {
 
     expect(controller.state.step, SacaStep.settings);
     expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Modern (Default)'), findsOneWidget);
+    expect(find.text('Glass (Preview)'), findsOneWidget);
+    expect(find.text('Classic'), findsOneWidget);
     expect(find.text('Light'), findsOneWidget);
     expect(find.text('Dark'), findsOneWidget);
     expect(find.text('System'), findsOneWidget);
@@ -200,9 +206,16 @@ void main() {
 
     await tester.tap(find.text('Dark'));
     await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Glass (Preview)'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Glass (Preview)'), findsOneWidget);
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('settingsTextScaleSlider')));
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.drag(
       find.byKey(const ValueKey('settingsTextScaleSlider')),
       const Offset(200, 0),
+      warnIfMissed: false,
     );
     await tester.pump(const Duration(milliseconds: 300));
 
@@ -211,6 +224,346 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(controller.state.step, SacaStep.language);
+  });
+
+  testWidgets('settings theme style keeps brightness separate', (tester) async {
+    final store = _WidgetSettingsStore();
+    final settings = SacaSettingsController(store: store);
+    await settings.load();
+    final controller = SacaFlowController(
+      speechInput: _NoopSpeechInputService(),
+      analysisService: MockAnalysisService(vocabulary: vocabulary),
+    );
+
+    await tester.pumpWidget(
+      CupertinoApp(
+        theme: SacaTheme.cupertinoTheme,
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          glassUnavailable: true,
+          child: SacaFlowScreen(
+            controller: controller,
+            readiness: SacaReadinessState.ready,
+            settings: settings,
+            styleOverride: SacaPlatformStyle.androidMobile,
+            localizer: SacaLocalizer(vocabulary: vocabulary),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 700));
+
+    await tester.ensureVisible(find.bySemanticsLabel('Settings').first);
+    await tester.tap(find.bySemanticsLabel('Settings').first,
+        warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.tap(find.text('Glass (Preview)'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('System'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(settings.state.visualThemeStyle, SacaVisualThemeStyle.glass);
+    expect(settings.state.themePreference, SacaThemePreference.system);
+    expect(find.textContaining('Glass preview is unavailable'), findsOneWidget);
+  });
+
+  testWidgets('glass style wraps shared controls in glass surface',
+      (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          surfaceStyle: SacaThemeSurfaceStyle.glass,
+          child: Center(
+            child: SacaPrimaryButton(
+              label: 'Continue',
+              onPressed: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(GlassContainer), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+  });
+
+  testWidgets('glass light shell uses modern backdrop colors', (tester) async {
+    await _pumpFlow(
+      tester,
+      visualThemeStyle: SacaVisualThemeStyle.glass,
+      themePreference: SacaThemePreference.light,
+    );
+
+    final backdrop = tester.widget<DecoratedBox>(
+      find.byKey(const ValueKey('shellBackdrop')),
+    );
+    final decoration = backdrop.decoration as BoxDecoration;
+    expect(decoration.gradient, SacaTheme.lightColors.shellGradient);
+  });
+
+  testWidgets('glass disabled filled button keeps readable semantic foreground',
+      (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.darkColors,
+          surfaceStyle: SacaThemeSurfaceStyle.glass,
+          child: const Center(
+            child: SacaPrimaryButton(
+              label: 'Use transcript',
+              filled: true,
+              onPressed: null,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final label = tester.widget<Text>(find.text('Use transcript'));
+    expect(label.style?.color, SacaTheme.darkColors.onDisabledControl);
+    expect(
+      _contrastRatio(
+        SacaTheme.darkColors.disabledControl,
+        SacaTheme.darkColors.onDisabledControl,
+      ),
+      greaterThanOrEqualTo(4.5),
+    );
+  });
+
+  testWidgets(
+      'glass accessibility fallback keeps setting but uses solid surface',
+      (tester) async {
+    final store = _WidgetSettingsStore();
+    await store.setString(
+        'saca.visualThemeStyle', SacaVisualThemeStyle.glass.name);
+    final settings = SacaSettingsController(store: store);
+    await settings.load();
+    final controller = SacaFlowController(
+      speechInput: _NoopSpeechInputService(),
+      analysisService: MockAnalysisService(vocabulary: vocabulary),
+    );
+
+    await tester.pumpWidget(
+      CupertinoApp(
+        theme: SacaTheme.cupertinoTheme,
+        home: MediaQuery(
+          data: const MediaQueryData(highContrast: true),
+          child: SacaThemeScope(
+            colors: SacaTheme.lightColors,
+            surfaceStyle: SacaThemeSurfaceStyle.glass,
+            glassSolidFallback: true,
+            child: SacaFlowScreen(
+              controller: controller,
+              readiness: SacaReadinessState.ready,
+              settings: settings,
+              styleOverride: SacaPlatformStyle.androidMobile,
+              localizer: SacaLocalizer(vocabulary: vocabulary),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.tap(find.bySemanticsLabel('Settings').first,
+        warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(settings.state.visualThemeStyle, SacaVisualThemeStyle.glass);
+    expect(find.byType(GlassCard), findsNothing);
+    expect(find.textContaining('solid readable surfaces'), findsOneWidget);
+  });
+
+  testWidgets('glass text field uses readable field surface semantics',
+      (tester) async {
+    final controller = await _pumpFlow(
+      tester,
+      style: SacaPlatformStyle.windowsDesktop,
+      themePreference: SacaThemePreference.dark,
+      visualThemeStyle: SacaVisualThemeStyle.glass,
+    );
+
+    await tester.tap(find.text('English'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Voice input'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(controller.state.step, SacaStep.voiceInput);
+    final placeholder = tester.widget<EditableText>(find.byType(EditableText));
+    expect(placeholder.style.color, SacaTheme.lightColors.onFieldSurface);
+    expect(
+      _contrastRatio(
+        SacaTheme.lightColors.fieldSurface,
+        SacaTheme.lightColors.onFieldSurface,
+      ),
+      greaterThanOrEqualTo(4.5),
+    );
+  });
+
+  testWidgets('classic style uses Material-style shared controls',
+      (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          surfaceStyle: SacaThemeSurfaceStyle.classic,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SacaPrimaryButton(
+                  label: 'Continue',
+                  filled: true,
+                  onPressed: () {},
+                ),
+                SacaOptionButton(
+                  label: 'Choice',
+                  selected: false,
+                  onPressed: () {},
+                ),
+                SacaSeveritySlider(
+                  value: 5,
+                  onChanged: (_) {},
+                  semanticLabel: 'Severity',
+                  descriptor: 'Moderate',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(FilledButton), findsOneWidget);
+    expect(find.byType(OutlinedButton), findsOneWidget);
+    expect(find.byType(Slider), findsOneWidget);
+    final theme =
+        SacaTheme.materialTheme(SacaTheme.lightColors, Brightness.light);
+    expect(theme.colorScheme.primary, SacaTheme.lightColors.control);
+    expect(theme.colorScheme.primary, isNot(SacaTheme.emergency));
+  });
+
+  testWidgets('classic settings chips use neutral readable labels',
+      (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.darkColors,
+          surfaceStyle: SacaThemeSurfaceStyle.classic,
+          child: Center(
+            child: SacaChipButton(
+              label: 'Dark',
+              selected: true,
+              onPressed: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final label = tester.widget<Text>(find.text('Dark'));
+    expect(label.style?.color, SacaTheme.darkColors.onSurface);
+    expect(label.style?.color, isNot(SacaTheme.darkColors.control));
+  });
+
+  testWidgets('classic light selected option uses white foreground',
+      (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          surfaceStyle: SacaThemeSurfaceStyle.classic,
+          child: Center(
+            child: SacaOptionButton(
+              label: 'Yes',
+              selected: true,
+              icon: CupertinoIcons.check_mark_circled_solid,
+              onPressed: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final label = tester.widget<Text>(find.text('Yes'));
+    final icon = tester.widget<Icon>(
+      find.byIcon(Icons.check_circle),
+    );
+
+    expect(label.style?.color, SacaTheme.lightColors.onControl);
+    expect(icon.color, SacaTheme.lightColors.onControl);
+  });
+
+  testWidgets('glass light filled button keeps modern accent contrast',
+      (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          surfaceStyle: SacaThemeSurfaceStyle.glass,
+          child: Center(
+            child: SacaPrimaryButton(
+              label: 'Continue',
+              icon: CupertinoIcons.arrow_right_circle_fill,
+              filled: true,
+              onPressed: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final label = tester.widget<Text>(find.text('Continue'));
+    final icon = tester.widget<Icon>(
+      find.byIcon(CupertinoIcons.arrow_right_circle_fill),
+    );
+
+    expect(label.style?.color, SacaTheme.lightColors.onControl);
+    expect(icon.color, SacaTheme.lightColors.onControl);
+    expect(
+      _contrastRatio(
+          SacaTheme.lightColors.control, SacaTheme.lightColors.onControl),
+      greaterThanOrEqualTo(4.5),
+    );
+  });
+
+  testWidgets('modern light selected controls use selected foreground',
+      (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          surfaceStyle: SacaThemeSurfaceStyle.modern,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SacaChipButton(
+                  label: 'Selected chip',
+                  selected: true,
+                  onPressed: () {},
+                ),
+                SacaOptionButton(
+                  label: 'Selected option',
+                  selected: true,
+                  icon: CupertinoIcons.check_mark_circled_solid,
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final chipLabel = tester.widget<Text>(find.text('Selected chip'));
+    final optionLabel = tester.widget<Text>(find.text('Selected option'));
+
+    expect(chipLabel.style?.color, SacaTheme.lightColors.onSelected);
+    expect(optionLabel.style?.color, SacaTheme.lightColors.onSelected);
+    expect(chipLabel.style?.color, isNot(SacaTheme.lightColors.onControl));
+    expect(optionLabel.style?.color, isNot(SacaTheme.lightColors.onControl));
   });
 
   testWidgets('settings page can switch app language to Gurindji',
@@ -292,14 +645,14 @@ void main() {
       ),
     );
 
-    expect(_probeColor(tester), SacaTheme.background);
+    expect(_probeColor(tester), SacaTheme.lightColors.background);
 
     await tester.tap(find.byType(CupertinoButton));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 130));
     final midColor = _probeColor(tester);
 
-    expect(midColor, isNot(SacaTheme.background));
+    expect(midColor, isNot(SacaTheme.lightColors.background));
     expect(midColor, isNot(SacaTheme.darkBackground));
 
     await tester.pumpAndSettle();
@@ -696,6 +1049,62 @@ void main() {
     expect(find.text('Moderate pain'), findsOneWidget);
   });
 
+  testWidgets('modern severity thumb is white in light mode', (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          surfaceStyle: SacaThemeSurfaceStyle.modern,
+          child: Center(
+            child: SacaSeveritySlider(
+              value: 5,
+              onChanged: (_) {},
+              semanticLabel: 'Severity',
+              descriptor: 'Moderate',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final thumb = tester.widget<AnimatedContainer>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! AnimatedContainer) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.shape == BoxShape.circle &&
+            decoration.color == const Color(0xFFFFFFFF);
+      }).first,
+    );
+    final decoration = thumb.decoration as BoxDecoration;
+    expect(decoration.color, const Color(0xFFFFFFFF));
+  });
+
+  testWidgets('glass severity slider uses package glass slider',
+      (tester) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: SacaThemeScope(
+          colors: SacaTheme.lightColors,
+          surfaceStyle: SacaThemeSurfaceStyle.glass,
+          child: Center(
+            child: SacaSeveritySlider(
+              value: 5,
+              onChanged: (_) {},
+              semanticLabel: 'Severity',
+              descriptor: 'Moderate',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(GlassSlider), findsOneWidget);
+    final slider = tester.widget<GlassSlider>(find.byType(GlassSlider));
+    expect(slider.interactionBehavior, GlassInteractionBehavior.full);
+    expect(slider.thumbColor, const Color(0xFFFFFFFF));
+  });
+
   testWidgets('gurindji severity descriptor is localized', (tester) async {
     await _pumpFlow(tester, vocabulary: vocabulary, localizer: localizer);
     await _reachInputMethod(tester, language: 'Gurindji');
@@ -794,6 +1203,17 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(const ValueKey('relatedOtherField')), findsOneWidget);
+
+    await tester.enterText(
+        find.byKey(const ValueKey('relatedOtherField')), 'dizziness');
+    await tester.pump();
+    await _tapVisible(tester, find.text('Cough'));
+    await tester.pump();
+    await _tapVisible(tester, find.text('None'));
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('relatedOtherField')), findsNothing);
+    expect(find.text('dizziness'), findsNothing);
   });
 
   testWidgets('related symptoms shows None first and only suggested chips',
@@ -930,10 +1350,49 @@ void main() {
     expect(find.text('Other possibilities to discuss'), findsOneWidget);
     expect(find.text('Also possible'), findsOneWidget);
     expect(find.text('Less likely'), findsOneWidget);
+    expect(find.text('General pattern from the information provided.'),
+        findsNothing);
     expect(find.textContaining('%'), findsNothing);
     expect(find.text('High'), findsNothing);
     expect(find.text('Medium'), findsNothing);
     expect(find.text('Low'), findsNothing);
+  });
+
+  testWidgets('compact result cards avoid generic repeated explanation',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 568));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await _pumpFlow(
+      tester,
+      analysisService: const _PepticRankedAnalysisService(),
+      style: SacaPlatformStyle.androidMobile,
+      mediaSize: const Size(320, 568),
+    );
+    await _reachInputMethod(tester);
+    await tester.tap(find.text('Text input'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'upper stomach pain and nausea',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Continue'));
+    await _answerQuestionnaire(tester);
+
+    expect(find.text('peptic ulcer disease'), findsOneWidget);
+    expect(find.text('diabetes'), findsOneWidget);
+    expect(find.text('drug reaction'), findsOneWidget);
+    expect(find.text('General pattern from the information provided.'),
+        findsNothing);
+    _expectNoHorizontalOverflow(
+      tester,
+      const _ViewportCase(
+        'iphone-se',
+        Size(320, 568),
+        SacaPlatformStyle.androidMobile,
+      ),
+    );
   });
 
   testWidgets('result screen renders key content in dark mode', (tester) async {
@@ -1300,7 +1759,7 @@ void main() {
 
   testWidgets('empty input confirmation dialog replaces red error',
       (tester) async {
-    await _pumpFlow(tester);
+    final controller = await _pumpFlow(tester);
     await _reachInputMethod(tester);
 
     await _tapVisible(tester, find.text('Text input'));
@@ -1310,6 +1769,52 @@ void main() {
 
     expect(find.text('No clear symptom heard'), findsOneWidget);
     expect(find.text('Please add a symptom before continuing.'), findsNothing);
+    expect(find.byType(CupertinoAlertDialog), findsNothing);
+    await _tapVisible(tester, find.text('Continue anyway'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(controller.state.step, SacaStep.questionSeverity);
+    expect(find.byKey(const ValueKey('severitySlider')), findsOneWidget);
+  });
+
+  testWidgets('empty input review stays on input page', (tester) async {
+    final controller = await _pumpFlow(tester);
+    await _reachInputMethod(tester);
+
+    await _tapVisible(tester, find.text('Text input'));
+    await _tapVisible(tester, find.text('Continue'));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    await _tapVisible(tester, find.text('Review answers'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 220));
+
+    expect(controller.state.step, SacaStep.textInput);
+    expect(controller.state.pendingConfirmation, isNull);
+  });
+
+  testWidgets('confirmation dialog respects glass theme semantics',
+      (tester) async {
+    await _pumpFlow(
+      tester,
+      visualThemeStyle: SacaVisualThemeStyle.glass,
+      themePreference: SacaThemePreference.dark,
+    );
+    await _reachInputMethod(tester);
+
+    await _tapVisible(tester, find.text('Text input'));
+    await _tapVisible(tester, find.text('Continue'));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('No clear symptom heard'), findsOneWidget);
+    final title = tester.widget<Text>(find.text('No clear symptom heard'));
+    final action = tester.widget<Text>(find.text('Continue anyway'));
+    expect(title.style?.color, isNotNull);
+    expect(action.style?.color, isNotNull);
+    expect(find.byType(CupertinoAlertDialog), findsNothing);
   });
 
   testWidgets('no clear illness confirmation appears before result',
@@ -1596,6 +2101,29 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('gurindji visible flow avoids blocked English UI tokens',
+      (tester) async {
+    await _pumpFlow(tester, vocabulary: vocabulary, localizer: localizer);
+    await _reachInputMethod(tester, language: 'Gurindji');
+    _expectNoBlockedEnglishUi(tester);
+
+    await tester.tap(find.text('Yawu'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('symptomTextField')),
+      'makurrmakurr warrgarrk',
+    );
+    await tester.pump();
+    await _tapVisible(tester, find.text('Kawayi'));
+    await _answerQuestionnaire(
+      tester,
+      gurindji: true,
+      related: 'ngirlkirri pung',
+    );
+
+    _expectNoBlockedEnglishUi(tester);
+  });
 }
 
 class _ViewportCase {
@@ -1662,6 +2190,14 @@ void _expectNoHorizontalOverflow(WidgetTester tester, _ViewportCase viewport) {
       reason: viewport.name);
 }
 
+double _contrastRatio(Color a, Color b) {
+  final l1 = a.computeLuminance();
+  final l2 = b.computeLuminance();
+  final lighter = l1 > l2 ? l1 : l2;
+  final darker = l1 > l2 ? l2 : l1;
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 Future<SacaFlowController> _pumpFlow(
   WidgetTester tester, {
   SacaPlatformStyle? style = SacaPlatformStyle.androidMobile,
@@ -1672,12 +2208,17 @@ Future<SacaFlowController> _pumpFlow(
   AnalysisService? analysisService,
   SacaReadinessState readiness = SacaReadinessState.ready,
   SacaThemePreference? themePreference,
+  SacaVisualThemeStyle? visualThemeStyle,
 }) async {
   final activeVocabulary =
       vocabulary ?? const ClinicalVocabularyService.empty();
   final settingsStore = _WidgetSettingsStore();
   if (themePreference != null) {
     await settingsStore.setString('saca.themePreference', themePreference.name);
+  }
+  if (visualThemeStyle != null) {
+    await settingsStore.setString(
+        'saca.visualThemeStyle', visualThemeStyle.name);
   }
   final controller = SacaFlowController(
     speechInput: speechInput ?? _NoopSpeechInputService(),
@@ -1865,6 +2406,21 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
   await tester.pump();
 }
 
+void _expectNoBlockedEnglishUi(WidgetTester tester) {
+  final blocklist = RegExp(
+    r'\b(Continue|Back|Settings|Result|Review|Light|Dark|System|Modern|Glass|Classic|Selected|Other|None|Not sure|Emergency|Severity|Recommendations|Text input|Voice input|Body map|Start|Finish|Done|Skip|Analyse|Edit|Theme)\b',
+    caseSensitive: false,
+  );
+  final visibleTexts = tester
+      .widgetList<Text>(find.byType(Text))
+      .map((widget) => widget.data)
+      .whereType<String>();
+  for (final text in visibleTexts) {
+    final scrubbed = text.replaceAll('SACA', '').replaceAll('000', '');
+    expect(blocklist.hasMatch(scrubbed), isFalse, reason: text);
+  }
+}
+
 Future<void> _pressPrimaryButton(
     WidgetTester tester, ValueKey<String> key) async {
   final button = tester.widget<SacaPrimaryButton>(find.byKey(key));
@@ -1930,6 +2486,36 @@ class _RankedAnalysisService implements AnalysisService {
           ConditionPrediction(label: 'Influenza', rank: 1, confidence: 0.82),
           ConditionPrediction(label: 'Common Cold', rank: 2, confidence: 0.54),
           ConditionPrediction(label: 'Migraine', rank: 3, confidence: 0.21),
+        ],
+      ),
+    );
+  }
+}
+
+class _PepticRankedAnalysisService implements AnalysisService {
+  const _PepticRankedAnalysisService();
+
+  @override
+  Future<AppResult<AnalysisResult>> analyse(AnalysisRequest request) async {
+    return const AppResult.success(
+      AnalysisResult(
+        disease: 'peptic ulcer disease',
+        severity: SeverityLevel.moderate,
+        guidance: <String>['Visit the clinic if pain keeps going.'],
+        isEmergency: false,
+        disclaimer: 'Prototype guidance only.',
+        predictions: <ConditionPrediction>[
+          ConditionPrediction(
+            label: 'peptic ulcer disease',
+            rank: 1,
+            confidence: 0.62,
+          ),
+          ConditionPrediction(label: 'diabetes', rank: 2, confidence: 0.31),
+          ConditionPrediction(
+            label: 'drug reaction',
+            rank: 3,
+            confidence: 0.22,
+          ),
         ],
       ),
     );

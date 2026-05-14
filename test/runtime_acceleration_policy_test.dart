@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:saca_demo/core/runtime/runtime_acceleration_policy.dart';
+import 'package:saca/core/runtime/runtime_acceleration_policy.dart';
 
 void main() {
   group('RuntimeAccelerationPolicy', () {

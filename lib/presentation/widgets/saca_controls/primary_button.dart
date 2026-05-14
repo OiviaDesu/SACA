@@ -21,8 +21,44 @@ class SacaPrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
     final enabled = onPressed != null;
-    final foreground = filled ? SacaTheme.surface : colors.text;
+    final foreground = !enabled
+        ? colors.onDisabledControl
+        : filled
+            ? colors.onControl
+            : colors.onSurface;
+    if (theme.useClassic) {
+      final content = Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 22, color: foreground),
+            const SizedBox(width: 10),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: SacaTheme.body.copyWith(color: foreground),
+            ),
+          ),
+        ],
+      );
+      final callback = enabled
+          ? () {
+              unawaited(filled ? SacaHaptics.confirm() : SacaHaptics.tap());
+              onPressed?.call();
+            }
+          : null;
+      return ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: SacaTheme.minTapTarget),
+        child: filled
+            ? FilledButton(onPressed: callback, child: content)
+            : OutlinedButton(onPressed: callback, child: content),
+      );
+    }
 
     return CupertinoButton(
       minimumSize: const Size(0, SacaTheme.minTapTarget),
@@ -43,12 +79,12 @@ class SacaPrimaryButton extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            colors.accent,
-            Color(0xFFE85D75),
+            colors.control,
+            colors.selectedBorder,
           ],
         ),
         baseBorderColor: colors.border,
-        selectedBorderColor: colors.accent,
+        selectedBorderColor: enabled ? colors.control : colors.fieldOutline,
         autofocus: autofocus,
         focusNode: focusNode,
         child: ConstrainedBox(

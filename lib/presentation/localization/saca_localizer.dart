@@ -12,8 +12,8 @@ class SacaLocalizer {
   // Prototype Gurindji UI copy. It must be reviewed by a fluent Gurindji
   // speaker before clinical or community production use.
   String t(SacaLanguage? language, String key) {
-    final table = _tableFor(language);
-    return table[key] ?? _english[key] ?? key;
+    final catalog = SacaLocalizationCatalogs.forLanguage(language);
+    return catalog[key] ?? SacaLocalizationCatalogs.english[key] ?? key;
   }
 
   String symptomLabel(SacaLanguage? language, Symptom symptom) {
@@ -129,10 +129,6 @@ class SacaLocalizer {
       t(language, 'progressAnalysis'),
       t(language, 'progressResult'),
     ];
-  }
-
-  Map<String, String> _tableFor(SacaLanguage? language) {
-    return language == SacaLanguage.gurindji ? _gurindji : _english;
   }
 
   String _guessGurindjiDiseaseLabel(String disease) {

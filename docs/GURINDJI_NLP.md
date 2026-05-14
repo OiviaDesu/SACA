@@ -20,7 +20,7 @@ service.
 
 ## Minimum Viable Dataset Stack
 
-Detailed dataset matrix lives in [Dataset research summary](DATASET_RESEARCH_SUMMARY.md).
+Detailed dataset matrix lives in [Dataset research summary](dataset_research_summary.md).
 
 Medical NLP datasets for prototype classification:
 

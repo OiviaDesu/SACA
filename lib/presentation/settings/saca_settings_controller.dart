@@ -3,21 +3,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum SacaThemePreference { light, dark, system }
 
+enum SacaVisualThemeStyle { modern, glass, classic }
+
 class SacaSettingsState {
   const SacaSettingsState({
     this.themePreference = SacaThemePreference.light,
+    this.visualThemeStyle = SacaVisualThemeStyle.modern,
     this.textScale = SacaSettingsController.defaultTextScale,
   });
 
   final SacaThemePreference themePreference;
+  final SacaVisualThemeStyle visualThemeStyle;
   final double textScale;
 
   SacaSettingsState copyWith({
     SacaThemePreference? themePreference,
+    SacaVisualThemeStyle? visualThemeStyle,
     double? textScale,
   }) {
     return SacaSettingsState(
       themePreference: themePreference ?? this.themePreference,
+      visualThemeStyle: visualThemeStyle ?? this.visualThemeStyle,
       textScale: textScale ?? this.textScale,
     );
   }
@@ -31,6 +37,7 @@ class SacaSettingsController extends ChangeNotifier {
   static const minTextScale = 0.90;
   static const maxTextScale = 1.40;
   static const _themeKey = 'saca.themePreference';
+  static const _visualThemeStyleKey = 'saca.visualThemeStyle';
   static const _textScaleKey = 'saca.textScale';
 
   final SacaSettingsStore _store;
@@ -40,11 +47,16 @@ class SacaSettingsController extends ChangeNotifier {
 
   Future<void> load() async {
     final themeName = await _store.getString(_themeKey);
+    final styleName = await _store.getString(_visualThemeStyleKey);
     final savedScale = await _store.getDouble(_textScaleKey);
     _state = SacaSettingsState(
       themePreference: SacaThemePreference.values.firstWhere(
         (preference) => preference.name == themeName,
         orElse: () => SacaThemePreference.light,
+      ),
+      visualThemeStyle: SacaVisualThemeStyle.values.firstWhere(
+        (style) => style.name == styleName,
+        orElse: () => SacaVisualThemeStyle.modern,
       ),
       textScale: clampTextScale(savedScale ?? defaultTextScale),
     );
@@ -56,6 +68,13 @@ class SacaSettingsController extends ChangeNotifier {
     _state = _state.copyWith(themePreference: preference);
     notifyListeners();
     await _store.setString(_themeKey, preference.name);
+  }
+
+  Future<void> setVisualThemeStyle(SacaVisualThemeStyle style) async {
+    if (_state.visualThemeStyle == style) return;
+    _state = _state.copyWith(visualThemeStyle: style);
+    notifyListeners();
+    await _store.setString(_visualThemeStyleKey, style.name);
   }
 
   Future<void> setTextScale(double value) async {

@@ -21,6 +21,34 @@ class SacaChipButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
+    final theme = SacaThemeContext.of(context);
+    final selectedForeground =
+        theme.useGlassStyle ? colors.onControl : colors.onSelected;
+    if (theme.useClassic) {
+      void callback() {
+        unawaited(SacaHaptics.selection());
+        onPressed();
+      }
+
+      final child = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (selected) ...[
+            Icon(Icons.check, size: 16, color: colors.onSurface),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: colors.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+      return OutlinedButton(onPressed: callback, child: child);
+    }
     return CupertinoButton(
       minimumSize: const Size(0, 42),
       padding: EdgeInsets.zero,
@@ -42,13 +70,7 @@ class SacaChipButton extends StatelessWidget {
         autofocus: autofocus,
         focusNode: focusNode,
         baseShadow: highlighted
-            ? [
-                BoxShadow(
-                  color: colors.selectedBorder.withValues(alpha: 0.18),
-                  blurRadius: 14,
-                  spreadRadius: 1,
-                ),
-              ]
+            ? SacaThemeContext.of(context).surfaceShadow(highlighted: true)
             : const [],
         hoverShadow: const [
           BoxShadow(
@@ -71,7 +93,7 @@ class SacaChipButton extends StatelessWidget {
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0,
-                color: colors.text,
+                color: selected ? selectedForeground : colors.onSurface,
               ),
             ),
           ),
