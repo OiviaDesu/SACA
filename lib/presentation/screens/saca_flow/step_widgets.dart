@@ -295,7 +295,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
                         label: _localizer.t(state.language, 'visualOtherTitle'),
                         secondaryLabel:
                             _localizer.t(state.language, 'visualOtherSubtitle'),
-                        imagePath: 'assets/images/cough.png',
+                        imagePath: 'assets/images/other.png',
                         selected: false,
                         onPressed: () =>
                             _controller.chooseInputMethod(InputMethod.text),
