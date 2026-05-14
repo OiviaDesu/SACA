@@ -609,55 +609,11 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
   }
 
   Widget _voiceQuestionControls(SacaFlowState state) {
-    if (state.inputMethod != InputMethod.voice) {
-      return const SizedBox.shrink();
-    }
-
-    final heard = state.voiceAnswerTranscript.trim();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SacaPrimaryButton(
-            key: const ValueKey('voiceQuestionRecordButton'),
-            label: state.isRecording
-                ? _localizer.t(state.language, 'stopVoiceAnswer')
-                : _localizer.t(state.language, 'answerByVoice'),
-            icon: state.isRecording
-                ? CupertinoIcons.stop_circle
-                : CupertinoIcons.mic,
-            onPressed: state.isBusy
-                ? null
-                : () {
-                    if (state.isRecording) {
-                      _controller.stopRecording();
-                    } else {
-                      _controller.startRecording();
-                    }
-                  },
-          ),
-          if (heard.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              '${_localizer.t(state.language, 'voiceAnswerHeard')} $heard',
-              key: const ValueKey('voiceQuestionHeard'),
-              textAlign: TextAlign.center,
-              style: SacaTheme.small,
-            ),
-          ],
-          if (!state.voiceAnswerMatched) ...[
-            const SizedBox(height: 6),
-            Text(
-              _localizer.t(state.language, 'voiceAnswerNotMatched'),
-              key: const ValueKey('voiceQuestionNotMatched'),
-              textAlign: TextAlign.center,
-              style: SacaTheme.small.copyWith(color: SacaTheme.emergency),
-            ),
-          ],
-        ],
-      ),
+    return _VoiceQuestionControls(
+      state: state,
+      localizer: _localizer,
+      onStartRecording: _controller.startRecording,
+      onStopRecording: _controller.stopRecording,
     );
   }
 
@@ -793,34 +749,5 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     return SacaFlowState.bodyAreas
         .where((area) => area.view == view)
         .any((area) => state.selectedBodyAreaIds.contains(area.id));
-  }
-}
-
-class _VoiceDraftNotice extends StatelessWidget {
-  const _VoiceDraftNotice({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = SacaThemeColors.of(context);
-    return Semantics(
-      label: message,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: SacaTheme.small.copyWith(color: colors.onSurfaceMuted),
-          ),
-        ),
-      ),
-    );
   }
 }
