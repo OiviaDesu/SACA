@@ -1,21 +1,18 @@
 part of '../saca_flow_screen.dart';
 
+const _severityPolicy = SeverityPolicy();
+
 extension _SacaFlowQuestionStepWidgets on _SacaFlowScreenState {
   Widget _severityStep(
     BuildContext context,
     SacaFlowState state,
     SacaPlatformStyle style,
   ) {
-    final severity = int.tryParse(state.questionAnswers['severity'] ?? '')
-            ?.clamp(1, 10)
-            .toInt() ??
-        5;
-    final severityDescriptorKey = switch (severity) {
-      <= 3 => 'severityDescriptorLow',
-      <= 6 => 'severityDescriptorModerate',
-      <= 8 => 'severityDescriptorHigh',
-      _ => 'severityDescriptorEmergency',
-    };
+    final severity = _severityPolicy.scoreFromAnswer(
+      state.questionAnswers['severity'],
+    );
+    final severityDescriptorKey =
+        _severityPolicy.descriptorKeyForScore(severity);
 
     return _wrapStep(
       state: state,
