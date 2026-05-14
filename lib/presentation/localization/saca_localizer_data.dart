@@ -1,5 +1,36 @@
 part of 'saca_localizer.dart';
 
+class SacaLocalizationCatalog {
+  const SacaLocalizationCatalog({
+    required this.language,
+    required this.uiStrings,
+  });
+
+  final SacaLanguage language;
+  final Map<String, String> uiStrings;
+
+  String? operator [](String key) => uiStrings[key];
+
+  Set<String> get keys => uiStrings.keys.toSet();
+}
+
+class SacaLocalizationCatalogs {
+  const SacaLocalizationCatalogs._();
+
+  static const english = SacaLocalizationCatalog(
+    language: SacaLanguage.english,
+    uiStrings: _english,
+  );
+  static const gurindji = SacaLocalizationCatalog(
+    language: SacaLanguage.gurindji,
+    uiStrings: _gurindji,
+  );
+
+  static SacaLocalizationCatalog forLanguage(SacaLanguage? language) {
+    return language == SacaLanguage.gurindji ? gurindji : english;
+  }
+}
+
 const _english = <String, String>{
   'splashSubtitle': 'Offline triage support',
   'languageTitle': 'Choose your language / Yawu nyawa',

@@ -130,6 +130,13 @@ void main() {
     }
   });
 
+  test('structured UI catalogs keep key parity', () {
+    expect(
+      SacaLocalizationCatalogs.gurindji.keys,
+      SacaLocalizationCatalogs.english.keys,
+    );
+  });
+
   test('Gurindji UI strings avoid blocked English UI tokens', () async {
     final source = File('lib/presentation/localization/saca_localizer_data.dart')
         .readAsStringSync();
