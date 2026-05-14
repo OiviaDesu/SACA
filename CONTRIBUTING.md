@@ -76,9 +76,9 @@ flutter build apk
 ```
 
 Windows offline speech-to-text requires local Whisper ONNX assets. See
-[docs/MODEL_ASSETS.md](docs/MODEL_ASSETS.md).
+[docs/model_assets.md](docs/model_assets.md).
 
-Use [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) when preparing a
+Use [docs/release_checklist.md](docs/release_checklist.md) when preparing a
 release PR or a GitHub publication cleanup pass.
 
 ## Pull Request Rules
@@ -89,10 +89,10 @@ release PR or a GitHub publication cleanup pass.
 - Do not merge if `flutter analyze` or `flutter test` fails.
 - Prefer squash merge for a clean main branch history.
 - Follow the sections in `.github/PULL_REQUEST_TEMPLATE.md`: `Summary`,
-	`Validation`, and `Risk / Notes`.
+  `Validation`, and `Risk / Notes`.
 
 ## Merge Strategy
 
 - Prefer **squash merge** for feature and cleanup PRs.
 - Keep repository hygiene, documentation, and refactors in separate PRs where
-	practical so rollback stays easy.
+  practical so rollback stays easy.

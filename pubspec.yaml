@@ -1,5 +1,5 @@
 name: saca
-description: SACA – Smart Adaptive Clinical Assistant (Whisper offline STT demo)
+description: SACA - Smart Adaptive Clinical Assistant (Whisper offline STT demo)
 version: 1.0.0+1
 
 environment:
@@ -45,5 +45,5 @@ flutter:
     - assets/models/classifier-xgb-quick/
     - assets/models/whisper-gue-base-run4-rc1/
     - assets/models/sherpa-onnx-whisper-gue-base-run4-rc1/
-    - assets/Images/
+    - assets/images/
     

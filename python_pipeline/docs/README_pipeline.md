@@ -85,7 +85,7 @@ Recommended datasets:
 - Local CSV/JSON rows with English, Gurindji, and mixed Gurindji-Kriol text
 
 Decision summary and source URLs are tracked in
-`docs/DATASET_RESEARCH_SUMMARY.md`.
+`docs/dataset_research_summary.md`.
 
 Keep raw downloads under `python_pipeline/data/raw/`, which is ignored by Git.
 Public symptom datasets usually contain diagnosis labels, not real clinical
@@ -309,7 +309,7 @@ The helper also bumps walltime automatically for the heavy profiles:
 Track baseline numbers, submitted job IDs, and future rung-by-rung results in:
 
 ```text
-docs/CLASSIFIER_TUNING_RUN_LOG.md
+docs/classifier_tuning_run_log.md
 ```
 
 After submission, inspect the manifest and then monitor the whole batch with:

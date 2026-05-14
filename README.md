@@ -44,7 +44,7 @@ flutter run
 ```
 
 For Windows offline speech-to-text, add the local model assets first. See
-[docs/MODEL_ASSETS.md](docs/MODEL_ASSETS.md).
+[docs/model_assets.md](docs/model_assets.md).
 
 If Android Gradle complains that `flutter.sdk` is missing, copy
 `android/local.properties.example` to `android/local.properties` and update the
@@ -64,7 +64,7 @@ path for your machine.
 
 - **Windows:** `flutter build windows` compiles without local model binaries, but
   runtime offline speech still needs the Whisper ONNX assets described in
-  `docs/MODEL_ASSETS.md`.
+  `docs/model_assets.md`.
 - **Android:** the app builds with the normal Flutter Android toolchain. Voice
   runtime behavior still depends on local/bundled model assets at runtime.
 - **macOS/iOS:** build with the normal Flutter Apple toolchains. Voice runtime
@@ -208,7 +208,7 @@ SACA uses Flutter's default renderer behavior per platform. Impeller is used
 where Flutter supports it, but Skia fallback is not universal. In particular,
 iOS does not support switching back to Skia, Android fallback is handled by
 Flutter when Impeller is unsupported, and Windows/macOS keep Flutter defaults.
-SACA does not support Web. See [Renderer policy](docs/RENDERER_POLICY.md).
+SACA does not support Web. See [Renderer policy](docs/renderer_policy.md).
 
 ## UI Credits
 
@@ -224,11 +224,11 @@ recognition on Windows still requires local model files.
 
 ## More Documentation
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [Gurindji NLP and dataset strategy](docs/GURINDJI_NLP.md)
-- [Dataset research summary](docs/DATASET_RESEARCH_SUMMARY.md)
-- [Model assets](docs/MODEL_ASSETS.md)
-- [Release checklist](docs/RELEASE_CHECKLIST.md)
+- [Architecture](docs/architecture.md)
+- [Gurindji NLP and dataset strategy](docs/gurindji_nlp.md)
+- [Dataset research summary](docs/dataset_research_summary.md)
+- [Model assets](docs/model_assets.md)
+- [Release checklist](docs/release_checklist.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Code of conduct](CODE_OF_CONDUCT.md)
