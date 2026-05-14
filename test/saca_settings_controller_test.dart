@@ -76,6 +76,30 @@ void main() {
       expect(theme.scaffoldBackgroundColor, SacaTheme.lightColors.background);
     });
 
+    test('theme style renderer resolves distinct style adapters', () {
+      final modern = SacaThemeStyleRenderer.resolve(
+        surfaceStyle: SacaThemeSurfaceStyle.modern,
+        glassUnavailable: false,
+        glassSolidFallback: false,
+      );
+      final glass = SacaThemeStyleRenderer.resolve(
+        surfaceStyle: SacaThemeSurfaceStyle.glass,
+        glassUnavailable: false,
+        glassSolidFallback: false,
+      );
+      final classic = SacaThemeStyleRenderer.resolve(
+        surfaceStyle: SacaThemeSurfaceStyle.classic,
+        glassUnavailable: false,
+        glassSolidFallback: false,
+      );
+
+      expect(modern.useGlassStyle, isFalse);
+      expect(glass.useGlassStyle, isTrue);
+      expect(classic.flattenGradients, isTrue);
+      expect(glass.surfaceOpacity, lessThan(modern.surfaceOpacity));
+      expect(classic.radiusScale, isNot(modern.radiusScale));
+    });
+
     test('visual styles resolve distinct theme tokens', () {
       const modern = SacaThemeContext(
         colors: SacaTheme.lightColors,

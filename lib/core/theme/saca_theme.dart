@@ -3,6 +3,58 @@ import 'package:flutter/material.dart' show ColorScheme, ThemeData;
 
 enum SacaThemeSurfaceStyle { modern, glass, classic }
 
+class SacaThemeStyleRenderer {
+  const SacaThemeStyleRenderer._({
+    required this.surfaceStyle,
+    required this.glassUnavailable,
+    required this.glassSolidFallback,
+  });
+
+  factory SacaThemeStyleRenderer.resolve({
+    required SacaThemeSurfaceStyle surfaceStyle,
+    required bool glassUnavailable,
+    required bool glassSolidFallback,
+  }) {
+    return SacaThemeStyleRenderer._(
+      surfaceStyle: surfaceStyle,
+      glassUnavailable: glassUnavailable,
+      glassSolidFallback: glassSolidFallback,
+    );
+  }
+
+  final SacaThemeSurfaceStyle surfaceStyle;
+  final bool glassUnavailable;
+  final bool glassSolidFallback;
+
+  bool get useGlass =>
+      surfaceStyle == SacaThemeSurfaceStyle.glass &&
+      !glassUnavailable &&
+      !glassSolidFallback;
+  bool get useGlassStyle =>
+      surfaceStyle == SacaThemeSurfaceStyle.glass && !glassUnavailable;
+  bool get useClassic => surfaceStyle == SacaThemeSurfaceStyle.classic;
+  double get surfaceOpacity => switch (surfaceStyle) {
+        SacaThemeSurfaceStyle.modern => 1.0,
+        SacaThemeSurfaceStyle.glass => glassUnavailable ? 1.0 : 0.30,
+        SacaThemeSurfaceStyle.classic => 1.0,
+      };
+  double get radiusScale => switch (surfaceStyle) {
+        SacaThemeSurfaceStyle.modern => 1.0,
+        SacaThemeSurfaceStyle.glass => 2.4,
+        SacaThemeSurfaceStyle.classic => 1.6,
+      };
+  double get elevation => switch (surfaceStyle) {
+        SacaThemeSurfaceStyle.modern => 1.0,
+        SacaThemeSurfaceStyle.glass => glassUnavailable ? 1.0 : 2.8,
+        SacaThemeSurfaceStyle.classic => 0.25,
+      };
+  bool get flattenGradients => useClassic;
+  double get blurSigma => glassSolidFallback ? 0 : 18;
+  double get scrimOpacity => glassSolidFallback ? 1 : 0.28;
+  double get borderOpacity => glassSolidFallback ? 0.92 : 0.64;
+  double get glowOpacity => glassSolidFallback ? 0.06 : 0.22;
+}
+
 enum SacaGlassMaterial { nav, panel, field, control, dialog }
 
 enum SacaThemeSurfaceRole {
@@ -54,33 +106,23 @@ class SacaThemeContext {
   final bool glassUnavailable;
   final bool glassSolidFallback;
 
-  bool get useGlass =>
-      surfaceStyle == SacaThemeSurfaceStyle.glass &&
-      !glassUnavailable &&
-      !glassSolidFallback;
-  bool get useGlassStyle =>
-      surfaceStyle == SacaThemeSurfaceStyle.glass && !glassUnavailable;
-  bool get useClassic => surfaceStyle == SacaThemeSurfaceStyle.classic;
-  double get surfaceOpacity => switch (surfaceStyle) {
-        SacaThemeSurfaceStyle.modern => 1.0,
-        SacaThemeSurfaceStyle.glass => glassUnavailable ? 1.0 : 0.30,
-        SacaThemeSurfaceStyle.classic => 1.0,
-      };
-  double get radiusScale => switch (surfaceStyle) {
-        SacaThemeSurfaceStyle.modern => 1.0,
-        SacaThemeSurfaceStyle.glass => 2.4,
-        SacaThemeSurfaceStyle.classic => 1.6,
-      };
-  double get elevation => switch (surfaceStyle) {
-        SacaThemeSurfaceStyle.modern => 1.0,
-        SacaThemeSurfaceStyle.glass => glassUnavailable ? 1.0 : 2.8,
-        SacaThemeSurfaceStyle.classic => 0.25,
-      };
-  bool get flattenGradients => useClassic;
-  double get blurSigma => glassSolidFallback ? 0 : 18;
-  double get scrimOpacity => glassSolidFallback ? 1 : 0.28;
-  double get borderOpacity => glassSolidFallback ? 0.92 : 0.64;
-  double get glowOpacity => glassSolidFallback ? 0.06 : 0.22;
+  SacaThemeStyleRenderer get renderer => SacaThemeStyleRenderer.resolve(
+        surfaceStyle: surfaceStyle,
+        glassUnavailable: glassUnavailable,
+        glassSolidFallback: glassSolidFallback,
+      );
+
+  bool get useGlass => renderer.useGlass;
+  bool get useGlassStyle => renderer.useGlassStyle;
+  bool get useClassic => renderer.useClassic;
+  double get surfaceOpacity => renderer.surfaceOpacity;
+  double get radiusScale => renderer.radiusScale;
+  double get elevation => renderer.elevation;
+  bool get flattenGradients => renderer.flattenGradients;
+  double get blurSigma => renderer.blurSigma;
+  double get scrimOpacity => renderer.scrimOpacity;
+  double get borderOpacity => renderer.borderOpacity;
+  double get glowOpacity => renderer.glowOpacity;
 
   double radius(double base) => base * radiusScale;
 
