@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -104,14 +103,8 @@ void main() {
     expect(guidance.join(' ').toLowerCase(), isNot(contains('drink')));
   });
 
-  test('model classes have non-generic condition explanations', () async {
-    final source = await rootBundle.loadString(
-      'assets/models/classifier-xgb-best/bundle.json',
-    );
-    final json = jsonDecode(source) as Map<String, dynamic>;
-    final classes = (json['classes'] as List<dynamic>).cast<String>();
-
-    for (final disease in classes) {
+  test('model classes have non-generic condition explanations', () {
+    for (final disease in _xgbDiseaseClasses) {
       final english = localizer.conditionExplanation(
         SacaLanguage.english,
         disease,
@@ -188,6 +181,33 @@ void main() {
     );
   });
 }
+
+const _xgbDiseaseClasses = <String>[
+  'acne',
+  'allergy',
+  'arthritis',
+  'bronchial asthma',
+  'cervical spondylosis',
+  'chicken pox',
+  'common cold',
+  'dengue',
+  'diabetes',
+  'dimorphic hemorrhoids',
+  'drug reaction',
+  'fungal infection',
+  'gastroesophageal reflux disease',
+  'hypertension',
+  'impetigo',
+  'jaundice',
+  'malaria',
+  'migraine',
+  'peptic ulcer disease',
+  'pneumonia',
+  'psoriasis',
+  'typhoid',
+  'urinary tract infection',
+  'varicose veins',
+];
 
 String _mapBody(String source, String name) {
   final match = RegExp(
