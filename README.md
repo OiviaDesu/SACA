@@ -7,6 +7,22 @@ escalation.
 
 SACA is not a diagnostic system and does not replace clinician judgement.
 
+## Acknowledgement of Country
+
+We respectfully acknowledge the Wurundjeri People of the Kulin Nation, who
+are the Traditional Owners of the land on which Swinburne’s Australian
+campuses are located in Melbourne’s east and outer-east, and pay our
+respect to their Elders past, present and emerging.
+We are honoured to recognise our connection to Wurundjeri Country, history,
+culture, and spirituality through these locations, and strive to ensure that we
+operate in a manner that respects and honours the Elders and Ancestors of
+these lands.
+We also respectfully acknowledge Swinburne’s Aboriginal and Torres Strait
+Islander staff, students, alumni, partners and visitors.
+We also acknowledge and respect the Traditional Owners of lands across
+Australia, their Elders, Ancestors, cultures, and heritage, and recognise the
+continuing sovereignties of all Aboriginal and Torres Strait Islander Nations.
+
 ## Safety & Disclaimer
 
 SACA is a **research prototype**, not a clinical decision system. It can support
@@ -29,9 +45,12 @@ When in doubt, keep the safety layer conservative and escalate to human care.
 - Text, voice, and visual symptom input.
 - Theme styles in Settings: Modern (Default), Glass (Preview), and Classic.
 - Structured follow-up questionnaire.
-- Placeholder local analysis via `MockAnalysisService`.
+- On-device diagnosis analysis through a bundled hybrid logistic-regression
+  classifier, with XGBoost bundle fallback when the primary asset is unavailable.
 - Emergency red-flag override through `SafetyRuleService`.
-- Windows offline STT through `sherpa_onnx` when local model files are present.
+- Web demo diagnosis runs in the browser; web voice still needs the local
+  backend `/stt` route.
+- Native offline STT paths use local model assets when present.
 
 ## Quick Start
 
@@ -44,7 +63,7 @@ flutter run
 ```
 
 For Windows offline speech-to-text, add the local model assets first. See
-[docs/model_assets.md](docs/model_assets.md).
+[docs/MODEL_ASSETS.md](docs/MODEL_ASSETS.md).
 
 If Android Gradle complains that `flutter.sdk` is missing, copy
 `android/local.properties.example` to `android/local.properties` and update the
@@ -57,14 +76,15 @@ path for your machine.
 - Android: mobile UI, local audio recording, `whisper_kit` path.
 - macOS: desktop UI and Flutter desktop runtime support.
 - iOS: mobile UI and Flutter iOS runtime support.
-- Web: local/LAN demo only. The browser frontend calls a backend on this
-  machine for STT and diagnosis; see [docs/web_lan_backend.md](docs/web_lan_backend.md).
+- Web: local/LAN demo only. The browser frontend runs diagnosis locally with
+  bundled Dart model assets and calls the backend only for STT; see
+  [docs/web_lan_backend.md](docs/web_lan_backend.md).
 
 ## Platform Setup Notes
 
 - **Windows:** `flutter build windows` compiles without local model binaries, but
   runtime offline speech still needs the Whisper ONNX assets described in
-  `docs/model_assets.md`.
+  `docs/MODEL_ASSETS.md`.
 - **Android:** the app builds with the normal Flutter Android toolchain. Voice
   runtime behavior still depends on local/bundled model assets at runtime.
 - **macOS/iOS:** build with the normal Flutter Apple toolchains. Voice runtime
@@ -89,6 +109,15 @@ The placeholder README in that folder is tracked. The model files are ignored.
 Classifier research artifacts from `python_pipeline/` such as `*.joblib`,
 `*.onnx`, run outputs, and intermediate datasets are also kept out of Git by
 default.
+
+Current diagnosis runtime:
+
+- Primary app classifier: `assets/models/saca-hybrid-logreg-v1/bundle.json`.
+- Fallback app classifier: `assets/models/classifier-xgb-best/bundle.json`.
+- Experimental/staged classifier: `assets/models/classifier-xgb-quick/`.
+
+See [docs/MODEL_ASSETS.md](docs/MODEL_ASSETS.md) and
+[docs/HPC_TRAINING_OUTPUTS.md](docs/HPC_TRAINING_OUTPUTS.md) for provenance.
 
 ## Project Structure
 
@@ -118,7 +147,7 @@ The Python training and HPC utilities live under `python_pipeline/`. They are
 optional for app development, but important for dataset normalization,
 classifier training, and Whisper fine-tuning research.
 
-See [python_pipeline/README_pipeline.md](python_pipeline/README_pipeline.md) for
+See [python_pipeline/docs/README_pipeline.md](python_pipeline/docs/README_pipeline.md) for
 setup, Slurm usage, and artifact policy.
 
 ## Store Readiness
@@ -208,13 +237,26 @@ SACA uses Flutter's default renderer behavior per platform. Impeller is used
 where Flutter supports it, but Skia fallback is not universal. In particular,
 iOS does not support switching back to Skia, Android fallback is handled by
 Flutter when Impeller is unsupported, and Windows/macOS keep Flutter defaults.
-SACA does not support Web. See [Renderer policy](docs/renderer_policy.md).
+SACA Web is a demo target and keeps Flutter's web renderer behavior. See
+[Renderer policy](docs/RENDERER_POLICY.md).
 
-## UI Credits
+## Credits and Acknowledgements
 
-Glass (Preview) uses [`liquid_glass_widgets`](https://github.com/sdegenaar/liquid_glass_widgets)
-for adaptive liquid-glass surfaces. Modern remains the default SACA theme, and
-Classic uses Material 3 theme tokens.
+SACA uses Flutter and Dart for the cross-platform app, Python/scikit-learn/
+XGBoost tooling for research pipeline work, `liquid_glass_widgets` for the
+Glass preview renderer, `whisper_kit`, `sherpa-onnx`, and Whisper-family assets
+for speech experiments, and curated public/research datasets for prototype
+training and evaluation.
+
+Training-output inspection and model-export evidence were produced on Swinburne
+HPC infrastructure, including OzSTAR/Ngarrgu Tindebeek paths documented in
+[docs/HPC_TRAINING_OUTPUTS.md](docs/HPC_TRAINING_OUTPUTS.md). This is an
+infrastructure/provenance acknowledgement only; it does not imply Swinburne
+clinical approval, dataset ownership, or endorsement of SACA.
+
+Full attribution, link-access notes, and data-governance constraints are in
+[docs/CREDITS.md](docs/CREDITS.md) and
+[docs/DATASET_RESEARCH_SUMMARY.md](docs/DATASET_RESEARCH_SUMMARY.md).
 
 ## CI
 
@@ -224,11 +266,13 @@ recognition on Windows still requires local model files.
 
 ## More Documentation
 
-- [Architecture](docs/architecture.md)
-- [Gurindji NLP and dataset strategy](docs/gurindji_nlp.md)
-- [Dataset research summary](docs/dataset_research_summary.md)
-- [Model assets](docs/model_assets.md)
-- [Release checklist](docs/release_checklist.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Credits and acknowledgements](docs/CREDITS.md)
+- [Gurindji NLP and dataset strategy](docs/GURINDJI_NLP.md)
+- [Dataset research summary](docs/DATASET_RESEARCH_SUMMARY.md)
+- [HPC training outputs](docs/HPC_TRAINING_OUTPUTS.md)
+- [Model assets](docs/MODEL_ASSETS.md)
+- [Release checklist](docs/RELEASE_CHECKLIST.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Code of conduct](CODE_OF_CONDUCT.md)

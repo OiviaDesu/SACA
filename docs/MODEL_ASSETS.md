@@ -1,5 +1,7 @@
 # Model Assets
 
+Last reviewed: 2026-05-18.
+
 Large speech model files are stored with Git LFS. This keeps normal Git history
 small while allowing demo/runtime model assets to be pulled into a checkout when
 needed.
@@ -9,11 +11,24 @@ and campaign run outputs, remain local unless explicitly copied into
 `assets/models/` as a runtime asset. Full training datasets remain outside Git
 and Git LFS.
 
+## Current Diagnosis Runtime
+
+The app now uses the same Dart on-device analysis path for native platforms and
+web diagnosis:
+
+- Primary: `assets/models/saca-hybrid-logreg-v1/bundle.json`.
+- Fallback: `assets/models/classifier-xgb-best/bundle.json`.
+- Debug/staged: `assets/models/classifier-xgb-quick/`.
+
+The backend `/analyse` route can remain useful for manual testing, but the web
+app does not depend on it for normal diagnosis. Web STT still depends on the
+local backend `/stt` route.
+
 ## Experimental Classifier Dart Export
 
-The current winning diagnosis artifact is still the local-only `quick xgboost`
-run from the expanded `multi` campaign dataset. This repo now includes an
-**experimental** Dart export path for that model:
+The current strongest inspected XGBoost diagnosis artifact is the staged
+24-class bundle under `assets/models/classifier-xgb-best/`. This repo also keeps
+an older quick XGBoost export path for debugging:
 
 ```text
 assets/models/classifier-xgb-quick/
@@ -47,12 +62,10 @@ campaign dataset:
   top-1 agreement on the same split, with worst-case probability drift around
   `0.0568`)
 
-Because of that result, treat any XGBoost Dart scorer as an export
-experiment/debug artifact, **not** the default-safe deployment path yet. The
-active Flutter diagnosis path remains the LR ONNX asset. The staged
-`classifier-xgb-best` bundle must pass parity against the Python
-`classifier_diagnosis_multi_xgb/best_model.joblib` before it becomes selectable
-outside debug/experimental code.
+Because of that result, treat generated raw XGBoost Dart scorers as
+experiment/debug artifacts. The app-facing safe path is the JSON asset runtime:
+hybrid logistic regression first, then the staged XGBoost JSON bundle as a
+fallback if the primary bundle cannot load.
 
 ## Mobile English STT
 
@@ -153,6 +166,13 @@ git lfs pull
 
 Without the required local model files, CI builds can still compile, but runtime
 speech recognition will not be available until the model assets are installed.
+
+## Credits and Provenance
+
+Classifier assets were prepared through the Python research pipeline and
+training-output inspection on Swinburne HPC infrastructure. See
+`docs/HPC_TRAINING_OUTPUTS.md` for run paths and metrics. This is a provenance
+note only, not clinical validation or institutional endorsement.
 
 ## CI Notes
 

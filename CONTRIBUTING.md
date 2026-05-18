@@ -76,9 +76,9 @@ flutter build apk
 ```
 
 Windows offline speech-to-text requires local Whisper ONNX assets. See
-[docs/model_assets.md](docs/model_assets.md).
+[docs/MODEL_ASSETS.md](docs/MODEL_ASSETS.md).
 
-Use [docs/release_checklist.md](docs/release_checklist.md) when preparing a
+Use [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) when preparing a
 release PR or a GitHub publication cleanup pass.
 
 ## Pull Request Rules

@@ -1,7 +1,8 @@
 # SACA Web LAN Backend
 
-SACA Web is a local/LAN demo target. The browser frontend runs Flutter Web;
-STT and diagnosis run on a backend hosted on the same machine as the build.
+SACA Web is a local/LAN demo target. The browser frontend runs Flutter Web and
+uses bundled Dart model assets for diagnosis. Voice transcription still calls a
+backend hosted on the same machine as the build.
 
 For a single public hostname such as `https://saca.mixcorp.org`, serve the
 Flutter Web files and API routes from the same local server. This avoids CORS
@@ -19,9 +20,9 @@ http://127.0.0.1:8787
 ```
 
 The local demo server exposes `/`, `/health`, `/analyse`, and `/stt` on the
-same port. `/analyse` runs the exported SACA XGBoost bundle. `/stt` uses
-`sherpa-onnx` plus the existing Whisper ONNX model assets and `ffmpeg` to decode
-browser WebM/WAV uploads.
+same port. `/stt` is the normal web voice path. `/analyse` is retained as a
+debug/manual fallback route; the web app does not call it during normal
+diagnosis because diagnosis runs in browser through `OnDeviceDiagnosisAnalysisService`.
 
 Install backend dependency if missing:
 
@@ -48,7 +49,9 @@ For Cloudflare Tunnel:
 flutter build web --dart-define=SACA_API_BASE=https://<your-tunnel>.trycloudflare.com
 ```
 
-Serve the output from `build/web` with any static HTTP server.
+Serve the output from `build/web` with the SACA demo server when STT is needed.
+Static-only hosting can display the app and run text diagnosis, but voice will
+be unavailable unless `/stt` is reachable.
 
 ## Backend requirements
 
@@ -56,7 +59,8 @@ The backend must bind to `0.0.0.0`, enable CORS for the web origin, and expose:
 
 - `GET /health`
   - Returns `2xx` when the backend is reachable.
-  - May include `{"stt":true,"analysis":true}` for diagnostics.
+  - May include `{"stt":true,"analysis":true}` for diagnostics. For current web
+    app behavior, `stt` is the important runtime dependency.
 - `POST /stt`
   - `multipart/form-data` fields:
     - `audio`: browser recording bytes, usually WebM/Opus.
@@ -76,7 +80,7 @@ The backend must bind to `0.0.0.0`, enable CORS for the web origin, and expose:
 }
 ```
 
-- `POST /analyse`
+- `POST /analyse` (optional debug/manual fallback)
   - Accepts `AnalysisRequest` JSON from the app.
   - Returns JSON:
 
@@ -99,7 +103,14 @@ The backend must bind to `0.0.0.0`, enable CORS for the web origin, and expose:
 2. Build web with `SACA_API_BASE=http://<LAN_IP>:8787`.
 3. Serve `build/web`.
 4. Open from host and from another LAN device.
-5. Verify text input, voice input, analysis, backend-down recovery, and CORS.
+5. Verify text input reaches results without `/analyse`, voice input calls
+   `/stt`, backend-down recovery is calm, and CORS is correct.
+
+## Link Notes
+
+`https://saca.mixcorp.org`, `http://127.0.0.1:8787`, `<LAN_IP>`, and
+`<your-tunnel>` are deployment examples. They are not guaranteed public
+documentation links.
 
 ## Scope
 

@@ -1,5 +1,11 @@
 # Gurindji NLP and Dataset Strategy
 
+Last reviewed: 2026-05-18.
+
+Gurindji language content in SACA is research-draft support material. It must be
+reviewed by appropriate community/native-speaker and clinical reviewers before
+being used as public medical wording.
+
 SACA uses Gurindji NLP as a prototype support layer. It is not clinically
 validated, and Gurindji medical wording must be reviewed by fluent speakers and
 community stakeholders before real use.
@@ -20,7 +26,7 @@ service.
 
 ## Minimum Viable Dataset Stack
 
-Detailed dataset matrix lives in [Dataset research summary](dataset_research_summary.md).
+Detailed dataset matrix lives in [Dataset research summary](DATASET_RESEARCH_SUMMARY.md).
 
 Medical NLP datasets for prototype classification:
 
@@ -171,3 +177,7 @@ Known constraints:
 - Ngumpin Gurindji Dictionary: https://ngumpin.org.au/gurindji/dictionary/az/
 - WOLD Gurindji Vocabulary: https://wold.clld.org/vocabulary/31
 - Whisper: https://github.com/openai/whisper
+
+Links were reviewed on 2026-05-18. Public reference pages were reachable during
+the review; access to underlying recordings or downloads may still depend on
+the source archive's conditions.

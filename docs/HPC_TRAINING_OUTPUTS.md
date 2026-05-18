@@ -1,8 +1,12 @@
 # HPC Training Outputs
 
-This note summarizes the SACA training artifacts inspected on Swinburne HPC.
-It is evidence for the current local classifier and Flutter model export work,
-not a clinical validation report.
+This note summarizes SACA training artifacts inspected on Swinburne HPC. It is
+provenance evidence for research training, local classifier export, and Flutter
+model-runtime work. It is not a clinical validation report.
+
+Swinburne HPC is acknowledged as the infrastructure used to generate and inspect
+these training outputs. This does not imply Swinburne provided the datasets,
+clinically approved SACA, or endorses the app.
 
 ## Source Location
 
@@ -11,6 +15,7 @@ not a clinical validation report.
 - Output path: `/fred/oz396/dunguyen/saca_whisper/outputs`
 - Code snapshot path: `/fred/oz396/dunguyen/saca_whisper/code`
 - Local metadata snapshot: `session_logs/hpc_outputs_snapshot`
+- Public HPC documentation: https://supercomputing.swin.edu.au/docs/
 
 The local snapshot intentionally keeps logs, JSON summaries, CSV samples, and
 pipeline docs. Large source datasets and binary model artifacts should stay on
@@ -131,13 +136,14 @@ weighted_f1: 0.9647729010640643
 ```
 
 This XGBoost path is staged locally under
-`assets/models/classifier-xgb-best/`. It is useful for server-side or custom
-local runtime experiments, but it is not the active Flutter classifier yet. The
-pipeline notes warn that XGBoost plus TF-IDF ONNX conversion can fail or drift,
-so XGBoost should not be enabled in Flutter until a parity test passes against
-the Python `best_model.joblib`.
+`assets/models/classifier-xgb-best/`. It is used by the current Dart
+`OnDeviceDiagnosisAnalysisService` only as a fallback bundle when the primary
+hybrid logistic-regression asset is unavailable. It is also useful for
+server-side or custom local runtime experiments.
 
-The safest Flutter-oriented path is logistic regression exported through ONNX:
+The current primary app classifier is the JSON hybrid logistic-regression bundle
+under `assets/models/saca-hybrid-logreg-v1/`. The older ONNX-oriented logistic
+regression run remains important provenance for the Flutter-friendly model path:
 
 ```text
 outputs/flutter_models/lr_balanced_single_flutter_onnx_20260504_063657
@@ -170,8 +176,10 @@ campaign model. Do not use it as evidence for the best 24-class XGBoost run.
 Safe claims:
 
 - SACA uses HPC-generated classifier artifacts for offline demo triage support.
-- The current Flutter-friendly diagnosis classifier is logistic regression exported to ONNX.
-- XGBoost achieved stronger results in selected HPC experiments, but requires separate parity-safe runtime handling.
+- The current app diagnosis runtime uses the hybrid logistic-regression JSON
+  bundle first, with the staged XGBoost bundle as a fallback.
+- XGBoost achieved stronger results in selected HPC experiments, but requires
+  careful parity-safe runtime handling before being treated as a primary model.
 - Dataset audits and run summaries are preserved as reproducibility evidence.
 
 Avoid claims:
