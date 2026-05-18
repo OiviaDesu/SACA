@@ -12,7 +12,6 @@ import sys
 
 
 REQUIRED_DIRS = {
-    ".github",
     ".github/ISSUE_TEMPLATE",
     ".github/workflows",
     ".githooks",
