@@ -51,17 +51,19 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
         const _LanguageCarouselText(),
         const SizedBox(height: 20),
         SacaOptionButton(
-          label: _localizer.t(SacaLanguage.english, 'languageEnglishLabel'),
-          icon: CupertinoIcons.chat_bubble_text,
-          selected: state.language == SacaLanguage.english,
-          onPressed: () => _controller.selectLanguage(SacaLanguage.english),
+         label: _localizer.t(SacaLanguage.english, 'languageEnglishLabel'),
+         icon: CupertinoIcons.chat_bubble_text,
+         selected: state.language == SacaLanguage.english,
+         minHeight: 72,
+         onPressed: () => _controller.selectLanguage(SacaLanguage.english),
         ),
         const SizedBox(height: 12),
         SacaOptionButton(
-          label: _localizer.t(SacaLanguage.gurindji, 'languageGurindjiLabel'),
-          icon: CupertinoIcons.chat_bubble_text_fill,
-          selected: state.language == SacaLanguage.gurindji,
-          onPressed: () => _controller.selectLanguage(SacaLanguage.gurindji),
+         label: _localizer.t(SacaLanguage.gurindji, 'languageGurindjiLabel'),
+         icon: CupertinoIcons.chat_bubble_text_fill,
+         selected: state.language == SacaLanguage.gurindji,
+         minHeight: 72,
+         onPressed: () => _controller.selectLanguage(SacaLanguage.gurindji),
         ),
       ],
     );
@@ -617,13 +619,18 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
     );
   }
 
-  Widget _title(SacaPlatformStyle _, String title, String subtitle) {
-    return _StepTitle(
+  Widget _title(SacaPlatformStyle style, String title, String subtitle) {
+  final lift = style == SacaPlatformStyle.windowsDesktop ? 15.0 : 0.0;
+
+  return Transform.translate(
+    offset: Offset(0, -lift),
+    child: _StepTitle(
       title: title,
       subtitle: subtitle,
       align: TextAlign.center,
-    );
-  }
+    ),
+  );
+}
 
   Widget _visualStageHeader({
     required SacaLanguage? language,
