@@ -262,7 +262,7 @@ class SacaSeveritySlider extends StatelessWidget {
                                     ),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontSize: 52,
+                                      fontSize: 44,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: 0,
                                       height: 1,
