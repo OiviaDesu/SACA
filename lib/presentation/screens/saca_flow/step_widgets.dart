@@ -47,7 +47,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       state: state,
       showBack: false,
       children: [
-        const SacaLogoHeader(),
+        const SacaLogoHeader(lift: 90),
         const _LanguageCarouselText(),
         const SizedBox(height: 20),
         SacaOptionButton(
