@@ -47,7 +47,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
       state: state,
       showBack: false,
       children: [
-        const SacaLogoHeader(lift: 90),
+        const SacaLogoHeader(lift: 60),
         const _LanguageCarouselText(),
         const SizedBox(height: 20),
         SacaOptionButton(
@@ -57,7 +57,7 @@ extension _SacaFlowStepWidgets on _SacaFlowScreenState {
          minHeight: 72,
          onPressed: () => _controller.selectLanguage(SacaLanguage.english),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         SacaOptionButton(
          label: _localizer.t(SacaLanguage.gurindji, 'languageGurindjiLabel'),
          icon: CupertinoIcons.chat_bubble_text_fill,
