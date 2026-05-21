@@ -129,6 +129,7 @@ are documented in [docs/CREDITS.md](docs/CREDITS.md) and
 - [Dataset research summary](docs/DATASET_RESEARCH_SUMMARY.md)
 - [Gurindji NLP and dataset strategy](docs/GURINDJI_NLP.md)
 - [HPC training outputs](docs/HPC_TRAINING_OUTPUTS.md)
+- [Swinburne HPC remote inventory](docs/HPC_REMOTE_INVENTORY.md)
 - [Model assets](docs/MODEL_ASSETS.md)
 - [Platform development](docs/PLATFORM_DEVELOPMENT.md)
 - [Renderer policy](docs/RENDERER_POLICY.md)
