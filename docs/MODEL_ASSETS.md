@@ -116,6 +116,38 @@ Otherwise it keeps using the current `sherpa-onnx-whisper-base` bundle with
 The app copies the selected desktop bundle into the application support
 directory on first runtime initialization.
 
+## Gurindji Whisper Candidate From HPC
+
+The latest Swinburne HPC inventory promotes:
+
+```text
+outputs/whisper-base-gue-example-only-run4/checkpoint-200
+```
+
+as the current best Gurindji Whisper candidate. The export folder is:
+
+```text
+outputs/exports/gue-whisper-base-run4-ckpt200-rc1/
+```
+
+Exported runtime forms include:
+
+- `ggml-gue-whisper-base-run4-ckpt200-rc1-f16.bin`
+- `ggml-gue-whisper-base-run4-ckpt200-rc1-q5_0.bin`
+- `sherpa-onnx/encoder.onnx`
+- `sherpa-onnx/decoder.onnx`
+- `sherpa-onnx/tokens.txt`
+
+Current reported metrics:
+
+- validation raw CER `0.258774`, normalized CER `0.241265`
+- test raw CER `0.231899`, normalized CER `0.210436`
+- validation raw WER `0.850450`, normalized WER `0.706564`
+- test raw WER `0.818722`, normalized WER `0.662910`
+
+This candidate is promising for research/demo evaluation, but WER remains high
+and it is not community-validated clinical speech recognition.
+
 ## Git Policy
 
 Runtime model assets under `assets/models/` use Git LFS:
@@ -171,8 +203,10 @@ speech recognition will not be available until the model assets are installed.
 
 Classifier assets were prepared through the Python research pipeline and
 training-output inspection on Swinburne HPC infrastructure. See
-`docs/HPC_TRAINING_OUTPUTS.md` for run paths and metrics. This is a provenance
-note only, not clinical validation or institutional endorsement.
+[HPC training outputs](HPC_TRAINING_OUTPUTS.md) and
+[HPC remote inventory](HPC_REMOTE_INVENTORY.md) for run paths, metrics, output
+directories, and export artifacts. This is a provenance note only, not clinical
+validation or institutional endorsement.
 
 ## CI Notes
 

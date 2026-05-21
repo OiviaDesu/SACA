@@ -11,6 +11,7 @@ class SacaOptionButton extends StatelessWidget {
     this.autofocus = false,
     this.focusNode,
     this.subdued = false,
+    this.minHeight,
   });
 
   final String label;
@@ -21,12 +22,14 @@ class SacaOptionButton extends StatelessWidget {
   final bool autofocus;
   final FocusNode? focusNode;
   final bool subdued;
+  final double? minHeight;
 
   @override
   Widget build(BuildContext context) {
     final colors = SacaThemeColors.of(context);
     final theme = SacaThemeContext.of(context);
     final enabled = onPressed != null;
+    final effectiveMinHeight = minHeight ?? SacaTheme.minTapTarget;
     final selectedForeground =
         theme.useGlassStyle ? colors.onControl : colors.onSelected;
     if (theme.useClassic) {
@@ -80,7 +83,7 @@ class SacaOptionButton extends StatelessWidget {
           : OutlinedButton(onPressed: callback, child: content);
     }
     return CupertinoButton(
-      minimumSize: const Size(0, SacaTheme.minTapTarget),
+      minimumSize: Size(0, effectiveMinHeight),
       padding: EdgeInsets.zero,
       pressedOpacity: 1,
       onPressed: enabled
@@ -102,8 +105,8 @@ class SacaOptionButton extends StatelessWidget {
         child: SizedBox(
           width: double.infinity,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minHeight: SacaTheme.minTapTarget,
+            constraints: BoxConstraints(
+              minHeight: effectiveMinHeight,
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

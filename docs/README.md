@@ -17,6 +17,8 @@ before technical setup and before data/model provenance notes.
 - `ARCHITECTURE.md`: high-level Flutter/application architecture.
 - `MODEL_ASSETS.md`: active, fallback, staged, and local-only model assets.
 - `HPC_TRAINING_OUTPUTS.md`: Swinburne HPC training-output provenance.
+- `HPC_REMOTE_INVENTORY.md`: live 2026-05-19 remote inventory of SACA HPC
+  output folders and current Gurindji Whisper export artifacts.
 - `DATASET_RESEARCH_SUMMARY.md`: dataset and reference-source audit.
 - `GURINDJI_NLP.md`: Gurindji NLP constraints and research-source notes.
 - `CREDITS.md`: acknowledgements, credits, and link-access notes.

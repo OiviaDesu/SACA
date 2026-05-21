@@ -3,9 +3,14 @@ import 'package:flutter/cupertino.dart';
 import '../../core/theme/saca_theme.dart';
 
 class SacaLogoHeader extends StatelessWidget {
-  const SacaLogoHeader({super.key, this.compact = false});
+  const SacaLogoHeader({
+    super.key,
+    this.compact = false,
+    this.lift = 0,
+  });
 
   final bool compact;
+  final double lift;
 
   @override
   Widget build(BuildContext context) {
@@ -13,45 +18,48 @@ class SacaLogoHeader extends StatelessWidget {
     final height = compact ? 118.0 : 190.0;
     final logoSize = compact ? 46.0 : 56.0;
 
-    return SizedBox(
-      height: height,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Align(
-            alignment: compact ? Alignment.topCenter : Alignment.center,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'SACA',
-                  style: SacaTheme.logoText.copyWith(
-                    fontSize: logoSize,
-                    color: colors.onSurface,
+    return Transform.translate(
+      offset: Offset(0, -lift),
+      child: SizedBox(
+        height: height,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Align(
+              alignment: compact ? Alignment.topCenter : Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'SACA',
+                    style: SacaTheme.logoText.copyWith(
+                      fontSize: logoSize,
+                      color: colors.onSurface,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Smart Adaptive Clinical Assistant',
-                  textAlign: TextAlign.center,
-                  style: SacaTheme.small.copyWith(
-                    color: colors.onSurfaceMuted,
-                    fontWeight: FontWeight.w700,
+                  const SizedBox(height: 6),
+                  Text(
+                    'Smart Adaptive Clinical Assistant',
+                    textAlign: TextAlign.center,
+                    style: SacaTheme.small.copyWith(
+                      color: colors.onSurfaceMuted,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Positioned(
-            right: compact ? 38 : 44,
-            top: compact ? 28 : 82,
-            child: SizedBox(
-              width: compact ? 88 : 112,
-              height: compact ? 58 : 74,
-              child: CustomPaint(painter: _StethoscopePainter()),
+            Positioned(
+              right: compact ? 38 : 44,
+              top: compact ? 28 : 82,
+              child: SizedBox(
+                width: compact ? 88 : 112,
+                height: compact ? 58 : 74,
+                child: CustomPaint(painter: _StethoscopePainter()),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -65,11 +73,13 @@ class _StethoscopePainter extends CustomPainter {
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
+
     final metal = Paint()
       ..color = const Color(0xFF2A3B40)
       ..strokeWidth = 2.2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
+
     final fill = Paint()
       ..color = const Color(0xFFE9FAFC)
       ..style = PaintingStyle.fill;
@@ -92,6 +102,7 @@ class _StethoscopePainter extends CustomPainter {
         size.width * 0.62,
         size.height * 0.86,
       );
+
     canvas.drawPath(path, tube);
 
     canvas.drawCircle(
@@ -99,26 +110,31 @@ class _StethoscopePainter extends CustomPainter {
       size.width * 0.18,
       fill,
     );
+
     canvas.drawCircle(
       Offset(size.width * 0.6, size.height * 0.72),
       size.width * 0.18,
       metal,
     );
+
     canvas.drawCircle(
       Offset(size.width * 0.6, size.height * 0.72),
       size.width * 0.08,
       metal,
     );
+
     canvas.drawLine(
       Offset(size.width * 0.78, size.height * 0.72),
       Offset(size.width * 0.98, size.height * 0.62),
       metal,
     );
+
     canvas.drawLine(
       Offset(size.width * 0.07, size.height * 0.07),
       const Offset(0, 0),
       metal,
     );
+
     canvas.drawLine(
       Offset(size.width * 0.13, size.height * 0.07),
       Offset(size.width * 0.24, 0),

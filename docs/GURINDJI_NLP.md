@@ -6,6 +6,12 @@ Gurindji language content in SACA is research-draft support material. It must be
 reviewed by appropriate community/native-speaker and clinical reviewers before
 being used as public medical wording.
 
+Latest HPC note: a live 2026-05-19 SSH inventory records
+`whisper-base-gue-example-only-run4/checkpoint-200` as the current promoted
+Gurindji Whisper candidate. See [HPC remote inventory](HPC_REMOTE_INVENTORY.md)
+for the complete remote output inventory and [model assets](MODEL_ASSETS.md) for
+runtime asset notes.
+
 SACA uses Gurindji NLP as a prototype support layer. It is not clinically
 validated, and Gurindji medical wording must be reviewed by fluent speakers and
 community stakeholders before real use.
