@@ -45,5 +45,6 @@ flutter:
     - assets/models/classifier-xgb-quick/
     - assets/models/whisper-gue-base-run4-rc1/
     - assets/models/sherpa-onnx-whisper-gue-base-run4-rc1/
+    - assets/branding/
     - assets/images/
     

@@ -132,6 +132,7 @@ are documented in [docs/CREDITS.md](docs/CREDITS.md) and
 - [Swinburne HPC remote inventory](docs/HPC_REMOTE_INVENTORY.md)
 - [Model assets](docs/MODEL_ASSETS.md)
 - [Platform development](docs/PLATFORM_DEVELOPMENT.md)
+- [Permissions fallback matrix](docs/permissions_fallback_matrix.md)
 - [Renderer policy](docs/RENDERER_POLICY.md)
 - [Store readiness](docs/store_readiness.md)
 - [Web LAN backend](docs/web_lan_backend.md)
