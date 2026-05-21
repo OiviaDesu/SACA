@@ -23,7 +23,6 @@ class SacaOptionButton extends StatelessWidget {
   final FocusNode? focusNode;
   final bool subdued;
   final double? minHeight;
-  
 
   @override
   Widget build(BuildContext context) {
